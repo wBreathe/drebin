@@ -337,7 +337,8 @@ class Writer(object):
             self.end_ins()
 
     def visit_constant(self, cst):
-        if isinstance(cst, str) or isinstance(cst, unicode):
+        # if isinstance(cst, str) or isinstance(cst, unicode):
+        if isinstance(cst, str):
             return self.write(string(cst))
         self.write('%r' % cst)
 
@@ -554,7 +555,7 @@ def string(s):
               ret.append(c.encode('unicode-escape'))
               continue
         i = ord(c)
-        ret.append('\\u')
+        ret.append('\\')
         ret.append('%x' % (i >> 12))
         ret.append('%x' % ((i >> 8) & 0x0f))
         ret.append('%x' % ((i >> 4) & 0x0f))

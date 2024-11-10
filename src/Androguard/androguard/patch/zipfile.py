@@ -347,7 +347,8 @@ class ZipInfo (object):
         return header + filename + extra
 
     def _encodeFilenameFlags(self):
-        if isinstance(self.filename, unicode):
+        #if isinstance(self.filename, unicode):
+        if isinstance(self.filename, str):
             try:
                 return self.filename.encode('ascii'), self.flag_bits
             except UnicodeEncodeError:
@@ -382,15 +383,15 @@ class ZipInfo (object):
                 idx = 0
 
                 # ZIP64 extension (large files and/or large archives)
-                if self.file_size in (0xffffffffffffffffL, 0xffffffffL):
+                if self.file_size in (0xffffffffffffffff, 0xffffffff):
                     self.file_size = counts[idx]
                     idx += 1
 
-                if self.compress_size == 0xFFFFFFFFL:
+                if self.compress_size == 0xFFFFFFFF:
                     self.compress_size = counts[idx]
                     idx += 1
 
-                if self.header_offset == 0xffffffffL:
+                if self.header_offset == 0xffffffff:
                     old = self.header_offset
                     self.header_offset = counts[idx]
                     idx+=1
@@ -1039,7 +1040,7 @@ class ZipFile:
         if isdir:
             arcname += '/'
         zinfo = ZipInfo(arcname, date_time)
-        zinfo.external_attr = (st[0] & 0xFFFF) << 16L      # Unix attributes
+        zinfo.external_attr = (st[0] & 0xFFFF) << 16     # Unix attributes
         if compress_type is None:
             zinfo.compress_type = self.compression
         else:
@@ -1174,7 +1175,7 @@ class ZipFile:
 
                 if zinfo.header_offset > ZIP64_LIMIT:
                     extra.append(zinfo.header_offset)
-                    header_offset = 0xffffffffL
+                    header_offset = 0xffffffff
                 else:
                     header_offset = zinfo.header_offset
 
@@ -1202,14 +1203,14 @@ class ZipFile:
                      0, zinfo.internal_attr, zinfo.external_attr,
                      header_offset)
                 except DeprecationWarning:
-                    print(>>sys.stderr, (structCentralDir,)
-                     stringCentralDir, create_version,
-                     zinfo.create_system, extract_version, zinfo.reserved,
-                     zinfo.flag_bits, zinfo.compress_type, dostime, dosdate,
-                     zinfo.CRC, compress_size, file_size,
-                     len(zinfo.filename), len(extra_data), len(zinfo.comment),
-                     0, zinfo.internal_attr, zinfo.external_attr,
-                     header_offset)
+                    print((structCentralDir,
+                            stringCentralDir, create_version,
+                            zinfo.create_system, extract_version, zinfo.reserved,
+                            zinfo.flag_bits, zinfo.compress_type, dostime, dosdate,
+                            zinfo.CRC, compress_size, file_size,
+                            len(zinfo.filename), len(extra_data), len(zinfo.comment),
+                            0, zinfo.internal_attr, zinfo.external_attr,
+                            header_offset), file=sys.stderr)
                     raise
                 self.fp.write(centdir)
                 self.fp.write(filename)
@@ -1346,7 +1347,7 @@ class PyZipFile(ZipFile):
                 print("Compiling", file_py)
             try:
                 py_compile.compile(file_py, file_pyc, None, True)
-            except py_compile.PyCompileError,err:
+            except py_compile.PyCompileError as err:
                 print(err.msg)
             fname = file_pyc
         else:

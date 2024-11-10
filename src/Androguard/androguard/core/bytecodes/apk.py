@@ -172,32 +172,37 @@ class APK:
             fd.close()
 
         self.zipmodule = zipmodule
-
+        print(f"zipmodule:{zipmodule}")
         if zipmodule == 0:
             self.zip = ChilkatZip(self.__raw)
         elif zipmodule == 2:
             from Androguard.androguard.patch import zipfile
-            self.zip = zipfile.ZipFile(io.StringIO(self.__raw), mode=mode)
+            self.zip = zipfile.ZipFile(io.BytesIO(self.__raw), mode=mode)
         else:
             import zipfile
-            self.zip = zipfile.ZipFile(io.StringIO(self.__raw), mode=mode)
-
+            self.zip = zipfile.ZipFile(io.BytesIO(self.__raw), mode=mode)
+        print(f"zip contents:{self.zip.namelist()}")
         for i in self.zip.namelist():
             if i == "AndroidManifest.xml":
-                self.axml[i] = AXMLPrinter(self.zip.read(i))
+                print(f"in loop: -1")
+                temp = self.zip.read(i)
+                print(f"after temp:{temp}")
+                self.axml[i] = AXMLPrinter(temp)
+                print(f'in loop: 0')
                 try:
                     self.xml[i] = minidom.parseString(self.axml[i].get_buff())
                 except:
                     self.xml[i] = None
-
+                print(f'in loop: 1')
                 if self.xml[i] != None:
+                    print(f'in loop: 2')
                     self.package = self.xml[i].documentElement.getAttribute("package")
                     self.androidversion["Code"] = self.xml[i].documentElement.getAttribute("android:versionCode")
                     self.androidversion["Name"] = self.xml[i].documentElement.getAttribute("android:versionName")
-
+                    print(f'in loop: 3')
                     for item in self.xml[i].getElementsByTagName('uses-permission'):
                         self.permissions.append(str(item.getAttribute("android:name")))
-
+                    print(f'in loop: 4')
                     self.valid_apk = True
 
         self.get_files_types()
@@ -208,6 +213,7 @@ class APK:
 
             :rtype: xml object
         """
+        print("in get_AndroidManifest")
         return self.xml["AndroidManifest.xml"]
 
     def is_valid_APK(self):
@@ -778,10 +784,11 @@ class StringBlock:
         length = length + length % 2
 
         data = ""
-
+        print(self.m_strings)
         for i in range(0, length):
             t_data = pack("=b", self.m_strings[offset + i])
-            data += unicode(t_data, errors='ignore')
+            # data += unicode(t_data, errors='ignore')
+            data += t_data.decode(errors='ignore')
             if data[-2:] == "\x00\x00":
                 break
 
@@ -789,16 +796,19 @@ class StringBlock:
         if end_zero != -1:
             data = data[:end_zero]
 
-        return data.decode("utf-16", 'replace')
+        print(f"data:{data.replace('\x00', '')}")
+        # return data.decode("utf-16", 'replace')
+        return data.replace('\x00', '')
 
     def decode2(self, array, offset, length):
         data = ""
 
         for i in range(0, length):
             t_data = pack("=b", self.m_strings[offset + i])
-            data += unicode(t_data, errors='ignore')
+            # data += unicode(t_data, errors='ignore')
+            data += t_data.decode(errors='ignore')
 
-        return data.decode("utf-8", 'replace')
+        return data.replace('\000','')
 
     def getVarint(self, array, offset):
         val = array[offset]
@@ -850,13 +860,14 @@ TEXT                        = 4
 
 class AXMLParser:
     def __init__(self, raw_buff):
+        print(f"in AXMLParser")
         self.reset()
 
         self.valid_axml = True
         self.buff = bytecode.BuffHandle(raw_buff)
 
         axml_file = unpack('<L', self.buff.read(4))[0]
-
+        print(f"bf chunk")
         if axml_file == CHUNK_AXML_FILE:
             self.buff.read(4)
 
@@ -873,6 +884,7 @@ class AXMLParser:
             androconf.warning("Not a valid xml file")
 
     def is_valid(self):
+        print(f"valid?: {self.valid_axml}")
         return self.valid_axml
 
     def reset(self):
@@ -898,7 +910,7 @@ class AXMLParser:
         self.reset()
         while True:
             chunkType = -1
-
+            
             # Fake END_DOCUMENT event.
             if event == END_TAG:
                 pass
@@ -911,24 +923,28 @@ class AXMLParser:
                     self.m_event = END_DOCUMENT
                     break
                 chunkType = unpack('<L', self.buff.read(4))[0]
-
+            print(f"in do_next, chunktype:{chunkType}")
             if chunkType == CHUNK_RESOURCEIDS:
+                print("in do_next, chunkType 0")
                 chunkSize = unpack('<L', self.buff.read(4))[0]
+                print(f"chunksize:{chunkSize}")
                 # FIXME
                 if chunkSize < 8 or chunkSize % 4 != 0:
                     androconf.warning("Invalid chunk size")
-
-                for i in range(0, chunkSize / 4 - 2):
+                print(f"I dont understand:{chunkSize / 4 - 2}")
+                for i in range(0, int(chunkSize / 4 - 2)):
                     self.m_resourceIDs.append(unpack('<L', self.buff.read(4))[0])
-
+                
                 continue
 
             # FIXME
             if chunkType < CHUNK_XML_FIRST or chunkType > CHUNK_XML_LAST:
+                print("in do_next, chunkType 1")
                 androconf.warning("invalid chunk type")
 
             # Fake START_DOCUMENT event.
             if chunkType == CHUNK_XML_START_TAG and event == -1:
+                print("in do_next, chunkType 2")
                 self.m_event = START_DOCUMENT
                 break
 
@@ -937,7 +953,9 @@ class AXMLParser:
             self.buff.read(4)  # 0xFFFFFFFF
 
             if chunkType == CHUNK_XML_START_NAMESPACE or chunkType == CHUNK_XML_END_NAMESPACE:
+                print("in do_next, chunkType 3")
                 if chunkType == CHUNK_XML_START_NAMESPACE:
+                    print("in do_next, chunkType 4")
                     prefix = unpack('<L', self.buff.read(4))[0]
                     uri = unpack('<L', self.buff.read(4))[0]
 
@@ -946,6 +964,7 @@ class AXMLParser:
                     self.m_prefixuriL.append((prefix, uri))
                     self.ns = uri
                 else:
+                    print("in do_next, chunkType 5")
                     self.ns = -1
                     self.buff.read(4)
                     self.buff.read(4)
@@ -958,6 +977,7 @@ class AXMLParser:
             self.m_lineNumber = lineNumber
 
             if chunkType == CHUNK_XML_START_TAG:
+                print("in do_next, chunkType 6")
                 self.m_namespaceUri = unpack('<L', self.buff.read(4))[0]
                 self.m_name = unpack('<L', self.buff.read(4))[0]
 
@@ -982,12 +1002,14 @@ class AXMLParser:
                 break
 
             if chunkType == CHUNK_XML_END_TAG:
+                print("in do_next, chunkType 8")
                 self.m_namespaceUri = unpack('<L', self.buff.read(4))[0]
                 self.m_name = unpack('<L', self.buff.read(4))[0]
                 self.m_event = END_TAG
                 break
 
             if chunkType == CHUNK_XML_TEXT:
+                print("in do_next, chunkType 9")
                 self.m_name = unpack('<L', self.buff.read(4))[0]
 
                 # FIXME
@@ -1007,17 +1029,17 @@ class AXMLParser:
         try:
             return self.sb.getString(self.m_uriprefix[self.m_namespaceUri])
         except KeyError:
-            return u''
+            return ''
 
     def getName(self):
         if self.m_name == -1 or (self.m_event != START_TAG and self.m_event != END_TAG) :
-            return u''
+            return ''
 
         return self.sb.getString(self.m_name)
 
     def getText(self) :
         if self.m_name == -1 or self.m_event != TEXT :
-            return u''
+            return ''
 
         return self.sb.getString(self.m_name)
 
@@ -1132,32 +1154,43 @@ class AXMLPrinter:
         self.axml = AXMLParser(raw_buff)
         self.xmlns = False
 
-        self.buff = u''
-
+        self.buff = ''
+        print("in AXMLPrinter and before loop")
         while True and self.axml.is_valid():
+            print("in valid loop")
             _type = self.axml.next()
 #           print("tagtype = ", _type)
-
+            print("in AXMLPrinter and in loop")
             if _type == START_DOCUMENT:
-                self.buff += u'<?xml version="1.0" encoding="utf-8"?>\n'
+                print("_type 0")
+                self.buff += '<?xml version="1.0" encoding="utf-8"?>\n'
             elif _type == START_TAG:
-                self.buff += u'<' + self.getPrefix(self.axml.getPrefix()) + self.axml.getName() + u'\n'
+                print("_type 1")
+                print(f"axml:{self.axml}")
+                print(f"axml.getName:{self.axml.getName()}")
+                print(f"axml.getPrefix:{self.axml.getPrefix()}")
+                self.buff += '<' + self.getPrefix(self.axml.getPrefix()) + self.axml.getName() + '\n'
+                print("A")
                 self.buff += self.axml.getXMLNS()
-
-                for i in range(0, self.axml.getAttributeCount()):
+                print(f"in AXMLPrinter: {self.axml.getAttributeCount()}")
+                for i in range(0, int(self.axml.getAttributeCount())):
                     self.buff += "%s%s=\"%s\"\n" % (self.getPrefix(
                         self.axml.getAttributePrefix(i)), self.axml.getAttributeName(i), self._escape(self.getAttributeValue(i)))
 
-                self.buff += u'>\n'
-
+                self.buff += '>\n'
+            
             elif _type == END_TAG:
+                print("_type 2")
                 self.buff += "</%s%s>\n" % (self.getPrefix(self.axml.getPrefix()), self.axml.getName())
 
             elif _type == TEXT:
+                print("_type 3")
                 self.buff += "%s\n" % self.axml.getText()
 
             elif _type == END_DOCUMENT:
+                print("_type 4")
                 break
+        print(f"buff:{self.buff}")
 
     # pleed patch
     def _escape(self, s):
@@ -1179,9 +1212,9 @@ class AXMLPrinter:
 
     def getPrefix(self, prefix):
         if prefix == None or len(prefix) == 0:
-            return u''
+            return ''
 
-        return prefix + u':'
+        return prefix + ':'
 
     def getAttributeValue(self, index):
         _type = self.axml.getAttributeValueType(index)

@@ -47,8 +47,10 @@ def GetFromXML(ApkDirectoryPath, ApkFile):
     HardwareComponentsSet = set()
     IntentFilterSet = set()
     try:
+        print(ApkFile)
         ApkFile = os.path.abspath(ApkFile)
         a = androlyze.APK(ApkFile)
+        print(f'this is a: {a}')
         f = open(os.path.splitext(ApkFile)[0] + ".xml", "w")
         f.write((a.xml["AndroidManifest.xml"].toprettyxml()).encode("utf-8"))
         f.close()
