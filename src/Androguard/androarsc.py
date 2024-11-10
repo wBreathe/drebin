@@ -22,9 +22,9 @@ import sys
 from optparse import OptionParser
 from xml.dom import minidom
 import codecs
-
-from androguard.core import androconf
-from androguard.core.bytecodes import apk
+from Androguard import *
+from Androguard.androguard.core import androconf
+from Androguard.androguard.core.bytecodes import apk
 
 
 option_0 = { 'name' : ('-i', '--input'), 'help' : 'filename input (APK or android resources(arsc))', 'nargs' : 1 }
@@ -48,7 +48,7 @@ def main(options, arguments):
         elif ret_type == "ARSC":
             arscobj = apk.ARSCParser(open(options.input, "rb").read())
         else:
-            print "Unknown file type"
+            print("Unknown file type")
             return
 
         if not options.package and not options.type and not options.locale:
@@ -72,10 +72,10 @@ def main(options, arguments):
             fd.write(buff)
             fd.close()
         else:
-            print buff
+            print(buff)
 
     elif options.version != None:
-        print "Androarsc version %s" % androconf.ANDROGUARD_VERSION
+        print(("Androarsc version %s" % androconf.ANDROGUARD_VERSION))
 
 if __name__ == "__main__":
     parser = OptionParser()

@@ -69,9 +69,9 @@ def HoldoutClassification(TrainMalSet, TrainGoodSet, TestMalSet, TestGoodSet, Fe
         BestModel= SVMModels.best_estimator_
         Logger.info("Best Model Selected : {}".format(BestModel))
         TrainingTime = round(time.time() - T0,2)
-        print "The training time for random split classification is %s sec." % (TrainingTime)
-        print "Enter a filename to save the model:"
-        filename = raw_input()
+        print(("The training time for random split classification is %s sec." % (TrainingTime)))
+        print("Enter a filename to save the model:")
+        filename = input()
         dump(Clf, filename+".pkl")
     else:
         SVMModels= load(Model)
@@ -82,10 +82,10 @@ def HoldoutClassification(TrainMalSet, TrainGoodSet, TestMalSet, TestGoodSet, Fe
     y_pred = SVMModels.predict(x_test)
     TestingTime = round(time.time() - TrainingTime - T0,2)
     Accuracy = accuracy_score(y_test, y_pred)  # Return (x1 == x2) element-wise.
-    print "Test Set Accuracy = ", Accuracy
-    print(metrics.classification_report(y_test,
+    print(("Test Set Accuracy = ", Accuracy))
+    print((metrics.classification_report(y_test,
                                         y_pred, labels=[1, -1],
-                                        target_names=['Malware', 'Goodware']))
+                                        target_names=['Malware', 'Goodware'])))
     Report = "Test Set Accuracy = " + str(Accuracy) + "\n" + metrics.classification_report(y_test,
                                                                                            y_pred,
                                                                                            labels=[1, -1],
@@ -99,15 +99,15 @@ def HoldoutClassification(TrainMalSet, TrainGoodSet, TestMalSet, TestGoodSet, Fe
     explanations = {os.path.basename(s):{} for s in AllTestSamples}
     for i in range(v.shape[0]):
         wx = v[i, :] * w
-        wv_vocab = zip(wx, vocab)
+        wv_vocab = list(zip(wx, vocab))
         if y_pred[i] == 1:
             wv_vocab.sort(reverse=True)
-           # print "pred: {}, org: {}".format(y_pred[i],y_test[i])
+           # print("pred: {}, org: {}".format(y_pred[i],y_test[i]))
            # pprint(wv_vocab[:10])
             explanations[os.path.basename(AllTestSamples[i])]['top_features'] = wv_vocab[:NumTopFeats]
         elif y_pred[i] == -1:
             wv_vocab.sort()
-           # print "pred: {}, org: {}".format(y_pred[i],y_test[i])
+           # print("pred: {}, org: {}".format(y_pred[i],y_test[i]))
            # pprint(wv_vocab[-10:])
             explanations[os.path.basename(AllTestSamples[i])]['top_features'] = wv_vocab[-NumTopFeats:]
         explanations[os.path.basename(AllTestSamples[i])]['original_label'] = y_test[i]

@@ -17,9 +17,9 @@
 
 import logging
 from collections import defaultdict
-from androguard.decompiler.dad.basic_blocks import (build_node_from_block,
+from Androguard.androguard.decompiler.dad.basic_blocks import (build_node_from_block,
                                                     StatementBlock, CondBlock)
-from androguard.decompiler.dad.instruction import Variable
+from Androguard.androguard.decompiler.dad.instruction import Variable
 
 logger = logging.getLogger('dad.graph')
 

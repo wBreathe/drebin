@@ -22,9 +22,9 @@ import sys
 from optparse import OptionParser
 from xml.dom import minidom
 import codecs
-
-from androguard.core import androconf
-from androguard.core.bytecodes import apk
+from Androguard import *
+from Androguard.androguard.core import androconf
+from Androguard.androguard.core.bytecodes import apk
 
 
 option_0 = { 'name' : ('-i', '--input'), 'help' : 'filename input (APK or android\'s binary xml)', 'nargs' : 1 }
@@ -45,7 +45,7 @@ def main(options, arguments) :
             ap = apk.AXMLPrinter(open(options.input, "rb").read())
             buff = minidom.parseString(ap.get_buff()).toprettyxml(encoding="utf-8")
         else:
-            print "Unknown file type"
+            print("Unknown file type")
             return
 
         if options.output != None :
@@ -53,10 +53,10 @@ def main(options, arguments) :
             fd.write( buff )
             fd.close()
         else :
-            print buff
+            print(buff)
 
     elif options.version != None :
-        print "Androaxml version %s" % androconf.ANDROGUARD_VERSION
+        print(("Androaxml version %s" % androconf.ANDROGUARD_VERSION))
 
 if __name__ == "__main__" :
     parser = OptionParser()

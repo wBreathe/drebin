@@ -23,7 +23,7 @@ import sys, os
 PATH_INSTALL = "./"
 sys.path.append(PATH_INSTALL)
 
-from androguard.core.binaries import idapipe
+from Androguard.androguard.core.binaries import idapipe
 
 PATH_IDA = os.path.expanduser("~") + "/ida-6.2/idal"
 PATH_WRAPPER = "./androguard/core/binaries/idawrapper.py"
@@ -34,7 +34,7 @@ ip = idapipe.IDAPipe( PATH_IDA, PATH_WRAPPER, "./elsim/examples/x86/elf/polarssl
 try :
     f = ip.get_quick_functions()
 
-   # print len(f)
+   # print(len(f))
 
     idapipe.display_function( f[ 15344 ] )
     #ip.get_raw()

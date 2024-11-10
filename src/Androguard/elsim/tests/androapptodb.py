@@ -29,9 +29,9 @@ from optparse import OptionParser
 
 from elsim.similarity.similarity import *
 
-from androguard.core import androconf
-from androguard.core.bytecodes import apk, dvm
-from androguard.core.analysis import analysis
+from Androguard.androguard.core import androconf
+from Androguard.androguard.core.bytecodes import apk, dvm
+from Androguard.androguard.core.analysis import analysis
 
 option_0 = { 'name' : ('-i', '--input'), 'help' : 'file : use these filenames', 'nargs' : 1 }
 option_1 = { 'name' : ('-o', '--output'), 'help' : 'file : use these filenames', 'nargs' : 1 }
@@ -63,7 +63,7 @@ def main(options, arguments) :
         edi.save()
 
     elif options.version != None :
-        print "Androapptodb version %s" % androconf.ANDROGUARD_VERSION
+        print("Androapptodb version %s" % androconf.ANDROGUARD_VERSION)
 
 if __name__ == "__main__" :
     parser = OptionParser()

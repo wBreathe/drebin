@@ -5,10 +5,10 @@ import sys
 PATH_INSTALL = "./"
 sys.path.append(PATH_INSTALL)
 
-from androguard.core.bytecodes import dvm
-from androguard.core.bytecodes import apk
-from androguard.core.analysis import analysis
-from androguard.core import androconf
+from Androguard.androguard.core.bytecodes import dvm
+from Androguard.androguard.core.bytecodes import apk
+from Androguard.androguard.core.analysis import analysis
+from Androguard.androguard.core import androconf
 
 
 def patch_dex(m):

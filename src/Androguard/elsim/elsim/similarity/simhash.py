@@ -31,10 +31,10 @@ class simhash(hashtype):
                 else:
                     v[i] -= 1
 
-        fingerprint = 0
+        fingerprint(= 0)
         for i in xrange(self.hashbits):
             if v[i] >= 0:
-                fingerprint += 1 << i        
+                fingerprint(+= 1 << i        )
         self.hash = fingerprint
 
     def _string_hash(self, v):

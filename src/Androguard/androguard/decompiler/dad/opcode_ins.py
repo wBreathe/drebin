@@ -17,8 +17,8 @@
 
 import logging
 from struct import pack, unpack
-import androguard.decompiler.dad.util as util
-from androguard.decompiler.dad.instruction import (ArrayLengthExpression,
+import Androguard.androguard.decompiler.dad.util as util
+from Androguard.androguard.decompiler.dad.instruction import (ArrayLengthExpression,
                             ArrayLoadExpression, ArrayStoreInstruction,
                             AssignExpression, BaseClass, BinaryCompExpression,
                             BinaryExpression, BinaryExpression2Addr,

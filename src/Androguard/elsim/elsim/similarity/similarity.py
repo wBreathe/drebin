@@ -182,9 +182,9 @@ class SIMILARITYBase(object) :
         self.ctype = t
 
     def show(self) :
-        print "ECACHES", len(self.__ecaches)
-        print "RCACHES", self.__nb_caches( self.__rcaches )
-        print "CACHES", self.__nb_caches( self.__caches )
+        print("ECACHES", len(self.__ecaches))
+        print("RCACHES", self.__nb_caches( self.__rcaches ))
+        print("CACHES", self.__nb_caches( self.__caches ))
 
 
 class SIMILARITYNative(SIMILARITYBase) :
@@ -286,7 +286,7 @@ class SIMILARITYPython(SIMILARITYBase) :
     def set_compress_type(self, t):
         self.ctype = t
         if self.ctype != ZLIB_COMPRESS and self.ctype != BZ2_COMPRESS :
-            print "warning: compressor %s is not supported (use zlib default compressor)" % HR_COMPRESSOR[ t ]
+            print("warning: compressor %s is not supported (use zlib default compressor)" % HR_COMPRESSOR[ t ])
             self.ctype = ZLIB_COMPRESS
 
     def compress(self, s1) :
@@ -431,7 +431,7 @@ class DBFormat:
             self.D = json.load( fd )
             fd.close()
         except IOError :
-            print "Impossible to open filename: " + filename
+            print("Impossible to open filename: " + filename)
             self.D = {}
 
         self.H = {}
@@ -524,11 +524,11 @@ class DBFormat:
 
     def show(self) :
         for i in self.D :
-            print i, ":"
+            print(i, ":")
             for j in self.D[i] :
-                print "\t", j, len(self.D[i][j])
+                print("\t", j, len(self.D[i][j]))
                 for k in self.D[i][j] :
-                    print "\t\t", k, len(self.D[i][j][k])
+                    print("\t\t", k, len(self.D[i][j][k]))
 
     def save(self):
         fd = open(self.filename, "w")

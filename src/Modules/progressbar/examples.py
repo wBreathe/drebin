@@ -9,9 +9,9 @@ import time
 #    ProgressBar, ReverseBar, RotatingMarker, \
 #    SimpleProgress, Timer
 
-from compat import *
-from widgets import *
-from progressbar import *
+from .compat import *
+from .widgets import *
+from .progressbar import *
 
 examples = []
 def example(fn):
@@ -199,7 +199,7 @@ def example18():
     pbar.start()
     for i in range(500):
 
-        #print 
+        #print()
         time.sleep(0.01 + (i < 100) * 0.01 + (i > 400) * 0.9)
         pbar.update(i + 1)
     pbar.finish()

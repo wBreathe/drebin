@@ -73,10 +73,10 @@ class ElsimNeighbors :
     def __init__(self, x, ys) :
         import numpy as np
         from sklearn.neighbors import NearestNeighbors
-        #print x, ys
+        #print(x, ys)
 
         CI = np.array( [x.checksum.get_signature_entropy(), x.checksum.get_entropy()] )
-        #print CI, x.get_info()
+        #print(CI, x.get_info())
         #print
 
         for i in ys : 
@@ -84,12 +84,12 @@ class ElsimNeighbors :
 
         #idx = 0
         #for i in np.array(CI)[1:] :
-        #    print idx+1, i, ys[idx].get_info()
+        #    print(idx+1, i, ys[idx].get_info())
         #    idx += 1
 
         self.neigh = NearestNeighbors(2, 0.4)
         self.neigh.fit(np.array(CI))
-        #print self.neigh.kneighbors( CI[0], len(CI) )
+        #print(self.neigh.kneighbors( CI[0], len(CI) ))
 
         self.CI = CI
         self.ys = ys
@@ -106,7 +106,7 @@ class ElsimNeighbors :
             #if cmp_values[idx] > 1.0 :
             #    break
 
-            #print i, cmp_values[idx], self.ys[ i - 1 ].get_info()
+            #print(i, cmp_values[idx], self.ys[ i - 1 ].get_info())
             l.append( self.ys[ i - 1 ] )
             idx += 1
 
@@ -319,7 +319,7 @@ class Elsim :
         return [ x for x in self.filters[attr] ]
 
     def show_element(self, i, details=True) :
-        print "\t", i.get_info()
+        print("\t", i.get_info())
 
         if details :
             if i.getsha256() == None :
@@ -327,12 +327,12 @@ class Elsim :
             elif i.getsha256() in self.ref_set_els[self.e2]:
                 if len(self.ref_set_ident[self.e2][i.getsha256()]) > 1:
                     for ident in self.ref_set_ident[self.e2][i.getsha256()]:
-                        print "\t\t-->", ident.get_info()
+                        print("\t\t-->", ident.get_info())
                 else:
-                    print "\t\t-->", self.ref_set_els[self.e2][ i.getsha256() ].get_info()
+                    print("\t\t-->", self.ref_set_els[self.e2][ i.getsha256() ].get_info())
             else :
                 for j in self.filters[ SIMILARITY_SORT_ELEMENTS ][ i ] :
-                    print "\t\t-->", j.get_info(), self.filters[ SIMILARITY_ELEMENTS ][ i ][ j ]
+                    print("\t\t-->", j.get_info(), self.filters[ SIMILARITY_ELEMENTS ][ i ][ j ])
     
     def get_element_info(self, i) :
         
@@ -381,12 +381,12 @@ class Elsim :
         return (similarity_value/len(values)) * 100
 
     def show(self): 
-        print "Elements:"
-        print "\t IDENTICAL:\t", len(self.get_identical_elements())
-        print "\t SIMILAR: \t", len(self.get_similar_elements())
-        print "\t NEW:\t\t", len(self.get_new_elements())
-        print "\t DELETED:\t", len(self.get_deleted_elements())
-        print "\t SKIPPED:\t", len(self.get_skipped_elements())
+        print("Elements:")
+        print("\t IDENTICAL:\t", len(self.get_identical_elements()))
+        print("\t SIMILAR: \t", len(self.get_similar_elements()))
+        print("\t NEW:\t\t", len(self.get_new_elements()))
+        print("\t DELETED:\t", len(self.get_deleted_elements()))
+        print("\t SKIPPED:\t", len(self.get_skipped_elements()))
 
         #self.sim.show()
 
@@ -426,17 +426,17 @@ class Eldiff :
             #self.filters[ LINK_ELEMENTS ][ i ] = j
 
     def show(self) :
-        for bb in self.filters[ LINK_ELEMENTS ] : #print "la"
-            print bb.get_info(), self.filters[ LINK_ELEMENTS ][ bb ].get_info()
+        for bb in self.filters[ LINK_ELEMENTS ] : #print("la")
+            print(bb.get_info(), self.filters[ LINK_ELEMENTS ][ bb ].get_info())
             
-            print "Added Elements(%d)" % (len(self.filters[ ADDED_ELEMENTS ][ bb ]))
+            print("Added Elements(%d)" % (len(self.filters[ ADDED_ELEMENTS ][ bb ])))
             for i in self.filters[ ADDED_ELEMENTS ][ bb ] :
-                print "\t",
+                print("\t",)
                 i.show()
 
-            print "Deleted Elements(%d)" % (len(self.filters[ DELETED_ELEMENTS ][ self.filters[ LINK_ELEMENTS ][ bb ] ]))
+            print("Deleted Elements(%d)" % (len(self.filters[ DELETED_ELEMENTS ][ self.filters[ LINK_ELEMENTS ][ bb ] ])))
             for i in self.filters[ DELETED_ELEMENTS ][ self.filters[ LINK_ELEMENTS ][ bb ] ] :
-                print "\t",
+                print("\t",)
                 i.show()
             print
 

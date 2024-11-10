@@ -158,7 +158,7 @@ def tqdm(iterable, desc='', total=None, leave=False, file=sys.stderr,
     n = 0
     for obj in iterable:
         yield obj
-        # Now the object was created and processed, so we can print the meter.
+        # Now the object was created and processed, so we can print(the meter.)
         n += 1
         if n - last_print_n >= miniters:
             # We check the counter first, to reduce the overhead of time.time()

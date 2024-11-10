@@ -8,8 +8,8 @@ PATH_INSTALL = "./"
 sys.path.append(PATH_INSTALL)
 
 from optparse import OptionParser
-from androguard.core.analysis import auto
-from androguard.core.androconf import set_debug
+from Androguard.androguard.core.analysis import auto
+from Androguard.androguard.core.androconf import set_debug
 
 option_0 = {'name': ('-d', '--directory'), 'help': 'directory input', 'nargs': 1}
 option_1 = {'name': ('-v', '--verbose'), 'help': 'add debug', 'action': 'count'}
@@ -27,7 +27,7 @@ def test(got, expected):
         prefix = ' OK '
     else:
         prefix = '  X '
-    print '%s got: %s expected: %s' % (prefix, repr(got), repr(expected)),
+    print('%s got: %s expected: %s' % (prefix, repr(got), repr(expected)),)
     return (got == expected)
 
 

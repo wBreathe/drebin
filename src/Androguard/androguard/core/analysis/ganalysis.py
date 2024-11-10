@@ -17,10 +17,10 @@
 
 from xml.sax.saxutils import escape
 
-from androguard.core import bytecode
-from androguard.core.bytecodes.dvm_permissions import DVM_PERMISSIONS
-from androguard.core.analysis.risk import PERMISSIONS_RISK, INTERNET_RISK, PRIVACY_RISK, PHONE_RISK, SMS_RISK, MONEY_RISK
-from androguard.core.analysis.analysis import PathVar, TAINTED_PACKAGE_CREATE
+from Androguard.androguard.core import bytecode
+from Androguard.androguard.core.bytecodes.dvm_permissions import DVM_PERMISSIONS
+from Androguard.androguard.core.analysis.risk import PERMISSIONS_RISK, INTERNET_RISK, PRIVACY_RISK, PHONE_RISK, SMS_RISK, MONEY_RISK
+from Androguard.androguard.core.analysis.analysis import PathVar, TAINTED_PACKAGE_CREATE
 
 
 """Base class for undirected graphs.
@@ -3193,15 +3193,15 @@ class GVMAnalysis:
             #        if i.get_class_name() == c.get_name() :
             #            n1 = self._get_node( i.get_class_name(), i.get_name(), i.get_descriptor() )
             #            n2 = self._get_exist_node( i.get_class_name(), "execute", i.get_descriptor() )
-            #            print n1, n2, i.get_descriptor()
+            #            print(n1, n2, i.get_descriptor())
                         #for j in self.vm.get_method("doInBackground") :
                         #    n2 = self._get_exist_node( i.get_class_name(), j.get_name(), j.get_descriptor() )
-                        #    print n1, n2
+                        #    print(n1, n2)
                         # n2 = self._get_node( i.get_class_name(), "
             #    raise("ooo")
 
         #for j in self.vmx.tainted_packages.get_internal_new_packages() :
-        #    print "\t %s %s %s %x ---> %s %s %s" % (j.get_method().get_class_name(), j.get_method().get_name(), j.get_method().get_descriptor(), \
+        #    print("\t %s %s %s %x ---> %s %s %s" % (j.get_method().get_class_name(), j.get_method().get_name(), j.get_method().get_descriptor(), \)
         #                                            j.get_bb().start + j.get_idx(), \
         #                                            j.get_class_name(), j.get_name(), j.get_descriptor())
 

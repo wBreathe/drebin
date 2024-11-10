@@ -20,8 +20,8 @@ from subprocess import Popen, PIPE, STDOUT
 import tempfile
 import os
 
-from androguard.core.androconf import rrmdir
-from androguard.decompiler.dad import decompile
+from Androguard.androguard.core.androconf import rrmdir
+from Androguard.androguard.decompiler.dad import decompile
 
 PYGMENTS = True
 try:
@@ -121,7 +121,7 @@ class DecompilerDex2Jad:
         return self.classes[class_name]
 
     def display_source(self, method):
-        print self.get_source_method(method)
+        print(self.get_source_method(method))
 
     def get_source_class(self, _class):
         return self.classes[_class.get_name()]
@@ -138,7 +138,7 @@ class DecompilerDex2Jad:
         return self.classes[class_name]
 
     def display_all(self, _class):
-        print self.get_all(_class.get_name())
+        print(self.get_all(_class.get_name()))
 
 
 class DecompilerDex2WineJad:
@@ -204,7 +204,7 @@ class DecompilerDex2WineJad:
         return self.classes[class_name]
 
     def display_source(self, method):
-        print self.get_source_method(method)
+        print(self.get_source_method(method))
 
     def get_source_class(self, _class):
         return self.classes[_class.get_name()]
@@ -221,7 +221,7 @@ class DecompilerDex2WineJad:
         return self.classes[class_name]
 
     def display_all(self, _class):
-        print self.get_all(_class.get_name())
+        print(self.get_all(_class.get_name()))
 
 class DecompilerDed:
     def __init__(self, vm, path="./decompiler/ded/", bin_ded="ded.sh", tmp_dir="/tmp/"):
@@ -258,7 +258,7 @@ class DecompilerDed:
         
         for i in vm.get_classes() :
             fname = findsrc + "/" + i.get_name()[1:-1] + ".java"
-            #print fname
+            #print(fname)
             if os.path.isfile(fname) == True :
                 fd = open(fname, "r")
                 self.classes[ i.get_name() ] = fd.read() 
@@ -282,7 +282,7 @@ class DecompilerDed:
         return result
 
     def display_source(self, method):
-        print self.get_source_method(method)
+        print(self.get_source_method(method))
 
     def get_all(self, class_name):
         if class_name not in self.classes:
@@ -297,7 +297,7 @@ class DecompilerDed:
         return self.classes[_class.get_name()]
 
     def display_all(self, _class):
-        print self.get_all(_class.get_name())
+        print(self.get_all(_class.get_name()))
 
 
 class DecompilerDex2Fernflower:
@@ -377,7 +377,7 @@ class DecompilerDex2Fernflower:
         return self.classes[class_name]
 
     def display_source(self, method):
-        print self.get_source_method(method)
+        print(self.get_source_method(method))
 
     def get_source_class(self, _class):
         return self.classes[_class.get_name()]
@@ -394,7 +394,7 @@ class DecompilerDex2Fernflower:
         return self.classes[class_name]
 
     def display_all(self, _class):
-        print self.get_all(_class.get_name())
+        print(self.get_all(_class.get_name()))
 
 
 class MethodFilter(Filter):
@@ -414,7 +414,7 @@ class MethodFilter(Filter):
 
         for ttype, value in stream:
             if self.method_name == value and (ttype is Token.Name.Function or ttype is Token.Name) :
-                #print ttype, value
+                #print(ttype, value)
 
                 item_decl = -1
                 for i in range(len(a)-1, 0, -1) :
@@ -481,7 +481,7 @@ class DecompilerDAD:
             lexer = get_lexer_by_name("java", stripall=True)
             formatter = TerminalFormatter()
             result = highlight(result, lexer, formatter)
-        print result
+        print(result)
 
     def get_source_class(self, _class):
         c = decompile.DvClass(_class, self.vmx)
@@ -498,7 +498,7 @@ class DecompilerDAD:
             lexer = get_lexer_by_name("java", stripall=True)
             formatter = TerminalFormatter()
             result = highlight(result, lexer, formatter)
-        print result
+        print(result)
 
     def get_all(self, class_name):
         pass

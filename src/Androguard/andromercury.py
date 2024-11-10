@@ -22,10 +22,10 @@ import sys, re, os
 
 from optparse import OptionParser
 
-from androguard.core.bytecodes import apk
+from Androguard.androguard.core.bytecodes import apk
 
 sys.path.append("./elsim/")
-from elsim.elsign import dalvik_elsign
+from .elsim.elsign import dalvik_elsign
 
 sys.path.append("./mercury/client")
 from merc.lib.common import Session
@@ -42,7 +42,7 @@ option_7 = { 'name' : ('-v', '--verbose'), 'help' : 'display debug information',
 options = [option_0, option_1, option_2, option_3, option_4, option_5, option_6, option_7]
 
 def display(ret, debug) :
-    print "---->", ret[0],
+    print(("---->", ret[0],))
 
 def main(options, arguments) :
     sessionip = "127.0.0.1"
@@ -62,7 +62,7 @@ def main(options, arguments) :
         if options.list :
             request = {'filter': options.list, 'permissions': None }
             apks_info = newsession.executeCommand("packages", "info", {}).getPaddedErrorOrData()
-            print apks_info
+            print(apks_info)
 
         elif options.input and options.output :
             s = None
@@ -71,22 +71,22 @@ def main(options, arguments) :
             
             request = {'filter': options.input, 'permissions': None }
             apks_info = newsession.executeCommand("packages", "info", request).getPaddedErrorOrData()
-            print apks_info
+            print(apks_info)
 
             for i in apks_info.split("\n") :
                 if re.match("APK path:", i) != None :
                     name_app = i.split(":")[1][1:]
-                    print name_app,
+                    print((name_app,))
                     response = newsession.downloadFile(name_app, options.output)
-                    print response.data, response.error,
+                    print((response.data, response.error,))
                     
                     if s != None :
                         a = apk.APK( options.output + "/" + os.path.basename(name_app) )
                         if a.is_valid_APK() :
                             display( s.check_apk( a ), options.verbose )
-                    print
+                    print()
     else:
-        print "\n**Network Error** Could not connect to " + sessionip + ":" + str(sessionport) + "\n"
+        print(("\n**Network Error** Could not connect to " + sessionip + ":" + str(sessionport) + "\n"))
 
 if __name__ == "__main__" :
     parser = OptionParser()

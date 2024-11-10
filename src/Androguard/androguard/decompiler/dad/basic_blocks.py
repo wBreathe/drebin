@@ -17,8 +17,8 @@
 
 import logging
 from collections import defaultdict
-from androguard.decompiler.dad.opcode_ins import INSTRUCTION_SET
-from androguard.decompiler.dad.node import Node
+from Androguard.androguard.decompiler.dad.opcode_ins import INSTRUCTION_SET
+from Androguard.androguard.decompiler.dad.node import Node
 
 
 logger = logging.getLogger('dad.basic_blocks')

@@ -21,10 +21,10 @@
 import sys, os
 from optparse import OptionParser
 
-from androguard.core.bytecodes import apk, dvm
-from androguard.core.data import data
-from androguard.core.analysis import analysis, ganalysis
-from androguard.core import androconf 
+from Androguard.androguard.core.bytecodes import apk, dvm
+from Androguard.androguard.core.data import data
+from Androguard.androguard.core.analysis import analysis, ganalysis
+from Androguard.androguard.core import androconf 
 
 option_0 = { 'name' : ('-i', '--input'), 'help' : 'filename input (dex, apk)', 'nargs' : 1 }
 option_1 = { 'name' : ('-o', '--output'), 'help' : 'directory output', 'nargs' : 1 }
@@ -57,12 +57,12 @@ def main(options, arguments) :
             if a.is_valid_APK() :
                 vm = dvm.DalvikVMFormat( a.get_dex() )
             else :
-                print "INVALID APK"
+                print("INVALID APK")
         elif ret_type == "DEX" :
             try :
                 vm = dvm.DalvikVMFormat( open(options.input, "rb").read() )
-            except Exception, e :
-                print "INVALID DEX", e
+            except Exception as e :
+                print(("INVALID DEX", e))
 
 
         vmx = analysis.VMAnalysis( vm )
@@ -87,9 +87,9 @@ def main(options, arguments) :
 if __name__ == "__main__" :
    parser = OptionParser()
    for option in options :
-	  param = option['name']
-	  del option['name']
-	  parser.add_option(*param, **option)
+        param = option['name']
+        del option['name']
+        parser.add_option(*param, **option)
 
 	  
    options, arguments = parser.parse_args()

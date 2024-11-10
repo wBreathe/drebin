@@ -15,11 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re, random, string, cPickle
+import re, random, string
+import pickle as cPickle
 
-from androguard.core.androconf import error, warning, debug, is_ascii_problem
-from androguard.core.bytecodes import jvm, dvm
-from androguard.core.bytecodes.api_permissions import DVM_PERMISSIONS_BY_PERMISSION, DVM_PERMISSIONS_BY_ELEMENT
+from Androguard.androguard.core.androconf import error, warning, debug, is_ascii_problem
+from Androguard.androguard.core.bytecodes import jvm, dvm
+from Androguard.androguard.core.bytecodes.api_permissions import DVM_PERMISSIONS_BY_PERMISSION, DVM_PERMISSIONS_BY_ELEMENT
 
 class ContextField :
     def __init__(self, mode) :
@@ -112,7 +113,7 @@ class BreakBlock(object) :
 
     def show(self) :
         for i in self._ins :
-            print "\t\t",
+            print("\t\t",)
             i.show(0)
 
 ##### JVM ######
@@ -164,10 +165,10 @@ class Stack :
         nb = 0
 
         if len(self.__elems) == 0 :
-            print "\t--> nil"
+            print("\t--> nil")
 
         for i in self.__elems :
-            print "\t-->", nb, ": ", i
+            print("\t-->", nb, ": ", i)
             nb += 1
 
 class StackTraces :
@@ -183,10 +184,10 @@ class StackTraces :
 
     def show(self) :
         for i in self.__elems :
-            print i[0], i[1], i[2].get_name()
+            print(i[0], i[1], i[2].get_name())
 
             cPickle.loads( i[3] ).show()
-            print "\t", cPickle.loads( i[4] )
+            print("\t", cPickle.loads( i[4] ))
 
 def push_objectref(_vm, ins, special, stack, res, ret_v) :
     value = "OBJ_REF_@_%s" % str(special)
@@ -269,7 +270,7 @@ def dup2(_vm, ins, special, stack, res, ret_v) :
 
 #FIXME
 def ldc(_vm, ins, special, stack, res, ret_v) :
-    #print ins.get_name(), ins.get_operands(), special
+    #print(ins.get_name(), ins.get_operands(), special)
     stack.push( "STRING" )
 
 def invoke(_vm, ins, special, stack, res, ret_v) :
@@ -277,7 +278,7 @@ def invoke(_vm, ins, special, stack, res, ret_v) :
     param = desc[1:desc.find(")")]
     ret = desc[desc.find(")")+1:]
 
-#   print "DESC --->", param, calc_nb( param ), ret, calc_nb( ret )
+#   print("DESC --->", param, calc_nb( param ), ret, calc_nb( ret ))
 
     for i in range(0, calc_nb( param )) :
         stack.pop()
@@ -599,14 +600,14 @@ class JVMBasicBlock :
         self.fathers.append( f )
 
     def set_childs(self, values) :
-#      print self, self.start, self.end, values, self.ins[-1].get_name()
+#      print(self, self.start, self.end, values, self.ins[-1].get_name())
         if values == [] :
             next_block = self.context.get_basic_block( self.end + 1 )
             if next_block != None :
                 self.childs.append( ( self.end - self.ins[-1].get_length(), self.end, next_block ) )
         else :
             for i in values :
-                #print i, self.context.get_basic_block( i )
+                #print(i, self.context.get_basic_block( i ))
                 if i != -1 :
                     self.childs.append( ( self.end - self.ins[-1].get_length(), i, self.context.get_basic_block( i ) ) )
 
@@ -617,7 +618,7 @@ class JVMBasicBlock :
     def prev_free_block_offset(self, idx=0) :
         last = -1
 
-        #print "IDX", idx, self.free_blocks_offsets
+        #print("IDX", idx, self.free_blocks_offsets)
 
         if self.free_blocks_offsets == [] :
             return -1
@@ -634,7 +635,7 @@ class JVMBasicBlock :
         return self.free_blocks_offsets[ random.randint(0, len(self.free_blocks_offsets) - 1) ]
 
     def next_free_block_offset(self, idx=0) :
-        #print idx, self.__free_blocks_offsets
+        #print(idx, self.__free_blocks_offsets)
         for i in self.free_blocks_offsets :
             if i > idx :
                 return i
@@ -709,7 +710,7 @@ class JVMBasicBlock :
                 #if desc == None :
                 #    desc = ExternalFM( o[0], o[1], o[2] )
 
-#               print "RES", res, "-->", desc.get_name()
+#               print("RES", res, "-->", desc.get_name())
                 self.context.get_tainted_variables().push_info( TAINTED_FIELD, [o[0], o[1], o[2]], (FIELDS[ i.get_name() ][0], idx, self, self.method) )
             #########################################################
 
@@ -745,17 +746,17 @@ class JVMBasicBlock :
     def analyze_code(self) :
         self.analyze_break_blocks()
 
-        #print "ANALYZE CODE -->", self.name
+        #print("ANALYZE CODE -->", self.name)
         d = {}
         for i in self.fathers :
-        #   print "\t FATHER ->", i[2].get_name(), i[2].get_stack(), i[0], i[1]
+        #   print("\t FATHER ->", i[2].get_name(), i[2].get_stack(), i[0], i[1])
             d[ i[0] ] = i[2]
 
         self.free_blocks_offsets.append( self.get_start() )
 
         idx = 0
         for i in self.ins :
-#         print i.get_name(), self.start + idx, idx
+#         print(i.get_name(), self.start + idx, idx)
 #         i.show(idx)
 
             if self.start + idx in d :
@@ -765,10 +766,10 @@ class JVMBasicBlock :
 
             res = []
             try :
-                #print i.get_name(), i.get_name() in INSTRUCTIONS_ACTIONS
+                #print(i.get_name(), i.get_name() in INSTRUCTIONS_ACTIONS)
 
                 if INSTRUCTIONS_ACTIONS[ i.get_name() ] == [] :
-                    print "[[[[ %s is not yet implemented ]]]]" % i.get_name()
+                    print("[[[[ %s is not yet implemented ]]]]" % i.get_name())
                     raise("ooops")
 
                 i_idx = 0
@@ -783,9 +784,9 @@ class JVMBasicBlock :
                     i_idx += 1
 
             except KeyError :
-                print "[[[[ %s is not in INSTRUCTIONS_ACTIONS ]]]]" % i.get_name()
+                print("[[[[ %s is not in INSTRUCTIONS_ACTIONS ]]]]" % i.get_name())
             except IndexError :
-                print "[[[[ Analysis failed in %s-%s-%s ]]]]" % (self.method.get_class_name(), self.method.get_name(), self.method.get_descriptor())
+                print("[[[[ Analysis failed in %s-%s-%s ]]]]" % (self.method.get_class_name(), self.method.get_name(), self.method.get_descriptor()))
 
             idx += i.get_length()
 
@@ -793,22 +794,22 @@ class JVMBasicBlock :
                 self.free_blocks_offsets.append( idx + self.get_start() )
 
     def show(self) :
-        print "\t@", self.name
+        print("\t@", self.name)
 
         idx = 0
         nb = 0
         for i in self.ins :
-            print "\t\t", nb, idx,
+            print("\t\t", nb, idx,)
             i.show(nb)
             nb += 1
             idx += i.get_length()
 
-        print ""
-        print "\t\tFree blocks offsets --->", self.free_blocks_offsets
-        print "\t\tBreakBlocks --->", len(self.break_blocks)
+        print("")
+        print("\t\tFree blocks offsets --->", self.free_blocks_offsets)
+        print("\t\tBreakBlocks --->", len(self.break_blocks))
 
-        print "\t\tF --->", ', '.join( i[2].get_name() for i in self.fathers )
-        print "\t\tC --->", ', '.join( i[2].get_name() for i in self.childs )
+        print("\t\tF --->", ', '.join( i[2].get_name() for i in self.fathers ))
+        print("\t\tC --->", ', '.join( i[2].get_name() for i in self.childs ))
 
         self.stack_traces.show()
 
@@ -872,7 +873,7 @@ class JVMBreakBlock(BreakBlock) :
                 if t == "F" :
                     self.__info[t][1][desc].append( self.__info[t][2]( FIELDS[ i.get_name() ][0] ) )
 
-#               print "RES", res, "-->", desc.get_name()
+#               print("RES", res, "-->", desc.get_name())
 #               self.__tf.push_info( desc, [ FIELDS[ i.get_name() ][0], res ] )
                 elif t == "M" :
                     self.__info[t][1][desc].append( self.__info[t][2]() )
@@ -1052,7 +1053,7 @@ class DVMBasicBlock:
       return self.last_length
 
     def set_childs(self, values):
-        #print self, self.start, self.end, values
+        #print(self, self.start, self.end, values)
         if values == [] :
             next_block = self.context.get_basic_block( self.end + 1 )
             if next_block != None :
@@ -1367,32 +1368,32 @@ def show_Path(vm, path):
   if isinstance(path, PathVar):
     dst_class_name, dst_method_name, dst_descriptor =  path.get_dst( cm )
     info_var = path.get_var_info()
-    print "%s %s (0x%x) ---> %s->%s%s" % (path.get_access_flag(),
+    print("%s %s (0x%x) ---> %s->%s%s" % (path.get_access_flag(),
                                           info_var,
                                           path.get_idx(),
                                           dst_class_name,
                                           dst_method_name,
-                                          dst_descriptor)
+                                          dst_descriptor))
   else :
     if path.get_access_flag() == TAINTED_PACKAGE_CALL :
       src_class_name, src_method_name, src_descriptor =  path.get_src( cm )
       dst_class_name, dst_method_name, dst_descriptor =  path.get_dst( cm )
 
-      print "%d %s->%s%s (0x%x) ---> %s->%s%s" % (path.get_access_flag(), 
+      print("%d %s->%s%s (0x%x) ---> %s->%s%s" % (path.get_access_flag(), 
                                                   src_class_name,
                                                   src_method_name,
                                                   src_descriptor,
                                                   path.get_idx(),
                                                   dst_class_name,
                                                   dst_method_name,
-                                                  dst_descriptor)
+                                                  dst_descriptor))
     else :
       src_class_name, src_method_name, src_descriptor =  path.get_src( cm )
-      print "%d %s->%s%s (0x%x)" % (path.get_access_flag(), 
+      print("%d %s->%s%s (0x%x)" % (path.get_access_flag(), 
                                     src_class_name,
                                     src_method_name,
                                     src_descriptor,
-                                    path.get_idx())
+                                    path.get_idx()))
 
 def get_Path(vm, path):
   x = {}
@@ -1435,7 +1436,7 @@ def show_PathVariable(vm, paths):
       access, idx = path[0]
       m_idx = path[1]
       method = vm.get_cm_method(m_idx)
-      print "%s %x %s->%s %s" % (access, idx, method[0], method[1], method[2][0] + method[2][1])
+      print("%s %x %s->%s %s" % (access, idx, method[0], method[1], method[2][0] + method[2][1]))
 
 
 class PathP:
@@ -1530,15 +1531,15 @@ class TaintedPackage:
 
     def show(self) :
         cm = self.vm.get_class_manager()
-        print self.get_name()
+        print(self.get_name())
         for _type in self.paths:
-            print "\t -->", _type
+            print("\t -->", _type)
             if _type == TAINTED_PACKAGE_CALL:
                 for path in self.paths[_type]:
-                    print "\t\t => %s <-- %x in %s" % (path.get_dst(cm), path.get_idx(), path.get_src(cm))
+                    print("\t\t => %s <-- %x in %s" % (path.get_dst(cm), path.get_idx(), path.get_src(cm)))
             else:
                 for path in self.paths[_type]:
-                    print "\t\t => %x in %s" % (path.get_idx(), path.get_src(cm))
+                    print("\t\t => %x in %s" % (path.get_idx(), path.get_src(cm)))
 
 def show_Permissions(dx) :
     """
@@ -1549,7 +1550,7 @@ def show_Permissions(dx) :
     p = dx.get_permissions( [] )
 
     for i in p :
-        print i, ":"
+        print(i, ":")
         for j in p[i] :
             show_Path( dx.get_vm(), j )
 
@@ -1572,7 +1573,7 @@ def show_NativeMethods(dx):
     d = dx.get_vm()
     for i in d.get_methods() :
         if i.get_access_flags() & 0x100 :
-            print i.get_class_name(), i.get_name(), i.get_descriptor()
+            print(i.get_class_name(), i.get_name(), i.get_descriptor())
 
 
 def show_ReflectionCode(dx):
@@ -2139,7 +2140,7 @@ class Exceptions:
 
     def get_exception(self, addr_start, addr_end) :
         for i in self.exceptions :
-#            print hex(i.start), hex(i.end), hex(addr_start), hex(addr_end), i.start >= addr_start and i.end <= addr_end, addr_end <= i.end and addr_start >= i.start
+#            print(hex(i.start), hex(i.end), hex(addr_start), hex(addr_end), i.start >= addr_start and i.end <= addr_end, addr_end <= i.end and addr_start >= i.start)
             if i.start >= addr_start and i.end <= addr_end :
                 return i
 
@@ -2278,21 +2279,21 @@ class MethodAnalysis:
         return self.tainted.get_tainted_variables().get_local_variables( self.method )
 
     def show(self) :
-        print "METHOD", self.method.get_class_name(), self.method.get_name(), self.method.get_descriptor()
+        print("METHOD", self.method.get_class_name(), self.method.get_name(), self.method.get_descriptor())
 
         for i in self.basic_blocks.get() :
-            print "\t", i
+            print("\t", i)
             i.show()
-            print ""
+            print("")
 
     def show_methods(self) :
-        print "\t #METHODS :"
+        print("\t #METHODS :")
         for i in self.__bb :
             methods = i.get_methods()
             for method in methods :
-                print "\t\t-->", method.get_class_name(), method.get_name(), method.get_descriptor()
+                print("\t\t-->", method.get_class_name(), method.get_name(), method.get_descriptor())
                 for context in methods[method] :
-                    print "\t\t\t |---|", context.details
+                    print("\t\t\t |---|", context.details)
 
     def create_tags(self) :
       """
@@ -2340,7 +2341,7 @@ SIGNATURES = {
                 SIGNATURE_HEX : {},
             }
 
-from sign import Signature
+from .sign import Signature
 
 
 class VMAnalysis:

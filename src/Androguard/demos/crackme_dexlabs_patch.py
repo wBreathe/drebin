@@ -5,10 +5,10 @@ import sys
 PATH_INSTALL = "./"
 sys.path.append(PATH_INSTALL)
 
-from androguard.core.bytecodes import dvm
-from androguard.core.bytecodes import apk
-from androguard.core.analysis import analysis
-from androguard.core import androconf
+from Androguard.androguard.core.bytecodes import dvm
+from Androguard.androguard.core.bytecodes import apk
+from Androguard.androguard.core.analysis import analysis
+from Androguard.androguard.core import androconf
 
 class Nop(dvm.Instruction10x) :
     def __init__(self) :
@@ -17,7 +17,7 @@ class Nop(dvm.Instruction10x) :
 def patch_dex( m ) :
     for i in m.get_methods() :
         if i.get_class_name() == "Lorg/dexlabs/poc/dexdropper/DropActivity;" :
-            print i.get_class_name(), i.get_name()
+            print(i.get_class_name(), i.get_name())
             
             patch_method_3( i )
             # or

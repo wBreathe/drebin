@@ -34,4 +34,4 @@ for i in manifest_document.getElementsByTagName( "permission" ) :
     name = i.getAttribute("android:name")
     name = name[ name.rfind(".") + 1: ]
 
-    print "\t\t\"%s\"" % name, ": [", "\"%s\"" % i.getAttribute( "android:protectionLevel" ), ",", rlabel, ",", rdesc, "],"
+    print("\t\t\"%s\"" % name, ": [", "\"%s\"" % i.getAttribute( "android:protectionLevel" ), ",", rlabel, ",", rdesc, "],")

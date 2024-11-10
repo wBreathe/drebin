@@ -22,8 +22,8 @@ from miasm.arch import arm_arch
 from miasm.core import bin_stream
 
 
-from androguard.core import bytecode
-from androguard.core.androconf import CONF, debug
+from Androguard.androguard.core import bytecode
+from Androguard.androguard.core.androconf import CONF, debug
 
 def disasm_at_addr(in_str, ad_to_dis, symbol_pool) :
     kargs = {}

@@ -76,7 +76,7 @@ def extractInformation( filename ) :
             perm_access = next_div.findAll(text=re.compile(perm))
             if perm_access != [] :
                 perms.append( perm )
-                #print i.name, i.get("name"), perm_access
+                #print(i.name, i.get("name"), perm_access)
 
         if perms != [] :
             element = None
@@ -170,7 +170,7 @@ ANDROID_PACKAGES2 = [
 for i in ANDROID_PACKAGES :
     for root, dirs, files in os.walk( BASE_DOCS + "docs/reference/android/" + i + "/" ) :
         for file in files :
-            print "Extracting from %s" %  (root + "/" + file)
+            print("Extracting from %s" %  (root + "/" + file))
             #extractInformation( "/home/pouik/Bureau/android/android-sdk-linux_86/docs/reference/android/accounts/AccountManager.html" )
             extractInformation( root + "/" + file )
 
@@ -179,37 +179,37 @@ for i in ANDROID_PACKAGES :
 
 for i in PERMS_API :
     if len(PERMS_API[ i ]) > 0 :
-        print "PERMISSION ", i
+        print("PERMISSION ", i)
 
     for package in PERMS_API[ i ] :
-        print "\t package ", package
+        print("\t package ", package)
 
         for j in PERMS_API[ i ][ package ] :
             if isinstance(j, Function) :
-                print "\t\t function : ", j.name
+                print("\t\t function : ", j.name)
             else :
-                print "\t\t constant : ", j.name
+                print("\t\t constant : ", j.name)
 
 save_file( "./dvm_permissions_unformatted.py" )
 
 #for i in soup.findAll('a') : #, attrs={'name' : re.compile("ACTION")}) :
 #   if i.get("name") != None :
-#      print i.name, i.get("name")#, i.findNextSlibing(text=re.compile("READ_PHONE_STATE"))
+#      print(i.name, i.get("name")#, i.findNextSlibing(text=re.compile("READ_PHONE_STATE")))
 
 #for i in soup.findAll(text=re.compile("READ_PHONE_STATE")) :
-#   print i, i.parent.name, i.findPrevious(re.compile('^A')), i.findPreviousSibling(re.compile('^A'))
+#   print(i, i.parent.name, i.findPrevious(re.compile('^A')), i.findPreviousSibling(re.compile('^A')))
 
 #   if i.contents != [] :
 #      if i.contents[0] == "READ_PHONE_STATE" :
-#         print "here", i.parent
+#         print("here", i.parent)
 
 #         parent = i.parent
 #         while parent.name != "A" :
 #            parent = parent.parent
-#            print "step", parent
+#            print("step", parent)
 
 #            if "class" in parent :
-#               print "step2", parent["class"]
+#               print("step2", parent["class"])
 
 #            time.sleep( 1 )
-#         print "end", previous.name
+#         print("end", previous.name)

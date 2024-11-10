@@ -25,11 +25,11 @@ import threading
 import hashlib
 
 
-from androguard.core.bytecodes import apk, dvm
-from androguard.core.analysis import analysis
-from androguard.core.analysis import ganalysis
-from androguard.decompiler import decompiler
-from androguard.core import androconf
+from Androguard.androguard.core.bytecodes import apk, dvm
+from Androguard.androguard.core.analysis import analysis
+from Androguard.androguard.core.analysis import ganalysis
+from Androguard.androguard.decompiler import decompiler
+from Androguard.androguard.core import androconf
 
 AG_DEX_VIEW = {}
 AG_APK_VIEW = {}
@@ -474,7 +474,7 @@ class AnalyseDexThread:  # (threading.Thread):
         AG_METHODS_LINE[self.view.id()] = {}
         AG_CLASSES_LINE[self.view.id()] = {}
         AG_FIELDS_LINE[self.view.id()] = {}
-        for key in sorted(by_package.iterkeys()):
+        for key in sorted(by_package.keys()):
             b_buffer += "%s\n" % key
             line += 1
 
@@ -769,4 +769,4 @@ class AgReset(sublime_plugin.WindowCommand):
     AG_FIELDS_LINE = {}
     AG_CLASSES_LINE = {}
 
-    print "Reset Androguard Plugin"
+    print("Reset Androguard Plugin")

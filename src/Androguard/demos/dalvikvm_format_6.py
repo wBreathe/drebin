@@ -5,10 +5,10 @@ import sys
 PATH_INSTALL = "./"
 sys.path.append(PATH_INSTALL)
 
-from androguard.core.bytecodes import dvm
-from androguard.core.bytecodes import apk
-from androguard.core.analysis import analysis
-from androguard.core import androconf
+from Androguard.androguard.core.bytecodes import dvm
+from Androguard.androguard.core.bytecodes import apk
+from Androguard.androguard.core.analysis import analysis
+from Androguard.androguard.core import androconf
 
 
 import hashlib
@@ -40,11 +40,11 @@ class MDalvikVMFormat:
             "Lfr/t0t0/android/TestModifActivity;", "onCreate",
             "(Landroid/os/Bundle;)V" )
 #        method.show()
-#        print hex(method.code_off)
+#        print(hex(method.code_off))
 
 #        instructions = [i for i in method.get_instructions()]
 #        ins = instructions[3]
-#        print ins
+#        print(ins)
 #        ins.BBBB = 12
 #        instructions.insert(3, ins)
 #        method.set_instructions( instructions )
@@ -65,24 +65,24 @@ class MDalvikVMFormat:
                   continue
 
                 if j >= len(b1) :
-                    print "OUT OF B1 @ OFFSET 0x%x(%d)" % (j,j)
+                    print("OUT OF B1 @ OFFSET 0x%x(%d)" % (j,j))
                     raise("ooo")
 
                 if j >= len(b2) :
-                    print "OUT OF B2 @ OFFSET 0x%x(%d)" % (j,j)
+                    print("OUT OF B2 @ OFFSET 0x%x(%d)" % (j,j))
                     raise("ooo")
 
                 if b1[j] != b2[j] :
-                    print "BEGIN @ OFFSET 0x%x" % j
-                    print "ORIG : "
-                    print hexdump(b1[j - 8: j + 8], off=j-8) + "\n"
-                    print "NEW : "
-                    print hexdump(b2[j - 8: j + 8], off=j-8) + "\n"
+                    print("BEGIN @ OFFSET 0x%x" % j)
+                    print("ORIG : ")
+                    print(hexdump(b1[j - 8: j + 8], off=j-8) + "\n")
+                    print("NEW : ")
+                    print(hexdump(b2[j - 8: j + 8], off=j-8) + "\n")
 
                 j += 1
 
 
-        print "OK"
+        print("OK")
 
 
 #TEST = "examples/android/TestsAndroguard/bin/TestsAndroguard.apk"
@@ -96,7 +96,7 @@ j = dvm.DalvikVMFormat( a.get_dex() )
 x = analysis.VMAnalysis( j )
 
 m = MDalvikVMFormat(j, x)
-print j, x, m
+print(j, x, m)
 
 new_dex = m.test_save()
 

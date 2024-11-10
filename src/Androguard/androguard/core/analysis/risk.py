@@ -102,11 +102,11 @@ AVERAGE_MALWARE_RISK        = "average"
 HIGH_MALWARE_RISK           = "high"
 UNACCEPTABLE_MALWARE_RISK   = "unacceptable"
 
-from androguard.core.androconf import error, warning, debug, set_debug, get_debug
-from androguard.core.bytecodes import dvm
-from androguard.core.analysis import analysis
+from Androguard.androguard.core.androconf import error, warning, debug, set_debug, get_debug
+from Androguard.androguard.core.bytecodes import dvm
+from Androguard.androguard.core.analysis import analysis
 
-from androguard.core.bytecodes.dvm_permissions import DVM_PERMISSIONS
+from Androguard.androguard.core.bytecodes.dvm_permissions import DVM_PERMISSIONS
 import re, copy
 
 def add_system_rule(system, rule_name, rule) :
@@ -763,7 +763,7 @@ class FuzzyRisk :
 
           
       for v in sorted(score_order_sign, key=lambda x : score_order_sign[x], reverse=True) :
-          print v.get_name(), v.get_class_name(), v.get_descriptor(), v.get_length(), score_order_sign[ v ]
+          print(v.get_name(), v.get_class_name(), v.get_descriptor(), v.get_length(), score_order_sign[ v ])
 
       ##########################
 
@@ -774,7 +774,7 @@ class FuzzyRisk :
           permission = i
           if permission.find(".") != -1 :
               permission = permission.split(".")[-1]
-#            print permission, GENERAL_PERMISSIONS_RISK[ list_details_permissions[ i ][0] ]
+#            print(permission, GENERAL_PERMISSIONS_RISK[ list_details_permissions[ i ][0] ])
         
           risk_type = GENERAL_PERMISSIONS_RISK[ list_details_permissions[ i ][0] ]
 
@@ -814,7 +814,7 @@ class FuzzyRisk :
       input_val['input_Internet_Risk'] = risks[ INTERNET_RISK ]
       input_val['input_Dynamic_Risk'] = risks[ DYNAMIC_RISK ]
 
-      #print input_val,
+      #print(input_val,)
       
       self.system.calculate(input=input_val, output = output_values)
 
@@ -832,7 +832,7 @@ class FuzzyRisk :
           except KeyError :
               pass
       
-      print length, android_entropy, java_entropy, val_permissions
+      print(length, android_entropy, java_entropy, val_permissions)
 
       output_values = {"output_method_one_score" : 0.0}
       input_val = {}
@@ -1029,7 +1029,7 @@ class MethodScore :
             except KeyError :
                 pass
         
-        print length, matches, android_entropy, java_entropy, similarity_matches, val_permissions
+        print(length, matches, android_entropy, java_entropy, similarity_matches, val_permissions)
 
         output_values = {"output_method_score" : 0.0}
         input_val = {}

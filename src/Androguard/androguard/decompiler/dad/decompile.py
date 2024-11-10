@@ -21,18 +21,18 @@ sys.path.append('./')
 import logging
 from collections import defaultdict
 import androguard.core.androconf as androconf
-import androguard.decompiler.dad.util as util
-from androguard.core.analysis import analysis
-from androguard.core.bytecodes import apk, dvm
-from androguard.decompiler.dad.control_flow import identify_structures
-from androguard.decompiler.dad.dataflow import (build_def_use,
+import Androguard.androguard.decompiler.dad.util as util
+from Androguard.androguard.core.analysis import analysis
+from Androguard.androguard.core.bytecodes import apk, dvm
+from Androguard.androguard.decompiler.dad.control_flow import identify_structures
+from Androguard.androguard.decompiler.dad.dataflow import (build_def_use,
                                                 place_declarations,
                                                 dead_code_elimination,
                                                 register_propagation,
                                                 split_variables)
-from androguard.decompiler.dad.graph import construct
-from androguard.decompiler.dad.instruction import Param, ThisParam
-from androguard.decompiler.dad.writer import Writer
+from Androguard.androguard.decompiler.dad.graph import construct
+from Androguard.androguard.decompiler.dad.instruction import Param, ThisParam
+from Androguard.androguard.decompiler.dad.writer import Writer
 
 
 def auto_vm(filename):
@@ -81,7 +81,7 @@ class DvMethod():
                 self.var_to_name[param] = Param(param, ptype)
                 num_param += util.get_type_size(ptype)
         if not __debug__:
-            from androguard.core import bytecode
+            from Androguard.androguard.core import bytecode
             bytecode.method2png('/tmp/dad/graphs/%s#%s.png' % \
                 (self.cls_name.split('/')[-1][:-1], self.name), methanalysis)
 
@@ -134,7 +134,7 @@ class DvMethod():
         del graph
 
     def show_source(self):
-        print self.get_source()
+        print(self.get_source())
 
     def get_source(self):
         if self.writer:
@@ -254,7 +254,7 @@ class DvClass():
         return ''.join(source)
 
     def show_source(self):
-        print self.get_source()
+        print(self.get_source())
 
     def __repr__(self):
         if not self.subclasses:

@@ -21,7 +21,7 @@ from struct import unpack, pack
 import textwrap
 
 import json
-from androconf import warning, error, CONF, enable_colors, remove_colors, save_colors, color_range
+from .androconf import warning, error, CONF, enable_colors, remove_colors, save_colors, color_range
 
 
 def disable_print_colors():
@@ -74,7 +74,7 @@ def _Print(name, arg) :
     elif isinstance(arg, SVs) :
         buff += arg.get_value().__str__()
 
-    print buff
+    print(buff)
 
 
 def PrettyShowEx(exceptions):
@@ -616,7 +616,7 @@ def object_to_str(obj) :
     elif obj == None :
         return ""
     else :
-        #print type(obj), obj
+        #print(type(obj), obj)
         return obj.get_raw()
 
 class MethodBC(object) :

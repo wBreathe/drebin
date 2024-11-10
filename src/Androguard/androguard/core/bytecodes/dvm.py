@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from androguard.core import bytecode
-from androguard.core.androconf import CONF, debug, warning, is_android_raw
+from Androguard.androguard.core import bytecode
+from Androguard.androguard.core.androconf import CONF, debug, warning, is_android_raw
 
 import sys
 import re
@@ -354,7 +354,7 @@ def determineException(vm, m) :
           h_off[ offset_handler ] = []
           h_off[ offset_handler ].append( [ try_item ] )
 
-    #print m.get_name(), "\t HANDLER_CATCH_LIST SIZE", handler_catch_list.size, handler_catch_list.get_offset()
+    #print(m.get_name(), "\t HANDLER_CATCH_LIST SIZE", handler_catch_list.size, handler_catch_list.get_offset())
     for handler_catch in handler_catch_list.get_list() :
         if handler_catch.get_off() not in h_off :
             continue
@@ -363,7 +363,7 @@ def determineException(vm, m) :
           i.append( handler_catch )
 
     exceptions = []
-    #print m.get_name(), h_off
+    #print(m.get_name(), h_off)
     for i in h_off :
       for value in h_off[ i ] :
         try_value = value[0]
@@ -379,7 +379,7 @@ def determineException(vm, m) :
 
         exceptions.append( z )
 
-    #print m.get_name(), exceptions
+    #print(m.get_name(), exceptions)
     return exceptions
 
 class HeaderItem :
@@ -1222,7 +1222,7 @@ class DebugInfoItem :
         self.line_start = readuleb128( buff )
         self.parameters_size = readuleb128( buff )
 
-        #print "line", self.line_start, "params", self.parameters_size
+        #print("line", self.line_start, "params", self.parameters_size)
 
         self.parameter_names = []
         for i in xrange(0, self.parameters_size) :
@@ -2273,7 +2273,7 @@ class FieldHIdItem :
     def show(self) :
         nb = 0
         for i in self.elem :
-            print nb,
+            print(nb,)
             i.show()
             nb = nb + 1
 
@@ -2425,10 +2425,10 @@ class MethodHIdItem :
             i.reload()
 
     def show(self) :
-        print "METHOD_ID_ITEM"
+        print("METHOD_ID_ITEM")
         nb = 0
         for i in self.methods :
-            print nb,
+            print(nb,)
             i.show()
             nb = nb + 1
 
@@ -2455,7 +2455,7 @@ class ProtoIdItemInvalid :
         return "(AG:IPI:invalid_return_type)"
 
     def show(self) :
-        print "AG:IPI:invalid_proto_item", self.get_shorty(), self.get_return_type(), self.get_params()
+        print("AG:IPI:invalid_proto_item", self.get_shorty(), self.get_return_type(), self.get_params())
 
 class FieldIdItemInvalid :
     def get_class_name(self) :
@@ -2474,7 +2474,7 @@ class FieldIdItemInvalid :
         return [ self.get_class_name(), self.get_type(), self.get_name() ]
 
     def show(self) :
-        print "AG:IFI:invalid_field_item"
+        print("AG:IFI:invalid_field_item")
 
 class MethodIdItemInvalid :
     def get_class_name(self) :
@@ -2493,7 +2493,7 @@ class MethodIdItemInvalid :
         return [ self.get_class_name(), self.get_name(), self.get_proto() ]
 
     def show(self) :
-        print "AG:IMI:invalid_method_item"
+        print("AG:IMI:invalid_method_item")
 
 
 class EncodedField:
@@ -3822,7 +3822,7 @@ class Instruction(object):
         """
             Print the instruction
         """
-        print self.get_name() + " " + self.get_output(idx),
+        print(self.get_name() + " " + self.get_output(idx),)
 
     def show_buff(self, idx):
         """
@@ -4012,7 +4012,7 @@ class FillArrayData:
         """
             Print the instruction
         """
-        print self.show_buff(pos),
+        print(self.show_buff(pos),)
 
     def get_length(self):
         """
@@ -4138,7 +4138,7 @@ class SparseSwitch:
         """
             Print the instruction
         """
-        print self.show_buff(pos),
+        print(self.show_buff(pos),)
 
     def get_length(self):
         return self.format_general_size + (self.size * calcsize('<L')) * 2
@@ -4263,7 +4263,7 @@ class PackedSwitch:
         """
             Print the instruction
         """
-        print self.show_buff(pos),
+        print(self.show_buff(pos),)
 
     def get_length(self):
         return self.format_general_size + (self.size * calcsize('=L'))
@@ -6105,7 +6105,7 @@ class LinearSweepAlgorithm :
 
           op_value = unpack('=B', insn[idx])[0]
 
-          #print "%x %x" % (op_value, idx)
+          #print("%x %x" % (op_value, idx))
 
           #payload instructions or extented/optimized instructions
           if (op_value == 0x00 or op_value == 0xff) and ((idx + 2) < max_idx):
@@ -6123,7 +6123,7 @@ class LinearSweepAlgorithm :
               try:
                 obj = get_extented_instruction(cm, op_value, insn[idx:])
                 classic_instruction = False
-              except struct.error, why:
+              except struct.error as why:
                 warning("error while decoding instruction ..." + why.__str__())
 
             # optimized instructions ?
@@ -6308,7 +6308,7 @@ class DCode:
         nb = 0
         idx = 0
         for i in self.get_instructions():
-            print "%-8d(%08x)" % (nb, idx),
+            print("%-8d(%08x)" % (nb, idx),)
             i.show(nb)
             print
 
@@ -6650,7 +6650,7 @@ class CodeItem :
             i.reload()
 
     def show(self) :
-        print "CODE_ITEM"
+        print("CODE_ITEM")
         for i in self.code :
             i.show()
 
@@ -7435,7 +7435,7 @@ class DalvikVMFormat(bytecode._Bytecode):
         idx = h[ i ]
         i.set_off( h[ i ] )
 
-#        print i, hex(h[ i ])
+#        print(i, hex(h[ i ]))
 
         last_idx = idx + s[ idx ]
 
@@ -8164,13 +8164,13 @@ class OdexHeaderItem:
         self.padding = unpack("=I", buff.read(4))[0]
 
     def show(self):
-        print "dex_offset:%x dex_length:%x deps_offset:%x deps_length:%x aux_offset:%x aux_length:%x flags:%x" % (self.dex_offset,
+        print("dex_offset:%x dex_length:%x deps_offset:%x deps_length:%x aux_offset:%x aux_length:%x flags:%x" % (self.dex_offset,
                                                                                                                   self.dex_length,
                                                                                                                   self.deps_offset,
                                                                                                                   self.deps_length,
                                                                                                                   self.aux_offset,
                                                                                                                   self.aux_length,
-                                                                                                                  self.flags)
+                                                                                                                  self.flags))
 
     def get_raw(self):
       return pack("=I", self.dex_offset) +    \

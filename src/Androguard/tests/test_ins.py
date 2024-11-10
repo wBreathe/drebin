@@ -23,8 +23,8 @@ import sys, re
 PATH_INSTALL = "./"
 sys.path.append(PATH_INSTALL)
 
-from androguard.core.androgen import AndroguardS
-from androguard.core.analysis import analysis
+from Androguard.androguard.core.androgen import AndroguardS
+from Androguard.androguard.core.analysis import analysis
 
 
 TESTS_CASES  = [ #'examples/android/TC/bin/classes.dex',
@@ -80,7 +80,7 @@ def test(got, expected):
     else:
         prefix = '  X '
 
-    print '\t%s got: %s expected: %s' % (prefix, repr(got), repr(expected))
+    print('\t%s got: %s expected: %s' % (prefix, repr(got), repr(expected)))
 
 def getVal(i) :
     op = i.get_operands()
@@ -105,13 +105,13 @@ def check(a, values) :
         if key not in values :
             continue
 
-        print "CHECKING ...", method.get_class_name(), method.get_name(), method.get_descriptor()
+        print("CHECKING ...", method.get_class_name(), method.get_name(), method.get_descriptor())
         code = method.get_code()
         bc = code.get_bc()
 
         idx = 0
         for i in bc.get() :
-#            print "\t", "%x(%d)" % (idx, idx), i.get_name(), i.get_operands()
+#            print("\t", "%x(%d)" % (idx, idx), i.get_name(), i.get_operands())
             if idx in values[key] :
                 elem = values[key][idx]
 
@@ -130,4 +130,4 @@ for i in TESTS_CASES :
     check( a, VALUES[i] )
 
     x = analysis.VMAnalysis( a.get_vm() )
-    print x
+    print(x)

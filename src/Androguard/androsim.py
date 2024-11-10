@@ -22,14 +22,14 @@ import sys, os
 
 from optparse import OptionParser
 
-from androguard.core import androconf
-from androguard.core.bytecodes import apk, dvm
-from androguard.core.analysis import analysis
+from Androguard.androguard.core import androconf
+from Androguard.androguard.core.bytecodes import apk, dvm
+from Androguard.androguard.core.analysis import analysis
 
 sys.path.append("./elsim")
-from elsim import elsim
-from elsim.elsim_dalvik import ProxyDalvik, FILTERS_DALVIK_SIM
-from elsim.elsim_dalvik import ProxyDalvikStringMultiple, ProxyDalvikStringOne, FILTERS_DALVIK_SIM_STRING
+from .elsim import elsim
+from .elsim.elsim_dalvik import ProxyDalvik, FILTERS_DALVIK_SIM
+from .elsim.elsim_dalvik import ProxyDalvikStringMultiple, ProxyDalvikStringOne, FILTERS_DALVIK_SIM_STRING
 
 option_0 = { 'name' : ('-i', '--input'), 'help' : 'file : use these filenames', 'nargs' : 2 }
 option_1 = { 'name' : ('-t', '--threshold'), 'help' : 'specify the threshold (0.0 to 1.0) to know if a method is similar. This option will impact on the filtering method. Because if you specify a higher value of the threshold, you will have more associations', 'nargs' : 1 }
@@ -59,31 +59,31 @@ def check_one_file(a, d1, dx1, FS, threshold, file_input, view_strings=False, ne
 
     el = elsim.Elsim( ProxyDalvik(d1, dx1), ProxyDalvik(d2, dx2), FS, threshold, options.compressor, libnative=library )
     el.show()
-    print "\t--> methods: %f%% of similarities" % el.get_similarity_value(new)
+    print(("\t--> methods: %f%% of similarities" % el.get_similarity_value(new)))
     
 
     if options.display :
-        print "SIMILAR methods:"
+        print("SIMILAR methods:")
         diff_methods = el.get_similar_elements()
         for i in diff_methods :
             el.show_element( i )
             
-        print "IDENTICAL methods:"
+        print("IDENTICAL methods:")
         new_methods = el.get_identical_elements()
         for i in new_methods :
             el.show_element( i )
 
-        print "NEW methods:"
+        print("NEW methods:")
         new_methods = el.get_new_elements()
         for i in new_methods :
             el.show_element( i, False )
 
-        print "DELETED methods:"
+        print("DELETED methods:")
         del_methods = el.get_deleted_elements()
         for i in del_methods :
             el.show_element( i )
             
-        print "SKIPPED methods:"
+        print("SKIPPED methods:")
         skipped_methods = el.get_skipped_elements()
         for i in skipped_methods :
             el.show_element( i )
@@ -98,30 +98,30 @@ def check_one_file(a, d1, dx1, FS, threshold, file_input, view_strings=False, ne
         #els = elsim.Elsim( ProxyDalvikStringOne(d1, dx1),
         #    ProxyDalvikStringOne(d2, dx2), FILTERS_DALVIK_SIM_STRING, threshold, options.compressor, libnative=library )
         els.show()
-        print "\t--> strings: %f%% of similarities" % els.get_similarity_value(new)
+        print(("\t--> strings: %f%% of similarities" % els.get_similarity_value(new)))
     
         if options.display :
-          print "SIMILAR strings:"
+          print("SIMILAR strings:")
           diff_strings = els.get_similar_elements()
           for i in diff_strings :
             els.show_element( i )
             
-          print "IDENTICAL strings:"
+          print("IDENTICAL strings:")
           new_strings = els.get_identical_elements()
           for i in new_strings :
             els.show_element( i )
 
-          print "NEW strings:"
+          print("NEW strings:")
           new_strings = els.get_new_elements()
           for i in new_strings :
             els.show_element( i, False )
 
-          print "DELETED strings:"
+          print("DELETED strings:")
           del_strings = els.get_deleted_elements()
           for i in del_strings :
             els.show_element( i )
             
-          print "SKIPPED strings:"
+          print("SKIPPED strings:")
           skipped_strings = els.get_skipped_elements()
           for i in skipped_strings :
             els.show_element( i )
@@ -136,7 +136,7 @@ def check_one_directory(a, d1, dx1, FS, threshold, directory, view_strings=False
                     real_filename += "/"
                 real_filename += f
 
-                print "filename: %s ..." % real_filename
+                print(("filename: %s ..." % real_filename))
                 check_one_file(a, d1, dx1, FS, threshold, real_filename, view_strings, new, library)
 
 ############################################################
@@ -176,7 +176,7 @@ def main(options, arguments) :
             check_one_directory(a, d1, dx1, FS, threshold, options.input[1], options.xstrings, new, library )
 
     elif options.version != None :
-        print "Androsim version %s" % androconf.ANDROGUARD_VERSION
+        print(("Androsim version %s" % androconf.ANDROGUARD_VERSION))
 
 if __name__ == "__main__" :
     parser = OptionParser()

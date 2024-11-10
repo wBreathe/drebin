@@ -22,9 +22,9 @@
 import sys
 import os
 from optparse import OptionParser
-from androguard.core import androconf
-from androguard.core.bytecodes import dvm
-from androguard.core.bytecodes.apk import *
+from Androguard.androguard.core import androconf
+from Androguard.androguard.core.bytecodes import dvm
+from Androguard.androguard.core.bytecodes.apk import *
 
 option_0 = { 'name' : ('-i', '--input'), 'help' : 'file : use this filename (DEX/ODEX)', 'nargs' : 1 }
 option_1 = { 'name' : ('-o', '--offset'), 'help' : 'offset to disassemble', 'nargs' : 1 }
@@ -39,9 +39,9 @@ def disassemble(dex, offset, size):
         nb = 0
         idx = offset
         for i in d.disassemble(offset, size):
-            print "%-8d(%08x)" % (nb, idx),
+            print(("%-8d(%08x)" % (nb, idx),))
             i.show(idx)
-            print
+            print()
 
             idx += i.get_length()
             nb += 1

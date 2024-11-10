@@ -21,4 +21,4 @@ for i in b :
         if len(buff) > 1 and buff[-1] != '.' :
             buff += "."
 
-        print "        \"%s\"" % v[2], ":", "\"%s\"," % buff
+        print("        \"%s\"" % v[2], ":", "\"%s\"," % buff)

@@ -19,11 +19,11 @@
 import sys
 import json, base64
 
-from androguard.core.bytecodes import apk
-from androguard.core.bytecodes import dvm
+from Androguard.androguard.core.bytecodes import apk
+from Androguard.androguard.core.bytecodes import dvm
 
-from androguard.core.analysis import analysis
-from androguard.core import androconf
+from Androguard.androguard.core.analysis import analysis
+from Androguard.androguard.core import androconf
 
 from libelsign.libelsign import Elsign, entropy
 
@@ -104,7 +104,7 @@ class DalvikElsign :
       
     def add_signature(self, type_signature, x, y, z) :
         ret = None
-        #print type_signature, x, y, z
+        #print(type_signature, x, y, z)
         
         # FIX ENTROPIES (old version)
         for j in z :
@@ -128,7 +128,7 @@ class DalvikElsign :
 
     def load_meths(self, vm, vmx) :
         if self.debug :
-            print "LM",
+            print("LM",)
             sys.stdout.flush()
 
         # Add methods for METHSIM
@@ -142,7 +142,7 @@ class DalvikElsign :
    
     def load_classes(self, vm, vmx) :
         if self.debug :
-            print "LC",
+            print("LC",)
             sys.stdout.flush()
        
         # Add classes for CLASSSIM
@@ -180,7 +180,7 @@ class DalvikElsign :
         self.load_meths(vm, vmx)
         
         if self.debug :
-            print "CM",
+            print("CM",)
             sys.stdout.flush()
         ret = self.meth_elsign.check() 
         
@@ -194,21 +194,21 @@ class DalvikElsign :
             debug_nb_cmp_elements = dt[4]
 
             debug_nb_cmp_max = debug_nb_sign * debug_nb_elements
-            print "[SIGN:%d CLUSTERS:%d CMP_CLUSTERS:%d ELEMENTS:%d CMP_ELEMENTS:%d" % (debug_nb_sign, debug_nb_clusters, debug_nb_cmp_clusters, debug_nb_elements, debug_nb_cmp_elements),
+            print("[SIGN:%d CLUSTERS:%d CMP_CLUSTERS:%d ELEMENTS:%d CMP_ELEMENTS:%d" % (debug_nb_sign, debug_nb_clusters, debug_nb_cmp_clusters, debug_nb_elements, debug_nb_cmp_elements),)
             try :
                 percentage = debug_nb_cmp_elements/float(debug_nb_cmp_max)
             except :
                 percentage = 0
             finally :
-                print "-> %d %f%%]" % (debug_nb_cmp_max, percentage * 100),
+                print("-> %d %f%%]" % (debug_nb_cmp_max, percentage * 100),)
 
-            print ret[1:],
+            print(ret[1:],)
 
         if ret[0] == None :
             self.load_classes(vm, vmx)
             
             if self.debug :
-                print "CC",
+                print("CC",)
                 sys.stdout.flush()
             ret = self.class_elsign.check()
         
@@ -221,15 +221,15 @@ class DalvikElsign :
                 debug_nb_cmp_elements = dt[4]
 
                 debug_nb_cmp_max = debug_nb_sign * debug_nb_elements
-                print "[SIGN:%d CLUSTERS:%d CMP_CLUSTERS:%d ELEMENTS:%d CMP_ELEMENTS:%d" % (debug_nb_sign, debug_nb_clusters, debug_nb_cmp_clusters, debug_nb_elements, debug_nb_cmp_elements),
+                print("[SIGN:%d CLUSTERS:%d CMP_CLUSTERS:%d ELEMENTS:%d CMP_ELEMENTS:%d" % (debug_nb_sign, debug_nb_clusters, debug_nb_cmp_clusters, debug_nb_elements, debug_nb_cmp_elements),)
                 try :
                     percentage = debug_nb_cmp_elements/float(debug_nb_cmp_max)
                 except :
                     percentage = 0
                 finally :
-                    print "-> %d %f%%]" % (debug_nb_cmp_max, percentage * 100),
+                    print("-> %d %f%%]" % (debug_nb_cmp_max, percentage * 100),)
 
-                print ret[1:],
+                print(ret[1:],)
 
         return ret[0], ret[1:]
 
@@ -243,7 +243,7 @@ class PublicSignature :
         self.database = database
         self.config = config
 
-        print self.database, self.config, debug
+        print(self.database, self.config, debug)
 
         self._load()
 
@@ -267,11 +267,11 @@ class PublicSignature :
             if type_signature != None :
                 self.DE.add_signature( type_signature, i, buff[i][1], sub_signatures )
             else :
-                print i, "ERROR"
+                print(i, "ERROR")
 
     def check_apk(self, apk) :
         if self.debug :
-            print "loading apk..",
+            print("loading apk..",)
             sys.stdout.flush()
        
         classes_dex = apk.get_dex()
@@ -299,13 +299,13 @@ class PublicSignature :
     
     def _check_dalvik(self, buff) :
         if self.debug :
-            print "loading dex..",
+            print("loading dex..",)
             sys.stdout.flush()
         
         vm = dvm.DalvikVMFormat( buff )
         
         if self.debug :
-            print "analysis..",
+            print("analysis..",)
             sys.stdout.flush()
         
         vmx = analysis.VMAnalysis( vm )
@@ -355,7 +355,7 @@ class MSignature :
             @rtype : None if no signatures match, otherwise the name of the signature
         """
         if self.debug :
-            print "loading apk..",
+            print("loading apk..",)
             sys.stdout.flush()
         
         classes_dex = apk.get_dex()
@@ -416,13 +416,13 @@ class PublicCSignature :
                     z.append( METHSIM )
                     m = vm.get_method_descriptor( j["CN"], j["MN"], j["D"] )
                     if m == None :
-                        print "impossible to find", j["CN"], j["MN"], j["D"]
+                        print("impossible to find", j["CN"], j["MN"], j["D"])
                         raise("ooo")
                     
-                    #print m.get_length()
+                    #print(m.get_length())
                    
                     z_tmp = create_entropies( vmx, m )
-                    print z_tmp[0]
+                    print(z_tmp[0])
                     z_tmp[0] = base64.b64encode( z_tmp[0] )
                     z.extend( z_tmp )
                 elif j["TYPE"] == "CLASSSIM" :
@@ -459,7 +459,7 @@ class PublicCSignature :
             x[ i["NAME"] ].append( sign )
             x[ i["NAME"] ].append( FIX_FORMULA(i["BF"], len(sign)) )
             l.append( x )
-        print l
+        print(l)
         return l
 
     def get_info(self, srules) :
@@ -486,7 +486,7 @@ class PublicCSignature :
                 if j["TYPE"] == "METHSIM" :
                     m = vm.get_method_descriptor( j["CN"], j["MN"], j["D"] )
                     if m == None :
-                        print "impossible to find", j["CN"], j["MN"], j["D"]
+                        print("impossible to find", j["CN"], j["MN"], j["D"])
                     else :
                         res.append( m )
 
@@ -518,11 +518,11 @@ class CSignature :
         fd.close()
 
         for i in buff :
-            print i
+            print(i)
             for j in buff[i][0] :
                 sign = base64.b64decode(j[1])
-                print "\t", j[0], "ENTROPIES:", j[2:], "L:%d" % len(sign), "K:%d" % s.kolmogorov(sign)[0]
-            print "\tFORMULA:", buff[i][-1]
+                print("\t", j[0], "ENTROPIES:", j[2:], "L:%d" % len(sign), "K:%d" % s.kolmogorov(sign)[0])
+            print("\tFORMULA:", buff[i][-1])
 
     def check_db(self, output) :
         ids = {}
@@ -539,7 +539,7 @@ class CSignature :
                 if ssign[0] == METHSIM :
                     value = base64.b64decode( ssign[1] )
                     if value in ids :
-                        print "IDENTICAL", ids[ value ], i, nb
+                        print("IDENTICAL", ids[ value ], i, nb)
                     else :
                         ids[ value ] = (i, nb)
                         meth_sim.append( value )
@@ -569,7 +569,7 @@ class CSignature :
                             s.set_compress_type( similarity.BZ2_COMPRESS )
                             ret = s.ncd( i, j )[0]
                             s.set_compress_type( similarity.SNAPPY_COMPRESS )
-                            print "[-] ", ids[ i ], ids[ j ], ret
+                            print("[-] ", ids[ i ], ids[ j ], ret)
                             problems[ ids_cmp ] = 0
                             problems[ ids[ j ] + ids[ i ] ] = 0
 

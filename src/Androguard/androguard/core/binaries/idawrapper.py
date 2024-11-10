@@ -21,7 +21,7 @@ from idautils import *
 from idc import *
 
 from SimpleXMLRPCServer import SimpleXMLRPCServer
-import cPickle
+import pickle as cPickle
 
 def is_connected() :
     return True 
@@ -65,7 +65,7 @@ def wrapper_get_raw(oops) :
                             edges.add((PrevHead(r, f_start), r))
                         edges.add((head, r))
         
-        #print edges, boundaries
+        #print(edges, boundaries)
         # Let's build the list of (startEA, startEA) couples
         # for each basic block
         sorted_boundaries = sorted(boundaries, reverse = True)

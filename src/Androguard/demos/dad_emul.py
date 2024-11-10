@@ -20,10 +20,10 @@
 import sys
 sys.path.append('./')
 
-from androguard.core.bytecodes import apk, dvm
-from androguard.core.analysis.analysis import uVMAnalysis
-from androguard.decompiler.dad.decompile import DvMethod
-from androguard.decompiler.dad.instruction import (Constant,
+from Androguard.androguard.core.bytecodes import apk, dvm
+from Androguard.androguard.core.analysis.analysis import uVMAnalysis
+from Androguard.androguard.decompiler.dad.decompile import DvMethod
+from Androguard.androguard.decompiler.dad.instruction import (Constant,
                                                    BinaryCompExpression)
 
 
@@ -168,12 +168,12 @@ visitor.init('keylen', len(KEYVALUE))
 method.show()
 
 def show_mem(visitor):
-    print 'Memory[4]: %s' % visitor.mem[4]
-    print '==> %r' % ''.join(chr(i) for i in visitor.mem[4])
+    print('Memory[4]: %s' % visitor.mem[4])
+    print('==> %r' % ''.join(chr(i) for i in visitor.mem[4]))
 
 show_mem(visitor)
-print '\nStarting visit...',
+print('\nStarting visit...',)
 graph.get_entry().visit(visitor)
-print ' done !\n'
+print(' done !\n')
 show_mem(visitor)
 

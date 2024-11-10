@@ -95,8 +95,8 @@ class Automaton :
         return expr
 
     def show(self) :
-        print self.__G.node
-        print self.__G.edge
+        print(self.__G.node)
+        print(self.__G.edge)
 
         #draw_graphviz(self.__G)
         #write_dot(self.__G,'file.dot')
@@ -120,10 +120,10 @@ class JVMGenerate :
         return l
 
     def write(self, method, offset, field) :
-        print method, offset, field
+        print(method, offset, field)
         expr = self.__automaton.new( 5 )
 
-        print field.get_name(), "EXPR ->", expr
+        print(field.get_name(), "EXPR ->", expr)
 
         self._transform( expr )
 

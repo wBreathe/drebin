@@ -4,10 +4,10 @@ import sys
 
 PATH_INSTALL = "./"
 sys.path.append(PATH_INSTALL)
-from androguard.core.bytecodes import dvm
-from androguard.core.bytecodes import apk
-from androguard.core.androconf import CONF
-from androguard.core.analysis import analysis, ganalysis
+from Androguard.androguard.core.bytecodes import dvm
+from Androguard.androguard.core.bytecodes import apk
+from Androguard.androguard.core.androconf import CONF
+from Androguard.androguard.core.analysis import analysis, ganalysis
 
 
 #CONF["LAZY_ANALYSIS"] = True
@@ -29,6 +29,6 @@ for m in dx.get_methods() :
 
   idx = 0
   for i in m.basic_blocks.get() :
-    print "\t %s %x %x" % (i.name, i.start, i.end), i.get_instructions()[-1].get_name()
+    print("\t %s %x %x" % (i.name, i.start, i.end), i.get_instructions()[-1].get_name())
 
-  print m.method.XREFfrom, m.method.XREFto
+  print(m.method.XREFfrom, m.method.XREFto)

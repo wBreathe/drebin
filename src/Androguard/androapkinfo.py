@@ -21,11 +21,10 @@
 import sys, os
 
 from optparse import OptionParser
-
-from androguard.core import androconf
-from androguard.core.bytecodes import apk
-from androguard.core.bytecodes import dvm
-from androguard.core.analysis import analysis
+from Androguard.androguard.core import androconf
+from Androguard.androguard.core.bytecodes import apk
+from Androguard.androguard.core.bytecodes import dvm
+from Androguard.androguard.core.analysis import analysis
 
 option_0 = { 'name' : ('-i', '--input'), 'help' : 'file : use this filename (APK)', 'nargs' : 1 }
 option_1 = { 'name' : ('-d', '--directory'), 'help' : 'directory : use this directory', 'nargs' : 1 }
@@ -38,21 +37,21 @@ def display_dvm_info(apk):
     vm = dvm.DalvikVMFormat(apk.get_dex())
     vmx = analysis.uVMAnalysis(vm)
 
-    print "Native code:", analysis.is_native_code(vmx)
-    print "Dynamic code:", analysis.is_dyn_code(vmx)
-    print "Reflection code:", analysis.is_reflection_code(vmx)
-    print "Ascii Obfuscation:", analysis.is_ascii_obfuscation(vm)
+    print(("Native code:", analysis.is_native_code(vmx)))
+    print(("Dynamic code:", analysis.is_dyn_code(vmx)))
+    print(("Reflection code:", analysis.is_reflection_code(vmx)))
+    print(("Ascii Obfuscation:", analysis.is_ascii_obfuscation(vm)))
 
     for i in vmx.get_methods():
       i.create_tags()
       if not i.tags.empty():
-        print i.method.get_class_name(), i.method.get_name(), i.tags
+        print((i.method.get_class_name(), i.method.get_name(), i.tags))
 
 def main(options, arguments) :
     if options.input != None :
         ret_type = androconf.is_android( options.input ) 
 
-        print os.path.basename(options.input), ":"
+        print((os.path.basename(options.input), ":"))
         if ret_type == "APK" :
             try :
                 a = apk.APK(options.input, zipmodule=2)
@@ -60,9 +59,9 @@ def main(options, arguments) :
                     a.show()
                     display_dvm_info( a )
                 else :
-                    print "INVALID"
-            except Exception, e :
-                print "ERROR", e
+                    print("INVALID")
+            except Exception as e :
+                print(("ERROR", e))
                 import traceback
                 traceback.print_exc()
 
@@ -77,21 +76,21 @@ def main(options, arguments) :
 
                     ret_type = androconf.is_android( real_filename )
                     if ret_type == "APK"  :
-                        print os.path.basename( real_filename ), ":"
+                        print((os.path.basename( real_filename ), ":"))
                         try :
                             a = apk.APK( real_filename )
                             if a.is_valid_APK() :
                                 a.show()
                                 display_dvm_info( a )
                             else :
-                                print "INVALID APK"
+                                print("INVALID APK")
                                 raise("ooos")
-                        except Exception, e :
-                            print "ERROR", e
+                        except Exception as e :
+                            print(("ERROR", e))
                             raise("ooos")
 
     elif options.version != None :
-        print "Androapkinfo version %s" % androconf.ANDROGUARD_VERSION
+        print(("Androapkinfo version %s" % androconf.ANDROGUARD_VERSION))
 
 if __name__ == "__main__" :
     parser = OptionParser()

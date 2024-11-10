@@ -19,11 +19,11 @@
 # along with Androguard.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-
-from androguard.core import androconf
+from Androguard import *
+from Androguard.androguard.core import androconf
 
 sys.path.append("./elsim/")
-from elsim.elsign import dalvik_elsign
+from .elsim.elsign import dalvik_elsign
 
 from optparse import OptionParser
 
@@ -53,7 +53,7 @@ def main(options, arguments) :
         s.check_db( options.check )
 
     elif options.version != None :
-        print "Androcsign version %s" % androconf.ANDROGUARD_VERSION
+        print(("Androcsign version %s" % androconf.ANDROGUARD_VERSION))
 
 if __name__ == "__main__" :
     parser = OptionParser()

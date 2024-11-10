@@ -19,10 +19,10 @@
 # along with Elsim.  If not, see <http://www.gnu.org/licenses/>.
 
 import hashlib, re
-from androguard.core.androconf import error, warning, debug, set_debug, get_debug
+from Androguard.androguard.core.androconf import error, warning, debug, set_debug, get_debug
 
-from androguard.core.bytecodes import dvm
-from androguard.core.analysis import analysis
+from Androguard.androguard.core.bytecodes import dvm
+from Androguard.androguard.core.analysis import analysis
 import elsim
 
 DEFAULT_SIGNATURE = analysis.SIGNATURE_L0_4
@@ -180,7 +180,7 @@ class DiffBB :
 
             nb += 1
 
-        #print nb, off_add, off_rm
+        #print(nb, off_add, off_rm)
 
         nbmax = nb
         if off_add != {} :
@@ -203,7 +203,7 @@ class DiffBB :
 
             nb += 1
 
-        #print off_add, off_rm
+        #print(off_add, off_rm)
 
     def set_childs(self, abb) :
         self.childs = self.bb1.childs
@@ -223,13 +223,13 @@ class DiffBB :
                 i.childs = childs
 
     def show(self) :
-        print "\tADD INSTRUCTIONS :"
+        print("\tADD INSTRUCTIONS :")
         for i in self.di.add_ins :
-            print "\t\t", i[0], i[1], i[2].get_name(), i[2].get_output()
+            print("\t\t", i[0], i[1], i[2].get_name(), i[2].get_output())
 
-        print "\tREMOVE INSTRUCTIONS :"
+        print("\tREMOVE INSTRUCTIONS :")
         for i in self.di.remove_ins :
-            print "\t\t", i[0], i[1], i[2].get_name(), i[2].get_output()
+            print("\t\t", i[0], i[1], i[2].get_name(), i[2].get_output())
 
 class NewBB :
     def __init__(self, bb) :
@@ -420,32 +420,32 @@ class Method :
         return self.m.get_code().get_length()
 
     def show(self, details=False, exclude=[]) :
-        print self.m.get_class_name(), self.m.get_name(), self.m.get_descriptor(),
-        print "with",
+        print(self.m.get_class_name(), self.m.get_name(), self.m.get_descriptor(),)
+        print("with",)
 
         for i in self.sort_h :
-            print i[0].m.get_class_name(), i[0].m.get_name(), i[0].m.get_descriptor(), i[1]
+            print(i[0].m.get_class_name(), i[0].m.get_name(), i[0].m.get_descriptor(), i[1])
 
-        print "\tDIFF BASIC BLOCKS :"
+        print("\tDIFF BASIC BLOCKS :")
         for d in self.dbb :
-            print "\t\t", self.dbb[d].bb1.name, " --->", self.dbb[d].bb2.name, ":", self.dbb[d].info[1]
+            print("\t\t", self.dbb[d].bb1.name, " --->", self.dbb[d].bb2.name, ":", self.dbb[d].info[1])
             if details :
                 self.dbb[d].show()
 
-        print "\tNEW BASIC BLOCKS :"
+        print("\tNEW BASIC BLOCKS :")
         for b in self.nbb :
-            print "\t\t", self.nbb[b].name
+            print("\t\t", self.nbb[b].name)
 
         # show diff !
         if details :
             bytecode.PrettyShow2( self.bbs, exclude )
 
     def show2(self, details=False) :
-        print self.m.get_class_name(), self.m.get_name(), self.m.get_descriptor(),
-        print self.get_length()
+        print(self.m.get_class_name(), self.m.get_name(), self.m.get_descriptor(),)
+        print(self.get_length())
 
         for i in self.sort_h :
-            print "\t", i[0].m.get_class_name(), i[0].m.get_name(), i[0].m.get_descriptor(), i[1]
+            print("\t", i[0].m.get_class_name(), i[0].m.get_name(), i[0].m.get_descriptor(), i[1])
 
         if details :
             bytecode.PrettyShow1( self.mx.basic_blocks.get() )
@@ -468,7 +468,7 @@ class BasicBlock :
         return self.bb.name
 
     def show(self) :
-        print self.bb.name
+        print(self.bb.name)
 
 def filter_element_bb_basic(el, e) :
     return BasicBlock( el ) 
@@ -685,7 +685,7 @@ class DiffInstruction :
         self.ins = instruction[2]
 
     def show(self) :
-        print hex(self.bb.bb.start + self.offset), self.pos_instruction, self.ins.get_name(), self.ins.show_buff( self.bb.bb.start + self.offset )
+        print(hex(self.bb.bb.start + self.offset), self.pos_instruction, self.ins.get_name(), self.ins.show_buff( self.bb.bb.start + self.offset ))
 
 class DiffBasicBlock :
     def __init__(self, x, y, added, deleted) :
@@ -728,7 +728,7 @@ def filter_diff_bb(x, y) :
 
     #set_debug()
 
-    #print map_x, map_y, a, r
+    #print(map_x, map_y, a, r)
     debug("DEBUG ADD")
     for i in a :
         instructions = [ j for j in y.bb.get_instructions() ]
@@ -767,7 +767,7 @@ class DiffDalvikMethod :
         return m.m.get_class_name(), m.m.get_name(), m.m.get_descriptor()
 
     def show(self) :
-        print "[", self.get_info_method(self.m1), "]", "<->", "[", self.get_info_method(self.m2), "]"
+        print("[", self.get_info_method(self.m1), "]", "<->", "[", self.get_info_method(self.m2), "]")
 
         self.eld.show()
 
@@ -776,15 +776,15 @@ class DiffDalvikMethod :
 
     def _show_elements(self, info, elements) :
         for i in elements :
-            print i.bb, hex(i.bb.get_start()), hex(i.bb.get_end()) #, i.bb.childs
+            print(i.bb, hex(i.bb.get_start()), hex(i.bb.get_end()) #, i.bb.childs)
             idx = i.bb.get_start()
             for j in i.bb.get_instructions() :
-                print "\t" + info, hex(idx), 
+                print("\t" + info, hex(idx), )
                 j.show(idx)
                 print
                 idx += j.get_length()
 
-        print "\n"
+        print("\n")
 
 
 

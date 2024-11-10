@@ -22,9 +22,9 @@ import sys, os
 
 from optparse import OptionParser
 
-from androguard.core import androconf
-from androguard.core.bytecodes import apk
-from androguard.core.analysis import risk
+from Androguard.androguard.core import androconf
+from Androguard.androguard.core.bytecodes import apk
+from Androguard.androguard.core.analysis import risk
 
 option_0 = { 'name' : ('-i', '--input'), 'help' : 'file : use these filenames', 'nargs' : 1 }
 option_1 = { 'name' : ('-m', '--method'), 'help' : 'perform analysis of each method', 'action' : 'count' }
@@ -35,16 +35,16 @@ options = [option_0, option_1, option_2, option_3]
 
 def display_result(res) :
   for i in res :
-    print "\t", i
+    print(("\t", i))
     for j in res[i] :
-      print "\t\t", j, res[i][j]
+      print(("\t\t", j, res[i][j]))
 
 def analyze_app(filename, ri, a) :
-    print filename
+    print(filename)
     display_result( ri.with_apk( a ) )
 
 def analyze_dex(filename, ri, d) :
-    print filename
+    print(filename)
     display_result( ri.with_dex( d ) )
 
 def main(options, arguments) :
@@ -75,14 +75,14 @@ def main(options, arguments) :
                         try :
                             a = apk.APK( real_filename )
                             analyze_app( real_filename, ri, a )
-                        except Exception, e :
-                            print e
+                        except Exception as e :
+                            print(e)
 
                     elif ret_type == "DEX" :
                         analyze_dex( real_filename, ri, open(real_filename, "r").read() )
 
     elif options.version != None :
-        print "Androrisk version %s" % androconf.ANDROGUARD_VERSION
+        print(("Androrisk version %s" % androconf.ANDROGUARD_VERSION))
 
 if __name__ == "__main__" :
     parser = OptionParser()

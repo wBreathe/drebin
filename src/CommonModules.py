@@ -76,9 +76,9 @@ class ProgressBar(object):
         self.Update()
         self.ProgressBar.finish()
         self.EndTime = time.time()
-        print "Processing finished."
-        #print "Processing results: ", self.TotalResults
-        print "Time Elapsed: %.2fs, or %.2fmins, or %.2fhours" % ((self.EndTime-self.StartTime),(self.EndTime-self.StartTime)/60,(self.EndTime-self.StartTime)/3600)
+        print ("Processing finished.")
+        #print("Processing results: ", self.TotalResults)
+        print(("Time Elapsed: %.2fs, or %.2fmins, or %.2fhours" % ((self.EndTime-self.StartTime),(self.EndTime-self.StartTime)/60,(self.EndTime-self.StartTime)/3600)))
         logger.info("Processing finished.")
         logger.info("Processing results: "+ str(self.TotalResults))
         logger.info("Time Elapsed: %.2fs, or %.2fmins, or %.2fhours" % ((self.EndTime-self.StartTime),(self.EndTime-self.StartTime)/60,(self.EndTime-self.StartTime)/3600))
@@ -117,7 +117,7 @@ class DefaultOrderedDict(collections.OrderedDict):
             args = tuple()
         else:
             args = self.default_factory,
-        return type(self), args, None, None, self.items()
+        return type(self), args, None, None, list(self.items())
 
     def copy(self):
         return self.__copy__()
@@ -128,7 +128,7 @@ class DefaultOrderedDict(collections.OrderedDict):
     def __deepcopy__(self, memo):
         import copy
         return type(self)(self.default_factory,
-                          copy.deepcopy(self.items()))
+                          copy.deepcopy(list(self.items())))
 
     def __repr__(self):
         return 'OrderedDefaultDict(%s, %s)' % (self.default_factory,
@@ -296,12 +296,12 @@ def ExportToJson(AbsolutePath, Content):
         #    Content = dict(Content)
         f=open(AbsolutePath,"wb")
         # json.dump(Content, f, indent=4)
-        for Key,Val in Content.items():
+        for Key,Val in list(Content.items()):
             for V in Val:
-                print >>f, str(Key)+'_'+str(V)
+                print(str(Key)+'_'+str(V), file=f)
 
     except Exception as e:
-        print "Json data writing Failed."
+        print("Json data writing Failed.")
         logger.error(e)
         logger.error("Json data writing Failed.")
         if "f" in dir():
@@ -328,7 +328,7 @@ def ExportToPkl(AbsolutePath,Content):
         f=open(AbsolutePath, "wb")
         pickle.dump(Content, f)
     except:
-        print "Pickle data writing Failed."
+        print("Pickle data writing Failed.")
         logger.error("Pickle data writing Failed.")
         if "f" in dir():
             f.close()
@@ -371,7 +371,7 @@ def ExportToJsonNodeLinkData(AbsolutePath,GraphContent):
         Content=json_graph.node_link_data(GraphContent)
         json.dump(Content,f,indent=4)
     except Exception as e:
-        print e
+        print(e)
         logger.error("JsonNodeLinkData writing Failed.")
         if "f" in dir():
             f.close()
@@ -481,7 +481,7 @@ def DeleteLilMatrixRow(mat, i):
     '''
 
     if not isinstance(mat, scipy.sparse.lil.lil_matrix):
-        #print mat.__class__
+        #print(mat.__class__)
         raise ValueError("works only for LIL format -- use .tolil() first")
     mat.rows = np.delete(mat.rows, i)
     mat.data = np.delete(mat.data, i)
@@ -500,7 +500,7 @@ def DeleteCsrMatrixRow(mat, i):
     '''
     if not isinstance(mat, scipy.sparse.csr_matrix):
         try:
-            print "Warning: works only for CSR format -- use .tocsr() first"
+            print("Warning: works only for CSR format -- use .tocsr() first")
             mat = mat.tocsr()
         except:
             raise ValueError("cannot convert mat to CSR format")
@@ -525,7 +525,7 @@ def ExportNpArray(AbsolutePath, NpArray, Format = "%f"):
     
     :param String AbsolutePath: The stored file location.
     :param numpy.array NpArray: The Numpy array you want to store.
-    :param String Format: How to print each element, e.g. %i, %10.5f
+    :param String Format: How to print(each element, e.g. %i, %10.5f)
     '''
     try:
         with open(AbsolutePath, "w+") as File:

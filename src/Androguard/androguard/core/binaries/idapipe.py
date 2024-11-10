@@ -20,7 +20,7 @@ from subprocess import Popen, PIPE, STDOUT
 import os, sys
 import xmlrpclib
 
-import cPickle
+import pickle as cPickle
 
 class _Method :
     def __init__(self, proxy, name) :
@@ -28,16 +28,16 @@ class _Method :
         self.name = name
     
     def __call__(self, *args):
-        #print "CALL", self.name, args
+        #print("CALL", self.name, args)
         z = getattr( self.proxy, self.name, None )
-        #print "SEND", repr(cPickle.dumps( args ) )
+        #print("SEND", repr(cPickle.dumps( args ) ))
        
         try :
             if len(args) == 1 :
                 ret = z( cPickle.dumps( args[0] ) )
             else :
                 ret = z( cPickle.dumps( args ) )
-            #print "RECEIVE", repr(ret)
+            #print("RECEIVE", repr(ret))
             return cPickle.loads( ret )
         except xmlrpclib.ProtocolError :
             return []
@@ -55,11 +55,11 @@ class BasicBlock :
 
     def show(self) :
         for i in self.ins :
-            print i
+            print(i)
 
 class Function :
     def __init__(self, name, start_ea, instructions, information) :
-        #print name, start_ea
+        #print(name, start_ea)
                 
         self.name = name
         self.start_ea = start_ea
@@ -90,10 +90,10 @@ def run_ida(idapath, wrapper_init_path, binpath) :
     if pid == 0:
         wrapper_path = "-S" + wrapper_init_path
         l = [ idapath, "-A", wrapper_path, binpath ]
-        print l
+        print(l)
         compile = Popen(l, stdout=open('/dev/null', 'w'), stderr=STDOUT)
         stdout, stderr = compile.communicate()
-#        print stdout, stderr
+#        print(stdout, stderr)
         sys.exit(0)
 
 class IDAPipe :
@@ -113,7 +113,7 @@ class IDAPipe :
             except :
                 pass
             
-        #print self.proxy
+        #print(self.proxy)
         self.proxy = MyXMLRPC( self.proxy )
 
     def quit(self) :
@@ -163,7 +163,7 @@ class IDAPipe :
                 refs = self.proxy.CodeRefsFrom(head, 0)
                 refs = set(filter(lambda x: x>=f_start and x<=f_end, refs))
 
-                #print head, f_end, refs, self.proxy.GetMnem(head), self.proxy.GetOpnd(head, 0), self.proxy.GetOpnd(head, 1)
+                #print(head, f_end, refs, self.proxy.GetMnem(head), self.proxy.GetOpnd(head, 0), self.proxy.GetOpnd(head, 1))
 
                 if refs :
                     next_head = self.proxy.NextHead(head, f_end)
@@ -184,7 +184,7 @@ class IDAPipe :
                         edges.add((head, r))
                 
 
-        #print edges, boundaries
+        #print(edges, boundaries)
         # Let's build the list of (startEA, startEA) couples
         # for each basic block
         sorted_boundaries = sorted(boundaries, reverse = True)
@@ -201,11 +201,11 @@ class IDAPipe :
                 end_addr = self.proxy.PrevHead(end_addr, f_start)
         # And finally return the result
         bb_addr.reverse()
-        #print bb_addr, sorted(edges)
+        #print(bb_addr, sorted(edges))
 
 def display_function(f) :
-    print f, f.name, f.information
+    print(f, f.name, f.information)
 
     for i in f.basic_blocks :
-        print i
+        print(i)
         i.show()

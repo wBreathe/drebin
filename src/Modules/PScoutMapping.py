@@ -79,19 +79,19 @@ class PScoutMapping (object):
     ##################################################
     
     def PrintDict(self):
-        pprint (self.PermApiDictFromJson)
+        pprint((self.PermApiDictFromJson))
 
 
         
     def PrintAllPerms (self):        
         for PermAsKey in self.PermApiDictFromJson:
-            print PermAsKey
+            print(PermAsKey)
 
 
             
     def PrintAllApis(self):
         for Api in self.PermApiDictFromJson.values():
-            print Api
+            print(Api)
 
 
     
@@ -104,7 +104,7 @@ class PScoutMapping (object):
             return -1
             
         for Api in self.PermApiDictFromJson[Perm]:
-            pprint (Api)
+            pprint((Api))
         return 0
     
     ##################################################
@@ -133,14 +133,14 @@ def main ():
     #PMap.PrintAllApis()    
     Perms = PMap.GetAllPerms()
     #Apis = PMap.GetAllApis()    
-    print Perms[60]
+    print(Perms[60])
     #raw_input("Enter...")
     #PermsApis = PMap.GetApisFromPerm(Perms[60])
-    #pprint (PermsApis)
+    #pprint((PermsApis))
     
-    print PMap.GetPermFromApi(
+    print(PMap.GetPermFromApi(
     'com.android.internal.telephony.sip.SipPhone$SipConnection$1', 
-                              'onError')
+                              'onError'))
     
     
     

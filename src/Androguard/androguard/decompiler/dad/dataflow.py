@@ -17,10 +17,10 @@
 
 import logging
 from collections import defaultdict
-from androguard.decompiler.dad.instruction import (Variable, ThisParam,
+from Androguard.androguard.decompiler.dad.instruction import (Variable, ThisParam,
                                                    Param)
-from androguard.decompiler.dad.util import build_path, common_dom
-from androguard.decompiler.dad.node import Node
+from Androguard.androguard.decompiler.dad.util import build_path, common_dom
+from Androguard.androguard.decompiler.dad.node import Node
 
 
 logger = logging.getLogger('dad.control_flow')

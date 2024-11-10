@@ -1,17 +1,16 @@
 import sys
-reload(sys)
-sys.setdefaultencoding("utf-8")
+import importlib
+importlib.reload(sys)
 
 import os
 import time
 sys.path.append("Modules")
-sys.path.append("Androguard")
 import re
 import multiprocessing as mp
 
 import CommonModules as CM
 from CommonModules import logger
-import androlyze
+import Androguard.androlyze as androlyze
 import BasicBlockAttrBuilder as BasicBlockAttrBuilder
 import PScoutMapping as PScoutMapping
 
@@ -54,7 +53,7 @@ def GetFromXML(ApkDirectoryPath, ApkFile):
         f.write((a.xml["AndroidManifest.xml"].toprettyxml()).encode("utf-8"))
         f.close()
     except Exception as e:
-        print e
+        print(e)
         logger.error(e)
         logger.error("Executing Androlyze on " + ApkFile + " to get AndroidManifest.xml Failed.")
         return
@@ -136,7 +135,7 @@ def GetFromInstructions(ApkDirectoryPath, ApkFile, PMap, RequestedPermissionList
         ApkFile = os.path.abspath(ApkFile)
         a, d, dx = androlyze.AnalyzeAPK(ApkFile)
     except Exception as e:
-        print e
+        print(e)
         logger.error(e)
         logger.error("Executing Androlyze on " + ApkFile + " Failed.")
         return
@@ -175,7 +174,7 @@ def ProcessingDataForGetApkData(ApkDirectoryPath, ApkFile, PMap):
     try:
         StartTime = time.time()
         logger.info("Start to process " + ApkFile + "...")
-        print("Start to process " + ApkFile + "...")
+        print(("Start to process " + ApkFile + "..."))
         DataDictionary = {}
         RequestedPermissionSet, ActivitySet, ServiceSet, ContentProviderSet, BroadcastReceiverSet, HardwareComponentsSet,\
         IntentFilterSet = GetFromXML(ApkDirectoryPath, ApkFile)
@@ -216,12 +215,12 @@ def ProcessingDataForGetApkData(ApkDirectoryPath, ApkFile, PMap):
         FinalTime = time.time()
         logger.error(e)
         logger.error(ApkFile + " processing failed in " + str(FinalTime - StartTime) + "s...")
-        print ApkFile + " processing failed in " + str(FinalTime - StartTime) + "s..."
+        print((ApkFile + " processing failed in " + str(FinalTime - StartTime) + "s..."))
         return ApkFile, False
     else:
         FinalTime = time.time()
         logger.info(ApkFile + " processed successfully in " + str(FinalTime - StartTime) + "s")
-        print ApkFile + " processed successfully in " + str(FinalTime - StartTime) + "s"
+        print((ApkFile + " processed successfully in " + str(FinalTime - StartTime) + "s"))
         return ApkFile, True
 
 

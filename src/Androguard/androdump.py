@@ -22,7 +22,9 @@ import sys, os, cmd, threading, re, atexit
 
 from optparse import OptionParser
 
-import androguard, androconf, jvm
+import Androguard.androguard as androgurad
+import Androguard.androguard.core.androconf as androconf
+import Androguard.androguard.core.bytecodes.jvm as jvm
 
 # External Libraries
 
@@ -61,7 +63,7 @@ class AndroPreDump :
 #               data = self.process.readBytes(pm.start, pm.end-pm.start)
 #               idx = data.find("SourceFile")
 #               if idx != -1 :
-#                  print "CODE", pm
+#                  print("CODE", pm)
 #                  self.data.append( (pm, data, idx) )
 #                  Code = True
 
@@ -69,7 +71,7 @@ class AndroPreDump :
                     data = self.process.readBytes(pm.start, pm.end-pm.start)
                     idx = data.find(MAGIC_PATTERN)
                     if idx != -1 :
-                        print "HEADER", pm
+                        print(("HEADER", pm))
                         self.data.append( (pm, data) )
                         Header = True
 
@@ -110,24 +112,24 @@ class AndroDump :
 
         for i in self.__adp.getFilesBuffer() :
             try :
-                print "0x%x :" % (i[0])
+                print(("0x%x :" % (i[0])))
                 j = jvm.JVMFormat( i[1] )
 
                 for method in j.get_methods() :
-                    print "\t -->", method.get_class_name(), method.get_name(), method.get_descriptor()
+                    print(("\t -->", method.get_class_name(), method.get_name(), method.get_descriptor()))
 
 #               if (method.get_class_name() == "Test2" and method.get_name() == "main") :
-#                  print "patch"
+#                  print("patch")
 
 #                  code = method.get_code()
                         #code.remplace_at( 51, [ "bipush", 20 ] )
 #                  code.show()
 
-#            print "\t\t-> %x" % (len(j.save()))
+#            print("\t\t-> %x" % (len(j.save())))
 
 #            self.__adp.write( i[0], j.save() )
-            except Exception, e :
-                print e
+            except Exception as e :
+                print(e)
 
 def main(options, arguments) :
     if options.input != None :
@@ -135,7 +137,7 @@ def main(options, arguments) :
         AndroDump( apd )
 
     elif options.version != None :
-        print "Androdump version %s" % androconf.ANDROGUARD_VERSION
+        print(("Androdump version %s" % androconf.ANDROGUARD_VERSION))
 
 if __name__ == "__main__" :
     parser = OptionParser()

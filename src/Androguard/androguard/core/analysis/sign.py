@@ -16,8 +16,8 @@
 # limitations under the License.
 
 
-from androguard.core.analysis.analysis import TAINTED_PACKAGE_CREATE, TAINTED_PACKAGE_CALL
-from androguard.core.bytecodes import dvm
+from Androguard.androguard.core.analysis.analysis import TAINTED_PACKAGE_CREATE, TAINTED_PACKAGE_CALL
+from Androguard.androguard.core.bytecodes import dvm
 
 TAINTED_PACKAGE_INTERNAL_CALL = 2
 FIELD_ACCESS = { "R" : 0, "W" : 1 }
@@ -331,9 +331,9 @@ class Signature :
 
         s = Sign()
 
-        #print signature_type, signature_arguments
+        #print(signature_type, signature_arguments)
         for i in signature_type.split(":") :
-        #    print i, signature_arguments[ i ]
+        #    print(i, signature_arguments[ i ])
             if i == "L0" : 
                 _type = self.levels[ i ][ signature_arguments[ i ][ "type" ] ]
                 try : 

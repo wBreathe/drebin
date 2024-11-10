@@ -17,10 +17,10 @@
 
 from struct import pack, unpack, calcsize
 from collections import namedtuple
-import re, zipfile, StringIO, os
-
-from androguard.core import bytecode
-from androguard.core.bytecode import SV, SVs
+import re, zipfile, os
+import io
+from Androguard.androguard.core import bytecode
+from Androguard.androguard.core.bytecode import SV, SVs
 
 
 ######################################################## JAR FORMAT ########################################################
@@ -35,7 +35,7 @@ class JAR :
             self.__raw = fd.read()
             fd.close()
 
-        self.zip = zipfile.ZipFile( StringIO.StringIO( self.__raw ) )
+        self.zip = zipfile.ZipFile( io.StringIO( self.__raw ) )
 
     def get_classes(self) :
         l = []
@@ -47,7 +47,7 @@ class JAR :
 
 
     def show(self) :
-        print self.zip.namelist()
+        print(self.zip.namelist())
 
 ######################################################## CLASS FORMAT ########################################################
 
@@ -106,7 +106,7 @@ FD = { "B" : "byte",
 }
 
 def formatFD(v) :
-    #print v, "--->",
+    #print(v, "--->",)
     l = []
 
     i = 0
@@ -129,7 +129,7 @@ def formatFD(v) :
             l.append( FD[ v[i] ] )
         i = i + 1
 
-        #print l
+        #print(l)
     return l
 
 def TableSwitch(idx, raw_format) :
@@ -587,9 +587,9 @@ class CpInfo(object) :
 
     def show(self) :
         if self.__bytes != None :
-            print self.format.get_value(), self.__bytes.get_value()
+            print(self.format.get_value(), self.__bytes.get_value())
         else :
-            print self.format.get_value()
+            print(self.format.get_value())
 
 class MethodRef(CpInfo) :
     def __init__(self, class_manager, buff) :
@@ -784,7 +784,7 @@ class FieldInfo :
         return self.format.get_value().descriptor_index
 
     def show(self) :
-        print self.format.get_value(), self.get_name(), self.get_descriptor()
+        print(self.format.get_value(), self.get_name(), self.get_descriptor())
         for i in self.__attributes :
             i.show()
 
@@ -870,18 +870,18 @@ class MethodInfo :
         return self.get_code()._patch_bytecodes()
 
     def show(self) :
-        print "*" * 80
-        print self.format.get_value(), self.get_class_name(), self.get_name(), self.get_descriptor()
+        print("*" * 80)
+        print(self.format.get_value(), self.get_class_name(), self.get_name(), self.get_descriptor())
         for i in self.__attributes :
             i.show()
-        print "*" * 80
+        print("*" * 80)
 
     def pretty_show(self, vm_a) :
-        print "*" * 80
-        print self.format.get_value(), self.get_class_name(), self.get_name(), self.get_descriptor()
+        print("*" * 80)
+        print(self.format.get_value(), self.get_class_name(), self.get_name(), self.get_descriptor())
         for i in self.__attributes :
             i.pretty_show(vm_a.hmethods[ self ])
-        print "*" * 80
+        print("*" * 80)
 
 class CreateString :
     """Create a specific String constant by given the name index"""
@@ -1142,38 +1142,38 @@ class JBC :
 
     def adjust_r(self, pos, pos_modif, len_modif) :
         """Adjust the bytecode (if necessary (in this cas the bytecode is a branch bytecode)) when a bytecode has been removed"""
-#        print self.__op_name, pos, pos_modif, len_modif, self.__special_value, type(pos), type(pos_modif), type(len_modif), type(self.__special_value)
+#        print(self.__op_name, pos, pos_modif, len_modif, self.__special_value, type(pos), type(pos_modif), type(len_modif), type(self.__special_value))
 
         if pos > pos_modif :
             if (self.__special_value + pos) < (pos_modif) :
-#                print "MODIF +", self.__special_value, len_modif,
+#                print("MODIF +", self.__special_value, len_modif,)
                 self.__special_value += len_modif
-#                print self.__special_value
+#                print(self.__special_value)
                 self.__raw_buff = pack( '>B', INVERT_JAVA_OPCODES[ self.__op_name ] ) + pack(self.__special[3], *self.__special[1]( self.__special_value ) )
 
         elif pos < pos_modif :
             if (self.__special_value + pos) > (pos_modif) :
-#                print "MODIF -", self.__special_value, len_modif,
+#                print("MODIF -", self.__special_value, len_modif,)
                 self.__special_value -= len_modif
-#                print self.__special_value
+#                print(self.__special_value)
                 self.__raw_buff = pack( '>B', INVERT_JAVA_OPCODES[ self.__op_name ] ) + pack(self.__special[3], *self.__special[1]( self.__special_value ) )
 
     def adjust_i(self, pos, pos_modif, len_modif) :
         """Adjust the bytecode (if necessary (in this cas the bytecode is a branch bytecode)) when a bytecode has been inserted"""
-        #print self.__op_name, pos, pos_modif, len_modif, self.__special_value, type(pos), type(pos_modif), type(len_modif), type(self.__special_value)
+        #print(self.__op_name, pos, pos_modif, len_modif, self.__special_value, type(pos), type(pos_modif), type(len_modif), type(self.__special_value))
 
         if pos > pos_modif :
             if (self.__special_value + pos) < (pos_modif) :
-#                print "MODIF +", self.__special_value, len_modif,
+#                print("MODIF +", self.__special_value, len_modif,)
                 self.__special_value -= len_modif
-#                print self.__special_value
+#                print(self.__special_value)
                 self.__raw_buff = pack( '>B', INVERT_JAVA_OPCODES[ self.__op_name ] ) + pack(self.__special[3], *self.__special[1]( self.__special_value ) )
 
         elif pos < pos_modif :
             if (self.__special_value + pos) > (pos_modif) :
-#                print "MODIF -", self.__special_value, len_modif,
+#                print("MODIF -", self.__special_value, len_modif,)
                 self.__special_value += len_modif
-#                print self.__special_value
+#                print(self.__special_value)
                 self.__raw_buff = pack( '>B', INVERT_JAVA_OPCODES[ self.__op_name ] ) + pack(self.__special[3], *self.__special[1]( self.__special_value ) )
 
     def show_buff(self, pos) :
@@ -1193,7 +1193,7 @@ class JBC :
 
             pos - the position into the bytecodes (integer)
         """
-        print self.show_buff( pos ),
+        print(self.show_buff( pos ),)
 
 
 class JavaCode :
@@ -1355,7 +1355,7 @@ class JavaCode :
         """
         nb = 0
         for i in self.__bytecodes :
-            print nb, self.__maps[nb],
+            print(nb, self.__maps[nb],)
             i.show( self.__maps[nb] )
             print
             nb += 1
@@ -1378,7 +1378,7 @@ class JavaCode :
         n = 0
         x = 0
         for i in self.__bytecodes :
-            #print n, idx
+            #print(n, idx)
             if n == idx :
                 return x
             n += i.get_length()
@@ -1615,22 +1615,22 @@ class CodeAttribute(BasicAttribute) :
 
     # FIXME : show* --> add exceptions
     def show_info(self) :
-        print "!" * 70
-        print self.low_struct.get_value()
+        print("!" * 70)
+        print(self.low_struct.get_value())
         bytecode._Print( "ATTRIBUTES_COUNT", self.attributes_count.get_value() )
         for i in self.__attributes :
             i.show()
-        print "!" * 70
+        print("!" * 70)
 
     def _begin_show(self) :
-        print "!" * 70
-        print self.low_struct.get_value()
+        print("!" * 70)
+        print(self.low_struct.get_value())
 
     def _end_show(self) :
         bytecode._Print( "ATTRIBUTES_COUNT", self.attributes_count.get_value() )
         for i in self.__attributes :
             i.show()
-        print "!" * 70
+        print("!" * 70)
 
     def show(self) :
         self._begin_show()
@@ -1672,7 +1672,7 @@ class CodeAttribute(BasicAttribute) :
 
     def inserts_at(self, idx, l_bc) :
 #        self.low_struct.set_value( { "max_stack" : self.low_struct.get_value().max_stack + 2 } )
-#        print self.low_struct.get_value()
+#        print(self.low_struct.get_value())
         total_size = 0
         for i in l_bc :
             size = self.insert_at( idx, i )
@@ -1719,7 +1719,7 @@ class SourceFileAttribute(BasicAttribute) :
         return self.sourcefile_index.get_value_buff()
 
     def show(self) :
-        print self.sourcefile_index
+        print(self.sourcefile_index)
 
 class LineNumberTableAttribute(BasicAttribute) :
     def __init__(self, cm, buff) :
@@ -1749,7 +1749,7 @@ class LineNumberTableAttribute(BasicAttribute) :
     def show(self) :
         bytecode._Print("LINE_NUMBER_TABLE_LENGTH", self.line_number_table_length.get_value())
         for x in self.__line_number_table :
-            print "\t", x.get_value()
+            print("\t", x.get_value())
 
     def _fix_attributes(self, new_cm) :
         pass
@@ -1779,9 +1779,9 @@ class LocalVariableTableAttribute(BasicAttribute) :
                  ''.join(x.get_value_buff() for x in self.local_variable_table)
 
     def show(self) :
-        print "LocalVariableTable", self.local_variable_table_length.get_value()
+        print("LocalVariableTable", self.local_variable_table_length.get_value())
         for x in self.local_variable_table :
-            print x.get_value()
+            print(x.get_value())
 
 class LocalVariableTypeTableAttribute(BasicAttribute) :
     def __init__(self, cm, buff) :
@@ -1808,9 +1808,9 @@ class LocalVariableTypeTableAttribute(BasicAttribute) :
                  ''.join(x.get_value_buff() for x in self.local_variable_type_table)
 
     def show(self) :
-        print "LocalVariableTypeTable", self.local_variable_type_table_length.get_value()
+        print("LocalVariableTypeTable", self.local_variable_type_table_length.get_value())
         for x in self.local_variable_type_table :
-            print x.get_value()
+            print(x.get_value())
 
 class SourceDebugExtensionAttribute(BasicAttribute) :
     def __init__(self, cm, buff) :
@@ -1825,7 +1825,7 @@ class SourceDebugExtensionAttribute(BasicAttribute) :
         return self.debug_extension
 
     def show(self) :
-        print "SourceDebugExtension", self.debug_extension.get_value()
+        print("SourceDebugExtension", self.debug_extension.get_value())
 
 class DeprecatedAttribute(BasicAttribute) :
     def __init__(self, cm, buff) :
@@ -1837,7 +1837,7 @@ class DeprecatedAttribute(BasicAttribute) :
         return ''
 
     def show(self) :
-        print "Deprecated"
+        print("Deprecated")
 
 class SyntheticAttribute(BasicAttribute) :
     def __init__(self, cm, buff) :
@@ -1849,7 +1849,7 @@ class SyntheticAttribute(BasicAttribute) :
         return ''
 
     def show(self) :
-        print "Synthetic"
+        print("Synthetic")
 
 class SignatureAttribute(BasicAttribute) :
     def __init__(self, cm, buff) :
@@ -1864,7 +1864,7 @@ class SignatureAttribute(BasicAttribute) :
         return self.signature_index.get_value_buff()
 
     def show(self) :
-        print "Signature", self.signature_index.get_value()
+        print("Signature", self.signature_index.get_value())
 
 class RuntimeVisibleAnnotationsAttribute(BasicAttribute) :
     def __init__(self, cm, buff) :
@@ -1885,13 +1885,13 @@ class RuntimeVisibleAnnotationsAttribute(BasicAttribute) :
                  ''.join(x.get_raw() for x in self.annotations)
 
     def show(self) :
-        print "RuntimeVisibleAnnotations", self.num_annotations.get_value()
+        print("RuntimeVisibleAnnotations", self.num_annotations.get_value())
         for i in self.annotations :
             i.show()
 
 class RuntimeInvisibleAnnotationsAttribute(RuntimeVisibleAnnotationsAttribute) :
     def show(self) :
-        print "RuntimeInvisibleAnnotations", self.num_annotations.get_value()
+        print("RuntimeInvisibleAnnotations", self.num_annotations.get_value())
         for i in self.annotations :
             i.show()
 
@@ -1917,13 +1917,13 @@ class RuntimeVisibleParameterAnnotationsAttribute(BasicAttribute) :
                  ''.join(x.get_raw() for x in self.parameter_annotations)
 
     def show(self) :
-        print "RuntimeVisibleParameterAnnotations", self.num_parameters.get_value()
+        print("RuntimeVisibleParameterAnnotations", self.num_parameters.get_value())
         for i in self.parameter_annotations :
             i.show()
 
 class RuntimeInvisibleParameterAnnotationsAttribute(RuntimeVisibleParameterAnnotationsAttribute) :
     def show(self) :
-        print "RuntimeVisibleParameterAnnotations", self.num_annotations.get_value()
+        print("RuntimeVisibleParameterAnnotations", self.num_annotations.get_value())
         for i in self.parameter_annotations :
             i.show()
 
@@ -1943,7 +1943,7 @@ class ParameterAnnotation :
                  ''.join(x.get_raw() for x in self.annotations)
 
     def show(self) :
-        print "ParameterAnnotation", self.num_annotations.get_value()
+        print("ParameterAnnotation", self.num_annotations.get_value())
         for i in self.annotations :
             i.show()
 
@@ -1961,7 +1961,7 @@ class AnnotationDefaultAttribute(BasicAttribute) :
         return self.default_value.get_raw()
 
     def show(self) :
-        print "AnnotationDefault"
+        print("AnnotationDefault")
         self.default_value.show()
 
 class Annotation :
@@ -1984,7 +1984,7 @@ class Annotation :
                  ''.join(x.get_raw() for x in self.element_value_pairs)
 
     def show(self) :
-        print "Annotation", self.type_index.get_value(), self.num_element_value_pairs.get_value()
+        print("Annotation", self.type_index.get_value(), self.num_element_value_pairs.get_value())
         for i in self.element_value_pairs :
             i.show()
 
@@ -2001,7 +2001,7 @@ class ElementValuePair :
                  self.value.get_raw()
 
     def show(self) :
-        print "ElementValuePair", self.element_name_index.get_value()
+        print("ElementValuePair", self.element_name_index.get_value())
         self.value.show()
 
 ENUM_CONST_VALUE = [ '>HH', namedtuple("EnumConstValue", "type_name_index const_name_index") ]
@@ -2044,9 +2044,9 @@ class ElementValue :
         return self.tag.get_value_buff() + self.value.get_raw()
 
     def show(self) :
-        print "ElementValue", self.tag.get_value()
+        print("ElementValue", self.tag.get_value())
         if isinstance(self.value, SV) or isinstance(self.value, SVs) :
-            print self.value.get_value()
+            print(self.value.get_value())
         else :
             self.value.show()
 
@@ -2065,7 +2065,7 @@ class ArrayValue :
                  ''.join(x.get_raw() for x in self.values)
 
     def show(self) :
-        print "ArrayValue", self.num_values.get_value()
+        print("ArrayValue", self.num_values.get_value())
         for i in self.values :
             i.show()
 
@@ -2090,9 +2090,9 @@ class ExceptionsAttribute(BasicAttribute) :
         return self.__exception_index_table
 
     def show(self) :
-        print "Exceptions", self.number_of_exceptions.get_value()
+        print("Exceptions", self.number_of_exceptions.get_value())
         for i in self.__exception_index_table :
-            print "\t", i
+            print("\t", i)
 
 class VerificationTypeInfo :
     def __init__(self, class_manager, buff) :
@@ -2111,11 +2111,11 @@ class VerificationTypeInfo :
     def show(self) :
         general_format = self.format.get_value()
         if len( VERIFICATION_TYPE_INFO[ general_format.tag ] ) > 3 :
-            print general_format,
+            print(general_format,)
             for (i,j) in VERIFICATION_TYPE_INFO[ general_format.tag ][3] :
-                print getattr(self.__CM, j)( getattr(general_format, i) )
+                print(getattr(self.__CM, j)( getattr(general_format, i) ))
         else :
-            print general_format
+            print(general_format)
 
     def _fix_attributes(self, new_cm) :
         general_format = self.format.get_value()
@@ -2167,7 +2167,7 @@ class FullFrame :
                   ''.join(x.get_raw() for x in self.__stack)
 
     def show(self) :
-        print "#" * 60
+        print("#" * 60)
         bytecode._Print("\tFULL_FRAME", self.frame_type.get_value())
         bytecode._Print("\tOFFSET_DELTA", self.offset_delta.get_value())
 
@@ -2179,7 +2179,7 @@ class FullFrame :
         for i in self.__stack :
             i.show()
 
-        print "#" * 60
+        print("#" * 60)
 
     def _fix_attributes(self, new_cm) :
         for i in self.__locals :
@@ -2201,10 +2201,10 @@ class ChopFrame :
         return self.frame_type.get_value_buff() + self.offset_delta.get_value_buff()
 
     def show(self) :
-        print "#" * 60
+        print("#" * 60)
         bytecode._Print("\tCHOP_FRAME", self.frame_type.get_value())
         bytecode._Print("\tOFFSET_DELTA", self.offset_delta.get_value())
-        print "#" * 60
+        print("#" * 60)
 
     def _fix_attributes(self, cm) :
         pass
@@ -2221,9 +2221,9 @@ class SameFrame :
         return self.frame_type.get_value_buff()
 
     def show(self) :
-        print "#" * 60
+        print("#" * 60)
         bytecode._Print("\tSAME_FRAME", self.frame_type.get_value())
-        print "#" * 60
+        print("#" * 60)
 
     def _fix_attributes(self, new_cm) :
         pass
@@ -2240,10 +2240,10 @@ class SameLocals1StackItemFrame :
         self.stack = VerificationTypeInfo( self.__CM, buff )
 
     def show(self) :
-        print "#" * 60
+        print("#" * 60)
         bytecode._Print("\tSAME_LOCALS_1_STACK_ITEM_FRAME", self.frame_type.get_value())
         self.stack.show()
-        print "#" * 60
+        print("#" * 60)
 
     def get_raw(self) :
         return self.frame_type.get_value_buff() + self.stack.get_raw()
@@ -2274,11 +2274,11 @@ class SameLocals1StackItemFrameExtended :
         self.__CM = cm
 
     def show(self) :
-        print "#" * 60
+        print("#" * 60)
         bytecode._Print("\tSAME_LOCALS_1_STACK_ITEM_FRAME_EXTENDED", self.frame_type.get_value())
         bytecode._Print("\tOFFSET_DELTA", self.offset_delta.get_value())
         self.stack.show()
-        print "#" * 60
+        print("#" * 60)
 
 class SameFrameExtended :
     def __init__(self, buff) :
@@ -2297,10 +2297,10 @@ class SameFrameExtended :
         pass
 
     def show(self) :
-        print "#" * 60
+        print("#" * 60)
         bytecode._Print("\tSAME_FRAME_EXTENDED", self.frame_type.get_value())
         bytecode._Print("\tOFFSET_DELTA", self.offset_delta.get_value())
-        print "#" * 60
+        print("#" * 60)
 
 class AppendFrame :
     def __init__(self, class_manager, buff) :
@@ -2320,14 +2320,14 @@ class AppendFrame :
         return self.__locals
 
     def show(self) :
-        print "#" * 60
+        print("#" * 60)
         bytecode._Print("\tAPPEND_FRAME", self.frame_type.get_value())
         bytecode._Print("\tOFFSET_DELTA", self.offset_delta.get_value())
 
         for i in self.__locals :
             i.show()
 
-        print "#" * 60
+        print("#" * 60)
 
     def get_raw(self) :
         return self.frame_type.get_value_buff() + \
@@ -2415,7 +2415,7 @@ class InnerClassesDesc :
         self.format = SVs( INNER_CLASSES_FORMAT[0], namedtuple( "InnerClassesFormat", INNER_CLASSES_FORMAT[1] ), self.__raw_buff )
 
     def show(self) :
-        print self.format
+        print(self.format)
 
     def get_raw(self) :
         return self.format.get_value_buff()
@@ -2448,7 +2448,7 @@ class InnerClassesAttribute(BasicAttribute) :
         return self.__classes
 
     def show(self) :
-        print self.number_of_classes
+        print(self.number_of_classes)
         for i in self.__classes :
             i.show()
 
@@ -2473,7 +2473,7 @@ class ConstantValueAttribute(BasicAttribute) :
         self.constantvalue_index = SV( '>H', buff.read(2) )
 
     def show(self) :
-        print self.constantvalue_index
+        print(self.constantvalue_index)
 
     def set_cm(self, cm) :
         self.__CM = cm
@@ -2498,7 +2498,7 @@ class EnclosingMethodAttribute(BasicAttribute) :
         self.format = SVs( ENCLOSING_METHOD_FORMAT[0], namedtuple( "EnclosingMethodFormat", ENCLOSING_METHOD_FORMAT[1] ), self.__raw_buff )
 
     def show(self) :
-        print self.format
+        print(self.format)
 
     def set_cm(self, cm) :
         self.__CM = cm
@@ -2539,7 +2539,7 @@ class AttributeInfo :
 
         try :
             self._info = ATTRIBUTE_INFO_DESCR[ self.__name ](self.__CM, buff)
-        except KeyError, ke :
+        except KeyError as ke :
             bytecode.Exit( "AttributeInfo %s doesn't exit" % self.__name )
 
     def get_item(self) :
@@ -2578,12 +2578,12 @@ class AttributeInfo :
         self._info.set_cm( cm )
 
     def show(self) :
-        print self.format, self.__name
+        print(self.format, self.__name)
         if self._info != None :
             self._info.show()
 
     def pretty_show(self, m_a) :
-        print self.format, self.__name
+        print(self.format, self.__name)
         if self._info != None :
             if isinstance(self._info, CodeAttribute) :
                 self._info.pretty_show(m_a)
@@ -3132,7 +3132,7 @@ class JVMFormat(bytecode._Bytecode) :
             descriptor = self.__CM.get_string( self.__CM.get_item(name_and_type_idx).get_descriptor_index() )
 
             if old[0] == class_name and old[1] == field_name and old[2] == descriptor :
-#              print "SET USED FIELD", class_name, method_name, descriptor
+#              print("SET USED FIELD", class_name, method_name, descriptor)
 
                 self.__CM.set_string( self.__CM.get_item(class_idx).get_name_index(), new[0] )
                 self.__CM.set_string( self.__CM.get_item(name_and_type_idx).get_name_index(), new[1] )
@@ -3153,7 +3153,7 @@ class JVMFormat(bytecode._Bytecode) :
             descriptor = self.__CM.get_string( self.__CM.get_item(name_and_type_idx).get_descriptor_index() )
 
             if old[0] == class_name and old[1] == method_name and old[2] == descriptor :
-#                print "SET USED METHOD", class_name, method_name, descriptor
+#                print("SET USED METHOD", class_name, method_name, descriptor)
 
                 self.__CM.set_string( self.__CM.get_item(class_idx).get_name_index(), new[0] )
                 self.__CM.set_string( self.__CM.get_item(name_and_type_idx).get_name_index(), new[1] )
@@ -3171,7 +3171,7 @@ class JVMFormat(bytecode._Bytecode) :
 
         nb = 0
         for i in self.constant_pool :
-            print nb,
+            print(nb,)
             i.show()
             nb += 1
 
@@ -3183,13 +3183,13 @@ class JVMFormat(bytecode._Bytecode) :
         bytecode._Print( "INTERFACE COUNT", self.interfaces_count.get_value() )
         nb = 0
         for i in self.interfaces :
-            print nb,
-            print i
+            print(nb,)
+            print(i)
 
         bytecode._Print( "FIELDS COUNT", self.fields_count.get_value() )
         nb = 0
         for i in self.fields :
-            print nb,
+            print(nb,)
             i.show()
             nb += 1
 
@@ -3197,7 +3197,7 @@ class JVMFormat(bytecode._Bytecode) :
         bytecode._Print( "METHODS COUNT", self.methods_count.get_value() )
         nb = 0
         for i in self.methods :
-            print nb,
+            print(nb,)
             i.show()
             nb += 1
 
@@ -3205,7 +3205,7 @@ class JVMFormat(bytecode._Bytecode) :
         bytecode._Print( "ATTRIBUTES COUNT", self.attributes_count.get_value() )
         nb = 0
         for i in self.__attributes :
-            print nb,
+            print(nb,)
             i.show()
             nb += 1
 
@@ -3220,7 +3220,7 @@ class JVMFormat(bytecode._Bytecode) :
 
         nb = 0
         for i in self.constant_pool :
-            print nb,
+            print(nb,)
             i.show()
             nb += 1
 
@@ -3232,13 +3232,13 @@ class JVMFormat(bytecode._Bytecode) :
         bytecode._Print( "INTERFACE COUNT", self.interfaces_count.get_value() )
         nb = 0
         for i in self.interfaces :
-            print nb,
+            print(nb,)
             i.show()
 
         bytecode._Print( "FIELDS COUNT", self.fields_count.get_value() )
         nb = 0
         for i in self.fields :
-            print nb,
+            print(nb,)
             i.show()
             nb += 1
 
@@ -3246,7 +3246,7 @@ class JVMFormat(bytecode._Bytecode) :
         bytecode._Print( "METHODS COUNT", self.methods_count.get_value() )
         nb = 0
         for i in self.methods :
-            print nb,
+            print(nb,)
             i.pretty_show(vm_a)
             nb += 1
 
@@ -3254,7 +3254,7 @@ class JVMFormat(bytecode._Bytecode) :
         bytecode._Print( "ATTRIBUTES COUNT", self.attributes_count.get_value() )
         nb = 0
         for i in self.__attributes :
-            print nb,
+            print(nb,)
             i.show()
 
     def insert_string(self, value) :

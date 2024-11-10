@@ -17,9 +17,9 @@
 
 import logging
 from struct import unpack
-from androguard.decompiler.dad.util import get_type
-from androguard.decompiler.dad.opcode_ins import Op
-from androguard.decompiler.dad.instruction import (Constant, ThisParam,
+from Androguard.androguard.decompiler.dad.util import get_type
+from Androguard.androguard.decompiler.dad.opcode_ins import Op
+from Androguard.androguard.decompiler.dad.instruction import (Constant, ThisParam,
                                                    BinaryExpression,
                                                    BinaryCompExpression)
 

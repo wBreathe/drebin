@@ -22,15 +22,15 @@ import sys
 
 from optparse import OptionParser
 
-from androguard.core.bytecodes import apk, dvm
-from androguard.core.analysis import analysis
-from androguard.core import androconf
+from Androguard.androguard.core.bytecodes import apk, dvm
+from Androguard.androguard.core.analysis import analysis
+from Androguard.androguard.core import androconf
 
 sys.path.append("./elsim")
-from elsim import elsim
-from elsim.elsim_dalvik import ProxyDalvik, FILTERS_DALVIK_SIM, ProxyDalvikMethod, FILTERS_DALVIK_BB
-from elsim.elsim_dalvik import ProxyDalvikBasicBlock, FILTERS_DALVIK_DIFF_BB
-from elsim.elsim_dalvik import DiffDalvikMethod
+from .elsim import elsim
+from .elsim.elsim_dalvik import ProxyDalvik, FILTERS_DALVIK_SIM, ProxyDalvikMethod, FILTERS_DALVIK_BB
+from .elsim.elsim_dalvik import ProxyDalvikBasicBlock, FILTERS_DALVIK_DIFF_BB
+from .elsim.elsim_dalvik import DiffDalvikMethod
 
 
 option_0 = { 'name' : ('-i', '--input'), 'help' : 'file : use these filenames', 'nargs' : 2 }
@@ -68,7 +68,7 @@ def main(options, arguments) :
         
         dx2 = analysis.VMAnalysis( d2 )
 
-        print d1, dx1, d2, dx2
+        print((d1, dx1, d2, dx2))
         sys.stdout.flush()
         
         threshold = None
@@ -93,18 +93,18 @@ def main(options, arguments) :
             ddm = DiffDalvikMethod( i, j, elb, eld )
             ddm.show()
 
-        print "NEW METHODS"
+        print("NEW METHODS")
         enew = el.get_new_elements()
         for i in enew :
             el.show_element( i, False )
 
-        print "DELETED METHODS"
+        print("DELETED METHODS")
         edel = el.get_deleted_elements()
         for i in edel :
             el.show_element( i )
 
     elif options.version != None :
-        print "Androdiff version %s" % androconf.ANDROGUARD_VERSION
+        print(("Androdiff version %s" % androconf.ANDROGUARD_VERSION))
 
 if __name__ == "__main__" :
     parser = OptionParser()

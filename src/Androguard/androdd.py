@@ -25,12 +25,12 @@ import re
 
 from optparse import OptionParser
 
-from androguard.core.androgen import Androguard
-from androguard.core import androconf
-from androguard.core.analysis import analysis
-from androguard.core.bytecodes import dvm
-from androguard.core.bytecode import method2dot, method2format
-from androguard.decompiler import decompiler
+from Androguard.androguard.core.androgen import Androguard
+from Androguard.androguard.core import androconf
+from Androguard.androguard.core.analysis import analysis
+from Androguard.androguard.core.bytecodes import dvm
+from Androguard.androguard.core.bytecode import method2dot, method2format
+from Androguard.androguard.decompiler import decompiler
 
 option_0 = { 'name' : ('-i', '--input'), 'help' : 'file : use this filename', 'nargs' : 1 }
 option_1 = { 'name' : ('-o', '--output'), 'help' : 'base directory to output all files', 'nargs' : 1 }
@@ -66,13 +66,13 @@ def create_directory(class_name, output):
 
 
 def export_apps_to_format(filename, a, output, methods_filter=None, jar=None, decompiler_type=None, format=None):
-    print "Dump information %s in %s" % (filename, output)
+    print(("Dump information %s in %s" % (filename, output)))
 
     if not os.path.exists(output):
-        print "Create directory %s" % output
+        print(("Create directory %s" % output))
         os.makedirs(output)
     else:
-        print "Clean directory %s" % output
+        print(("Clean directory %s" % output))
         androconf.rrmdir(output)
         os.makedirs(output)
 
@@ -86,12 +86,12 @@ def export_apps_to_format(filename, a, output, methods_filter=None, jar=None, de
 
     dump_classes = []
     for vm in a.get_vms():
-        print "Analysis ...",
+        print(("Analysis ...",))
         sys.stdout.flush()
         vmx = analysis.VMAnalysis(vm)
-        print "End"
+        print("End")
 
-        print "Decompilation ...",
+        print(("Decompilation ...",))
         sys.stdout.flush()
 
         if not decompiler_type:
@@ -125,16 +125,16 @@ def export_apps_to_format(filename, a, output, methods_filter=None, jar=None, de
                                                                   androconf.CONF["TMP_DIRECTORY"]))
         else:
             raise("invalid decompiler !")
-        print "End"
+        print("End")
 
         if options.jar:
-            print "jar ...",
+            print(("jar ...",))
             filenamejar = decompiler.Dex2Jar(vm,
                                              androconf.CONF["PATH_DEX2JAR"],
                                              androconf.CONF["BIN_DEX2JAR"],
                                              androconf.CONF["TMP_DIRECTORY"]).get_jar()
             shutil.move(filenamejar, output + "classes.jar")
-            print "End"
+            print("End")
 
         for method in vm.get_methods():
             if methods_filter_expr:
@@ -147,9 +147,9 @@ def export_apps_to_format(filename, a, output, methods_filter=None, jar=None, de
             filename_class = valid_class_name(method.get_class_name())
             create_directory(filename_class, output)
 
-            print "Dump %s %s %s ..." % (method.get_class_name(),
+            print(("Dump %s %s %s ..." % (method.get_class_name(),
                                          method.get_name(),
-                                         method.get_descriptor()),
+                                         method.get_descriptor()),))
 
             filename_class = output_name + filename_class
             if filename_class[-1] != "/":
@@ -176,11 +176,11 @@ def export_apps_to_format(filename, a, output, methods_filter=None, jar=None, de
             buff = method2dot(vmx.get_method(method))
 
             if format:
-                print "%s ..." % format,
+                print(("%s ..." % format,))
                 method2format(filename + "." + format, format, None, buff)
 
             if method.get_class_name() not in dump_classes:
-                print "source codes ...",
+                print(("source codes ...",))
                 current_class = vm.get_class(method.get_class_name())
                 current_filename_class = valid_class_name(current_class.get_name())
                 create_directory(filename_class, output)
@@ -192,13 +192,13 @@ def export_apps_to_format(filename, a, output, methods_filter=None, jar=None, de
 
                 dump_classes.append(method.get_class_name())
 
-            print "bytecodes ...",
+            print(("bytecodes ...",))
             bytecode_buff = dvm.get_bytecodes_method(vm, vmx, method)
             fd = open(filename + ".ag", "w")
             fd.write(bytecode_buff)
             fd.close()
 
-            print
+            print()
 
 
 def main(options, arguments):
@@ -206,9 +206,9 @@ def main(options, arguments):
         a = Androguard([options.input])
         export_apps_to_format(options.input, a, options.output, options.limit, options.jar, options.decompiler, options.format)
     elif options.version != None:
-        print "Androdd version %s" % androconf.ANDROGUARD_VERSION
+        print(("Androdd version %s" % androconf.ANDROGUARD_VERSION))
     else:
-      print "Please, specify an input file and an output directory"
+      print("Please, specify an input file and an output directory")
 
 if __name__ == "__main__":
     parser = OptionParser()

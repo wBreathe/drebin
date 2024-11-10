@@ -5,8 +5,8 @@ import sys
 PATH_INSTALL = "./"
 sys.path.append(PATH_INSTALL)
 
-from androguard.core.bytecodes import dvm
-from androguard.core.analysis import analysis
+from Androguard.androguard.core.bytecodes import dvm
+from Androguard.androguard.core.analysis import analysis
 
 TEST = "examples/android/TestsAndroguard/bin/classes.dex"
 

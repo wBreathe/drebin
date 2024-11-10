@@ -35,9 +35,8 @@ try:
 except ImportError:
     pass
 
-from compat import *  # for: any, next
-import widgets
-
+from .compat import *  # for: any, next
+import Modules.progressbar.widgets as widgets
 
 class UnknownLength: pass
 

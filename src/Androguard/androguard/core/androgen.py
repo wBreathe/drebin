@@ -15,12 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from androguard.core import androconf
-from androguard.core.bytecodes import jvm
-from androguard.core.bytecodes import dvm
-from androguard.core.bytecodes import apk
-from androguard.core.analysis import analysis
-from androguard.core.analysis import ganalysis
+from Androguard.androguard.core import androconf
+from Androguard.androguard.core.bytecodes import jvm
+from Androguard.androguard.core.bytecodes import dvm
+from Androguard.androguard.core.bytecodes import apk
+from Androguard.androguard.core.analysis import analysis
+from Androguard.androguard.core.analysis import ganalysis
 
 class BC :
     def __init__(self, bc) :
@@ -116,7 +116,7 @@ class Androguard:
             elif ret_type == "DEY" :
                 bc = dvm.DalvikOdexVMFormat( open(i, "rb").read() )
             elif ret_type == "ELF" :
-                from androguard.core.binaries import elf
+                from Androguard.androguard.core.binaries import elf
                 bc = elf.ELF( open(i, "rb").read() )
             else :
                 raise( "Unknown format" )

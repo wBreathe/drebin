@@ -5,10 +5,10 @@ import sys, re
 PATH_INSTALL = "./"
 sys.path.append(PATH_INSTALL)
 
-from androguard.core.androgen import AndroguardS
-from androguard.core.analysis import analysis
+from Androguard.androguard.core.androgen import AndroguardS
+from Androguard.androguard.core.analysis import analysis
 
-from androguard.core.bytecodes.jvm import BRANCH2_JVM_OPCODES, determineNext
+from Androguard.androguard.core.bytecodes.jvm import BRANCH2_JVM_OPCODES, determineNext
 
 TEST_CASE  = 'examples/java/TC/orig/TCE.class'
 
@@ -76,7 +76,7 @@ def test(got, expected):
     else:
         prefix = '  X '
 
-    print '\t%s got: %s expected: %s' % (prefix, repr(got), repr(expected))
+    print('\t%s got: %s expected: %s' % (prefix, repr(got), repr(expected)))
 
 def getVal(i) :
     op = i.get_operands()
@@ -105,14 +105,14 @@ def check(a, values, branch) :
         if key not in values :
             continue
 
-        print "CHECKING ...", method.get_class_name(), method.get_name(), method.get_descriptor()
+        print("CHECKING ...", method.get_class_name(), method.get_name(), method.get_descriptor())
         code = method.get_code()
         bc = code.get_bc()
 
         idx = 0
         v = 0
         for i in bc.get() :
-#         print "\t", "%x(%d)" % (idx, idx), i.get_name(), i.get_operands()
+#         print("\t", "%x(%d)" % (idx, idx), i.get_name(), i.get_operands())
             for j in b :
                 if j.match(i.get_name()) != None :
                     elem = values[key][v]
@@ -130,7 +130,7 @@ def modify(a, modif) :
         if key not in modif :
             continue
 
-        print "MODIFYING ...", method.get_class_name(), method.get_name(), method.get_descriptor()
+        print("MODIFYING ...", method.get_class_name(), method.get_name(), method.get_descriptor())
         code = method.get_code()
 
         for i in modif[key] :

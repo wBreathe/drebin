@@ -21,10 +21,10 @@ import threading
 import time
 import zlib
 
-from androguard.core import androconf
-from androguard.core.bytecodes import apk, dvm
-from androguard.core.analysis import analysis
-from androguard.core.androconf import debug
+from Androguard.androguard.core import androconf
+from Androguard.androguard.core.bytecodes import apk, dvm
+from Androguard.androguard.core.analysis import analysis
+from Androguard.androguard.core.androconf import debug
 
 
 class AndroAuto(object):
@@ -103,7 +103,7 @@ class AndroAuto(object):
             myandro.analysis_app(log, a, d, dx)
 
           myandro.finish(log)
-        except Exception, why:
+        except Exception as why:
           myandro.crash(log, why)
           myandro.finish(log)
 

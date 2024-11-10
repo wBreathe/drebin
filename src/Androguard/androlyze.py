@@ -22,26 +22,26 @@ import sys, os, cmd, threading, code, re
 
 from optparse import OptionParser
 
-from androguard.core import *
-from androguard.core.androgen import *
-from androguard.core.androconf import *
-from androguard.core.bytecode import *
-#from androguard.core.bytecodes.jvm import *
-from androguard.core.bytecodes.dvm import *
-from androguard.core.bytecodes.apk import *
+from Androguard.androguard.core import *
+from Androguard.androguard.core.androgen import *
+from Androguard.androguard.core.androconf import *
+from Androguard.androguard.core.bytecode import *
+#from Androguard.androguard.core.bytecodes.jvm import *
+from Androguard.androguard.core.bytecodes.dvm import *
+from Androguard.androguard.core.bytecodes.apk import *
 
-from androguard.core.analysis.analysis import *
-from androguard.core.analysis.ganalysis import *
-from androguard.core.analysis.risk import *
-from androguard.decompiler.decompiler import *
+from Androguard.androguard.core.analysis.analysis import *
+from Androguard.androguard.core.analysis.ganalysis import *
+from Androguard.androguard.core.analysis.risk import *
+from Androguard.androguard.decompiler.decompiler import *
 
 
-from androguard.core import androconf
+from Androguard.androguard.core import androconf
 
 #from IPython.frontend.terminal.embed import InteractiveShellEmbed
 #from IPython.config.loader import Config
 
-from cPickle import dumps, loads
+from pickle import dumps, loads
 
 option_0 = { 'name' : ('-i', '--input'), 'help' : 'file : use this filename', 'nargs' : 1 }
 option_1 = { 'name' : ('-d', '--display'), 'help' : 'display the file in human readable format', 'action' : 'count' }
@@ -49,7 +49,7 @@ option_2 = { 'name' : ('-m', '--method'), 'help' : 'display method(s) respect wi
 option_3 = { 'name' : ('-f', '--field'), 'help' : 'display field(s) respect with a regexp', 'nargs' : 1 }
 option_4 = { 'name' : ('-s', '--shell'), 'help' : 'open an interactive shell to play more easily with objects', 'action' : 'count' }
 option_5 = { 'name' : ('-v', '--version'), 'help' : 'version of the API', 'action' : 'count' }
-option_6 = { 'name' : ('-p', '--pretty'), 'help' : 'pretty print !', 'action' : 'count' }
+option_6 = { 'name' : ('-p', '--pretty'), 'help' : 'pretty print!', 'action' : 'count' }
 option_8 = { 'name' : ('-x', '--xpermissions'), 'help' : 'show paths of permissions', 'action' : 'count' }
 
 options = [option_0, option_1, option_2, option_3, option_4, option_5, option_6, option_8]
@@ -240,7 +240,7 @@ def RunDecompiler(d, dx, decompiler):
 
 def AnalyzeElf(filename, raw=False):
     # avoid to install smiasm for everybody
-    from androguard.core.binaries.elf import ELF
+    from Androguard.Androguard.androguard.core.binaries.elf import ELF
 
     e = None
     if raw == False:
@@ -309,12 +309,12 @@ def main(options, arguments):
             _a.ianalyze()
             perms_access = _a.get_analysis().get_permissions( [] )
             for perm in perms_access :
-                print "PERM : ", perm
+                print(("PERM : ", perm))
                 for path in perms_access[ perm ] :
                     show_Path( _a.get_vm(), path )
 
     elif options.version != None :
-        print "Androlyze version %s" % androconf.ANDROGUARD_VERSION
+        print(("Androlyze version %s" % androconf.ANDROGUARD_VERSION))
 
 if __name__ == "__main__" :
     parser = OptionParser()

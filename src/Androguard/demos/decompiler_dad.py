@@ -5,9 +5,9 @@ import sys
 PATH_INSTALL = "./"
 sys.path.append(PATH_INSTALL)
 
-from androguard.core.bytecodes import dvm
-from androguard.core.analysis import analysis
-from androguard.decompiler.dad import decompile
+from Androguard.androguard.core.bytecodes import dvm
+from Androguard.androguard.core.analysis import analysis
+from Androguard.androguard.decompiler.dad import decompile
 
 TEST = 'examples/android/TestsAndroguard/bin/classes.dex'
 
@@ -21,9 +21,9 @@ for method in vm.get_methods():
     if method.get_code() == None:
       continue
 
-    print method.get_class_name(), method.get_name(), method.get_descriptor()
+    print(method.get_class_name(), method.get_name(), method.get_descriptor())
 
     ms = decompile.DvMethod(mx)
     ms.process()
 
-    print ms.get_source()
+    print(ms.get_source())

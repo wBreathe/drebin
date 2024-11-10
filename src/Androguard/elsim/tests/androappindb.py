@@ -31,9 +31,9 @@ from elsim.elsim_db import *
 from elsim.elsim_dalvik import LIST_EXTERNAL_LIBS
 from elsim.similarity.similarity import *
 
-from androguard.core import androconf
-from androguard.core.bytecodes import apk, dvm
-from androguard.core.analysis import analysis
+from Androguard.androguard.core import androconf
+from Androguard.androguard.core.bytecodes import apk, dvm
+from Androguard.androguard.core.analysis import analysis
 
 DEFAULT_SIGNATURE = analysis.SIGNATURE_SEQUENCE_BB
 option_0 = { 'name' : ('-i', '--input'), 'help' : 'use this filename', 'nargs' : 1 }
@@ -46,9 +46,9 @@ options = [option_0, option_1, option_2, option_3, option_4]
 
 
 def check_one_file(d1, dx1) :
-  print "Similarities ...."
+  print("Similarities ....")
   e = ElsimDB( options.database )
-  print e.percentages(d1, dx1)
+  print(e.percentages(d1, dx1))
 
 def check_one_directory(directory) :
     for root, dirs, files in os.walk( directory, followlinks=True ) :
@@ -59,7 +59,7 @@ def check_one_directory(directory) :
                     real_filename += "/"
                 real_filename += f
 
-                print "filename: %s ..." % real_filename
+                print("filename: %s ..." % real_filename)
                 ret_type = androconf.is_android( real_filename )
                 if ret_type == "APK" :
                     a = apk.APK( real_filename )
@@ -91,7 +91,7 @@ def main(options, arguments) :
         db.show()
 
     elif options.version != None :
-        print "Androappindb version %s" % androconf.ANDROGUARD_VERSION
+        print("Androappindb version %s" % androconf.ANDROGUARD_VERSION)
 
 if __name__ == "__main__" :
     parser = OptionParser()
