@@ -50,6 +50,7 @@ def main(options, arguments) :
 
         if options.output != None :
             fd = codecs.open(options.output, "w", "utf-8")
+            print(f"in androaxml write 0")
             fd.write( buff )
             fd.close()
         else :

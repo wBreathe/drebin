@@ -148,7 +148,7 @@ def dead_code_elimination(graph, du, ud):
 
 
 def clear_path_node(graph, reg, loc1, loc2):
-    for loc in xrange(loc1, loc2):
+    for loc in range(loc1, loc2):
         ins = graph.get_ins_from_loc(loc)
         logger.debug('  treat loc: %d, ins: %s', loc, ins)
         if ins is None:

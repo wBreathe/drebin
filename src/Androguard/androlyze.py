@@ -113,9 +113,13 @@ def AnalyzeAPK(filename, raw=False, decompiler=None):
 
         :rtype: return the :class:`APK`, :class:`DalvikVMFormat`, and :class:`VMAnalysis` objects
     """
+    print(f"in analyzeAPK 0")
     androconf.debug("APK ...")
+    print(f"in analyzeAPK 1" )
     a = APK(filename, raw)
+    print(f"in analyzeAPK 2")
     d, dx = AnalyzeDex(a.get_dex(), raw=True, decompiler=decompiler)
+    print(f"in analyzeAPK 3")
     return a, d, dx
 
 
@@ -130,6 +134,8 @@ def AnalyzeDex(filename, raw=False, decompiler=None):
 
         :rtype: return the :class:`DalvikVMFormat`, and :class:`VMAnalysis` objects
     """
+    
+    # TO DO I AM HERE
     androconf.debug("DalvikVMFormat ...")
 
     d = None

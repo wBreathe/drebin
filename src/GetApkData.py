@@ -52,7 +52,7 @@ def GetFromXML(ApkDirectoryPath, ApkFile):
         a = androlyze.APK(ApkFile)
         print(f'this is a: {a}')
         f = open(os.path.splitext(ApkFile)[0] + ".xml", "w")
-        f.write((a.xml["AndroidManifest.xml"].toprettyxml()).encode("utf-8"))
+        f.write(a.xml["AndroidManifest.xml"].toprettyxml())
         f.close()
     except Exception as e:
         print(e)

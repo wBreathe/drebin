@@ -574,7 +574,7 @@ class AnnotationSetItem :
         self.annotation_off_item = []
 
         self.size = unpack("=I", buff.read( 4 ) )[0]
-        for i in xrange(0, self.size) :
+        for i in range(0, self.size) :
             self.annotation_off_item.append( AnnotationOffItem(buff, cm) )
 
     def get_annotation_off_item(self) :
@@ -664,7 +664,7 @@ class AnnotationSetRefList:
         self.list = []
 
         self.size = unpack("=I", buff.read( 4 ) )[0]
-        for i in xrange(0, self.size) :
+        for i in range(0, self.size) :
             self.list.append( AnnotationSetRefItem(buff, cm) )
 
     def get_list(self) :
@@ -880,15 +880,15 @@ class AnnotationsDirectoryItem :
         self.annotated_parameters_size = unpack("=I", buff.read(4))[0]
 
         self.field_annotations = []
-        for i in xrange(0, self.annotated_fields_size) :
+        for i in range(0, self.annotated_fields_size) :
             self.field_annotations.append( FieldAnnotation( buff, cm ) )
 
         self.method_annotations = []
-        for i in xrange(0, self.annotated_methods_size) :
+        for i in range(0, self.annotated_methods_size) :
             self.method_annotations.append( MethodAnnotation( buff, cm ) )
 
         self.parameter_annotations = []
-        for i in xrange(0, self.annotated_parameters_size) :
+        for i in range(0, self.annotated_parameters_size) :
             self.parameter_annotations.append( ParameterAnnotation( buff, cm ) )
 
     def get_class_annotations_off(self) :
@@ -1069,7 +1069,7 @@ class TypeList :
         self.size = unpack("=I", buff.read( 4 ) )[0]
 
         self.list = []
-        for i in xrange(0, self.size) :
+        for i in range(0, self.size) :
             self.list.append( TypeItem( buff, cm ) )
 
     def get_pad(self) :
@@ -1225,7 +1225,7 @@ class DebugInfoItem :
         #print("line", self.line_start, "params", self.parameters_size)
 
         self.parameter_names = []
-        for i in xrange(0, self.parameters_size) :
+        for i in range(0, self.parameters_size) :
             self.parameter_names.append( readuleb128p1( buff ) )
 
         self.bytecodes = []
@@ -1378,7 +1378,7 @@ class EncodedArray :
         self.size = readuleb128( buff )
 
         self.values = []
-        for i in xrange(0, self.size) :
+        for i in range(0, self.size) :
             self.values.append( EncodedValue(buff, cm) )
 
     def get_size(self) :
@@ -1579,7 +1579,7 @@ class EncodedAnnotation :
         self.size = readuleb128( buff )
 
         self.elements = []
-        for i in xrange(0, self.size) :
+        for i in range(0, self.size) :
             self.elements.append( AnnotationElement( buff, cm ) )
 
     def get_type_idx(self) :
@@ -1739,7 +1739,7 @@ class EncodedArrayItem :
 def utf8_to_string(buff, length):
     chars = []
 
-    for _ in xrange(length):
+    for _ in range(length):
         first_char = ord(buff.read(1))
         value = first_char >> 4
         if value in (0x00, 0x01, 0x02, 0x03,
@@ -1944,7 +1944,7 @@ class TypeHIdItem :
         self.offset = buff.get_idx()
 
         self.type = []
-        for i in xrange(0, size) :
+        for i in range(0, size) :
             self.type.append( TypeIdItem( buff, cm ) )
 
     def get_type(self) :
@@ -2098,7 +2098,7 @@ class ProtoHIdItem :
 
         self.proto = []
 
-        for i in xrange(0, size) :
+        for i in range(0, size) :
             self.proto.append( ProtoIdItem(buff, cm) )
 
     def set_off(self, off) :
@@ -2248,7 +2248,7 @@ class FieldHIdItem :
         self.offset = buff.get_idx()
 
         self.elem = []
-        for i in xrange(0, size) :
+        for i in range(0, size) :
             self.elem.append( FieldIdItem(buff, cm) )
 
     def set_off(self, off) :
@@ -2405,7 +2405,7 @@ class MethodHIdItem :
         self.offset = buff.get_idx()
 
         self.methods = []
-        for i in xrange(0, size) :
+        for i in range(0, size) :
             self.methods.append( MethodIdItem(buff, cm) )
 
     def set_off(self, off) :
@@ -2765,7 +2765,7 @@ class EncodedMethod:
             info["registers"] = (0, nb - len(params) - 1)
             j = 0
             info["params"] = []
-            for i in xrange(nb - len(params), nb):
+            for i in range(nb - len(params), nb):
               info["params"].append((i, get_type(params[j])))
               j += 1
           else:
@@ -2782,7 +2782,7 @@ class EncodedMethod:
         if params:
             bytecode._PrintDefault("- local registers: v%d...v%d\n" % (0, nb - len(params) - 1))
             j = 0
-            for i in xrange(nb - len(params), nb):
+            for i in range(nb - len(params), nb):
                 bytecode._PrintDefault("- v%d: %s\n" % (i, get_type(params[j])))
                 j += 1
         else:
@@ -3104,12 +3104,12 @@ class ClassDataItem :
         if value != None :
             values = value.get_values()
             if len(values) <= len(self.static_fields) :
-                for i in xrange(0, len(values)) :
+                for i in range(0, len(values)) :
                     self.static_fields[i].set_init_value( values[i] )
 
     def _load_elements(self, size, l, Type, buff, cm) :
         prev = 0
-        for i in xrange(0, size) :
+        for i in range(0, size) :
             el = Type(buff, cm)
             el.adjust_idx( prev )
 
@@ -3466,7 +3466,7 @@ class ClassHDefItem :
 
         self.class_def = []
 
-        for i in xrange(0, size) :
+        for i in range(0, size) :
             idx = buff.get_idx()
 
             class_def = ClassDefItem( buff, cm )
@@ -3578,7 +3578,7 @@ class EncodedCatchHandler :
 
         self.handlers = []
 
-        for i in xrange(0, abs(self.size)) :
+        for i in range(0, abs(self.size)) :
             self.handlers.append( EncodedTypeAddrPair(buff) )
 
         if self.size <= 0 :
@@ -3658,7 +3658,7 @@ class EncodedCatchHandlerList :
         self.size = readuleb128( buff )
         self.list = []
 
-        for i in xrange(0, self.size) :
+        for i in range(0, self.size) :
             self.list.append( EncodedCatchHandler(buff, cm) )
 
 
@@ -3977,7 +3977,7 @@ class FillArrayData:
         data = self.get_data()
 
         buff += repr(data) + " | "
-        for i in xrange(0, len(data)):
+        for i in range(0, len(data)):
           buff += "\\x%02x" % ord(data[i])
 
         return buff
@@ -4004,7 +4004,7 @@ class FillArrayData:
         """
         buff = self.get_name() + " "
 
-        for i in xrange(0, len(self.data)):
+        for i in range(0, len(self.data)):
             buff += "\\x%02x" % ord(self.data[i])
         return buff
 
@@ -4043,11 +4043,11 @@ class SparseSwitch:
         self.targets = []
 
         idx = self.format_general_size
-        for i in xrange(0, self.size):
+        for i in range(0, self.size):
             self.keys.append(unpack('=l', buff[idx:idx + 4])[0])
             idx += 4
 
-        for i in xrange(0, self.size):
+        for i in range(0, self.size):
             self.targets.append(unpack('=l', buff[idx:idx + 4])[0])
             idx += 4
 
@@ -4129,7 +4129,7 @@ class SparseSwitch:
             :rtype: string
         """
         buff = self.get_name() + " "
-        for i in xrange(0, len(self.keys)):
+        for i in range(0, len(self.keys)):
             buff += "%x:%x " % (self.keys[i], self.targets[i])
 
         return buff
@@ -4170,7 +4170,7 @@ class PackedSwitch:
         if (max_size * 4) > len(buff):
             max_size = len(buff) - idx - 8
 
-        for i in xrange(0, max_size):
+        for i in range(0, max_size):
             self.targets.append(unpack('=l', buff[idx:idx + 4])[0])
             idx += 4
 
@@ -6434,7 +6434,7 @@ class DalvikCode:
         self.tries = []
         self.handlers = None
         if self.tries_size > 0:
-            for i in xrange(0, self.tries_size):
+            for i in range(0, self.tries_size):
                 self.tries.append(TryItem(buff, self.__CM))
 
             self.handlers = EncodedCatchHandlerList(buff, self.__CM)
@@ -6628,7 +6628,7 @@ class CodeItem :
         self.code = []
         self.__code_off = {}
 
-        for i in xrange(0, size) :
+        for i in range(0, size) :
             x = DalvikCode( buff, cm )
             self.code.append( x )
             self.__code_off[ x.get_off() ] = x
@@ -6704,7 +6704,7 @@ class MapItem :
         debug("%s @ 0x%x(%d) %x %x" % (TYPE_MAP_ITEM[self.type], buff.get_idx(), buff.get_idx(), self.size, self.offset))
 
         if TYPE_MAP_ITEM[ self.type ] == "TYPE_STRING_ID_ITEM" :
-            self.item = [ StringIdItem( buff, cm ) for i in xrange(0, self.size) ]
+            self.item = [ StringIdItem( buff, cm ) for i in range(0, self.size) ]
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_CODE_ITEM" :
             self.item = CodeItem( self.size, buff, cm )
@@ -6728,31 +6728,31 @@ class MapItem :
             self.item = HeaderItem( self.size, buff, cm )
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_ANNOTATION_ITEM" :
-            self.item = [ AnnotationItem( buff, cm ) for i in xrange(0, self.size) ]
+            self.item = [ AnnotationItem( buff, cm ) for i in range(0, self.size) ]
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_ANNOTATION_SET_ITEM" :
-            self.item = [ AnnotationSetItem( buff, cm ) for i in xrange(0, self.size) ]
+            self.item = [ AnnotationSetItem( buff, cm ) for i in range(0, self.size) ]
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_ANNOTATIONS_DIRECTORY_ITEM" :
-            self.item = [ AnnotationsDirectoryItem( buff, cm ) for i in xrange(0, self.size) ]
+            self.item = [ AnnotationsDirectoryItem( buff, cm ) for i in range(0, self.size) ]
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_ANNOTATION_SET_REF_LIST" :
-            self.item = [ AnnotationSetRefList( buff, cm ) for i in xrange(0, self.size) ]
+            self.item = [ AnnotationSetRefList( buff, cm ) for i in range(0, self.size) ]
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_TYPE_LIST" :
-            self.item = [ TypeList( buff, cm ) for i in xrange(0, self.size) ]
+            self.item = [ TypeList( buff, cm ) for i in range(0, self.size) ]
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_STRING_DATA_ITEM" :
-            self.item = [ StringDataItem( buff, cm ) for i in xrange(0, self.size) ]
+            self.item = [ StringDataItem( buff, cm ) for i in range(0, self.size) ]
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_DEBUG_INFO_ITEM" :
             self.item = DebugInfoItemEmpty( buff, cm )
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_ENCODED_ARRAY_ITEM" :
-            self.item = [ EncodedArrayItem( buff, cm ) for i in xrange(0, self.size) ]
+            self.item = [ EncodedArrayItem( buff, cm ) for i in range(0, self.size) ]
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_CLASS_DATA_ITEM" :
-            self.item = [ ClassDataItem(buff, cm) for i in xrange(0, self.size) ]
+            self.item = [ ClassDataItem(buff, cm) for i in range(0, self.size) ]
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_MAP_LIST" :
             pass # It's me I think !!!
@@ -6762,7 +6762,7 @@ class MapItem :
 
     def next_lazy(self, buff, cm) :
         if TYPE_MAP_ITEM[ self.type ] == "TYPE_STRING_ID_ITEM" :
-            self.item = [ StringIdItem( buff, cm ) for i in xrange(0, self.size) ]
+            self.item = [ StringIdItem( buff, cm ) for i in range(0, self.size) ]
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_CODE_ITEM" :
             self.item = CodeItem( self.size, buff, cm )
@@ -6786,19 +6786,19 @@ class MapItem :
             self.item = HeaderItem( self.size, buff, cm )
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_TYPE_LIST" :
-            self.item = [ TypeList( buff, cm ) for i in xrange(0, self.size) ]
+            self.item = [ TypeList( buff, cm ) for i in range(0, self.size) ]
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_STRING_DATA_ITEM" :
-            self.item = [ StringDataItem( buff, cm ) for i in xrange(0, self.size) ]
+            self.item = [ StringDataItem( buff, cm ) for i in range(0, self.size) ]
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_DEBUG_INFO_ITEM" :
             self.item = DebugInfoItemEmpty( buff, cm )
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_ENCODED_ARRAY_ITEM" :
-            self.item = [ EncodedArrayItem( buff, cm ) for i in xrange(0, self.size) ]
+            self.item = [ EncodedArrayItem( buff, cm ) for i in range(0, self.size) ]
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_CLASS_DATA_ITEM" :
-            self.item = [ ClassDataItem(buff, cm) for i in xrange(0, self.size) ]
+            self.item = [ ClassDataItem(buff, cm) for i in range(0, self.size) ]
 
         elif TYPE_MAP_ITEM[ self.type ] == "TYPE_MAP_LIST" :
             pass # It's me I think !!!
@@ -7165,7 +7165,7 @@ class MapList :
         self.size = unpack("=I", buff.read( 4 ) )[0]
 
         self.map_item = []
-        for i in xrange(0, self.size) :
+        for i in range(0, self.size) :
             idx = buff.get_idx()
 
             mi = MapItem( buff, self.CM )
@@ -8288,7 +8288,7 @@ def get_params_info(nb, proto):
     if params:
         i_buffer += "# - local registers: v%d...v%d\n" % (0, nb - len(params) - 1)
         j = 0
-        for i in xrange(nb - len(params), nb):
+        for i in range(nb - len(params), nb):
             i_buffer += "# - v%d:%s\n" % (i, get_type(params[j]))
             j += 1
     else:

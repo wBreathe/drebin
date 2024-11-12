@@ -189,9 +189,9 @@ def tqdm(iterable, desc='', total=None, leave=False, file=sys.stderr,
 
 
 def trange(*args, **kwargs):
-    """A shortcut for writing tqdm(range()) on py3 or tqdm(xrange()) on py2"""
+    """A shortcut for writing tqdm(range()) on py3 or tqdm(range()) on py2"""
     try:
-        f = xrange
+        f = range
     except NameError:
         f = range
     

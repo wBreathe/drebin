@@ -17,7 +17,7 @@ def hexdump(src, length=8, off=0):
     result = []
     # digits = 4 if isinstance(src, unicode) else 2
     digits = 4 if isinstance(src, str) else 2
-    for i in xrange(0, len(src), length):
+    for i in range(0, len(src), length):
         s = src[i:i+length]
         hexa = b' '.join(["%0*X" % (digits, ord(x))  for x in s])
         text = b''.join([x if 0x20 <= ord(x) < 0x7F else b'.'  for x in s])

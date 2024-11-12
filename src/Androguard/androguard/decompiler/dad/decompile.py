@@ -20,7 +20,7 @@ sys.path.append('./')
 
 import logging
 from collections import defaultdict
-import androguard.core.androconf as androconf
+import Androguard.androguard.core.androconf as androconf
 import Androguard.androguard.decompiler.dad.util as util
 from Androguard.androguard.core.analysis import analysis
 from Androguard.androguard.core.bytecodes import apk, dvm

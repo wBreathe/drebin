@@ -204,8 +204,9 @@ class APK:
                         self.permissions.append(str(item.getAttribute("android:name")))
                     print(f'in loop: 4')
                     self.valid_apk = True
-
+        print("before get_files_types")
         self.get_files_types()
+        print("after get_files_types")
 
     def get_AndroidManifest(self):
         """
@@ -795,8 +796,9 @@ class StringBlock:
         end_zero = data.find("\x00\x00")
         if end_zero != -1:
             data = data[:end_zero]
-
-        print(f"data:{data.replace('\x00', '')}")
+        
+        temp = data.replace('\x00', '')
+        print(f"data:{temp}")
         # return data.decode("utf-16", 'replace')
         return data.replace('\x00', '')
 
