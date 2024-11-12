@@ -4,16 +4,15 @@ importlib.reload(sys)
 
 import os
 import time
-sys.path.append("Modules")
 import re
 import multiprocessing as mp
-
+from lxml import etree
 import CommonModules as CM
 from CommonModules import logger
-import Androguard.androlyze as androlyze
-import BasicBlockAttrBuilder as BasicBlockAttrBuilder
-import PScoutMapping as PScoutMapping
-
+from Androguard.androguard.core import apk, axml
+import Modules.BasicBlockAttrBuilder as BasicBlockAttrBuilder
+import Modules.PScoutMapping as PScoutMapping
+from Androguard.androguard.misc import AnalyzeAPK, AnalyzeDex
 from xml.dom import minidom #mini Document Object Model for XML
 
 def GetFromXML(ApkDirectoryPath, ApkFile):
@@ -49,10 +48,12 @@ def GetFromXML(ApkDirectoryPath, ApkFile):
     try:
         print(ApkFile)
         ApkFile = os.path.abspath(ApkFile)
-        a = androlyze.APK(ApkFile)
+        a = apk.APK(ApkFile)
         print(f'this is a: {a}')
         f = open(os.path.splitext(ApkFile)[0] + ".xml", "w")
-        f.write(a.xml["AndroidManifest.xml"].toprettyxml())
+        # f.write(a.xml["AndroidManifest.xml"].toprettyxml())
+        f.write(etree.tostring(a.xml["AndroidManifest.xml"], pretty_print=True, encoding='unicode'))
+
         f.close()
     except Exception as e:
         print(e)
@@ -135,14 +136,19 @@ def GetFromInstructions(ApkDirectoryPath, ApkFile, PMap, RequestedPermissionList
     URLDomainSet = set()
     try:
         ApkFile = os.path.abspath(ApkFile)
-        a, d, dx = androlyze.AnalyzeAPK(ApkFile)
+        a, d, dx = AnalyzeAPK(ApkFile)
     except Exception as e:
         print(e)
         logger.error(e)
         logger.error("Executing Androlyze on " + ApkFile + " Failed.")
         return
-    for method in d.get_methods():
+    print(f"what is d : {d}, {len(d)},{dx}")
+    # print(f"dx:{len(dx)}")
+    assert(len(d)==1)
+    for method in d[0].get_encoded_methods():
+        print(f"method:{method}")
         g = dx.get_method(method)
+        print(f"g:{g}")
         for BasicBlock in g.get_basic_blocks().get():
             Instructions = BasicBlockAttrBuilder.GetBasicBlockDalvikCode(BasicBlock)
             Apis, SuspiciousApis = BasicBlockAttrBuilder.GetInvokedAndroidApis(Instructions)

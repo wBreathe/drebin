@@ -95,7 +95,7 @@ def HoldoutClassification(TrainMalSet, TrainGoodSet, TestMalSet, TestGoodSet, Fe
     w = BestModel.coef_
     w = w[0].tolist()
     v = x_test.toarray()
-    vocab = FeatureVectorizer.get_feature_names()
+    vocab = FeatureVectorizer.get_feature_names_out()
     explanations = {os.path.basename(s):{} for s in AllTestSamples}
     for i in range(v.shape[0]):
         wx = v[i, :] * w

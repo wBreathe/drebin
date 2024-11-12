@@ -96,7 +96,7 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, FeatureOption,
     w = BestModel.coef_
     w = w[0].tolist()
     v = x_test.toarray()
-    vocab = FeatureVectorizer.get_feature_names()
+    vocab = FeatureVectorizer.get_feature_names_out()
     explanations = {os.path.basename(s):{} for s in x_test_samplenames}
     for i in range(v.shape[0]):
         wx = v[i, :] * w

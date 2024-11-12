@@ -1,0 +1,28 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="61" android:versionName="1.6.1" package="com.sivartech.SpyPhoneLite">
+  <application android:label="@7F060006" android:icon="@7F020000" android:name="SpyPhoneApplication" android:debuggable="false">
+    <activity android:theme="@7F080000" android:label="@7F060006" android:name=".a_camera" android:screenOrientation="2">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
+      </intent-filter>
+    </activity>
+    <activity android:theme="@7F080000" android:label="@7F060006" android:name="a_audio" android:screenOrientation="1"/>
+    <activity android:theme="@7F080000" android:label="@7F060006" android:name="a_video" android:screenOrientation="2"/>
+    <activity android:theme="@7F080000" android:label="@7F060006" android:name="a_videoFroyo" android:screenOrientation="1"/>
+    <activity android:name="com.sivartech.SpyPhoneBase.a_audio"/>
+    <activity android:name="com.sivartech.SpyPhoneBase.a_camera" android:screenOrientation="2"/>
+    <activity android:name="com.sivartech.SpyPhoneBase.a_videoFroyo"/>
+    <activity android:name="com.sivartech.SpyPhoneBase.a_video"/>
+    <activity android:theme="@7F080000" android:label="@7F060006" android:name="com.sivartech.SpyPhoneBase.Preferences"/>
+    <activity android:name="com.google.ads.AdActivity" android:configChanges="0x000000B0"/>
+  </application>
+  <uses-sdk android:minSdkVersion="7"/>
+  <uses-permission android:name="android.permission.CAMERA"/>
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+  <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+  <uses-permission android:name="android.permission.VIBRATE"/>
+  <uses-feature android:name="android.hardware.camera"/>
+  <uses-feature android:name="android.hardware.camera.autofocus"/>
+  <uses-permission android:name="android.permission.INTERNET"/>
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+</manifest>

@@ -210,9 +210,9 @@ def ListAllFiles(Directory, Extension):
     '''
     ListOfFiles=[]
     if(Directory == ""):
-        raise ValueError(Directory, 'Directory is empty!')
+        raise ValueError(Directory, f'Directory {Directory} is empty!')
     if(os.path.isdir(Directory) == False):
-        raise ValueError(Directory, 'Directory is not a directory!')
+        raise ValueError(Directory, f'Directory {Directory} is not a directory!')
     if(type(Extension)!=str):
         raise ValueError(Extension, 'Extension is not a string!')
     if(Extension):
@@ -239,9 +239,9 @@ def ListDirs(Directory):
     '''
     ListOfFiles=[]
     if(Directory == ""):
-        raise ValueError(Directory, 'Directory is empty!')
+        raise ValueError(Directory, f'Directory {Directory} is empty!')
     if(os.path.isdir(Directory) == False):
-        raise ValueError(Directory, 'Directory is not a directory!')
+        raise ValueError(Directory, f'Directory {Directory} is not a directory!')
     filenames = os.listdir(Directory)
     for filename in filenames:
         #list filenames 
@@ -294,10 +294,11 @@ def ExportToJson(AbsolutePath, Content):
             Content = list(Content)
         #if(isinstance(Content, collections.defaultdict)):
         #    Content = dict(Content)
-        f=open(AbsolutePath,"wb")
+        f=open(AbsolutePath,"w")
         # json.dump(Content, f, indent=4)
         for Key,Val in list(Content.items()):
             for V in Val:
+                # print(f"key and v: {Key}, {V}")
                 print(str(Key)+'_'+str(V), file=f)
 
     except Exception as e:

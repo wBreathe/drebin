@@ -1,0 +1,26 @@
+__pycache__/
+*.pyc
+*.pyo
+
+docs/build
+
+.idea/
+
+*.o
+*.so
+
+androguard.egg-info/
+build/
+dist/
+
+# Files from tests
+test_session
+
+.eggs/
+ak_androguard.egg-info
+*.ag
+*.log
+*.db
+*.db-*
+*DS_Store*
+*.txt
