@@ -70,8 +70,8 @@ def HoldoutClassification(TrainMalSet, TrainGoodSet, TestMalSet, TestGoodSet, Fe
         Logger.info("Best Model Selected : {}".format(BestModel))
         TrainingTime = round(time.time() - T0,2)
         print(("The training time for random split classification is %s sec." % (TrainingTime)))
-        print("Enter a filename to save the model:")
-        filename = input()
+        # print("Enter a filename to save the model:")
+        filename = "houldoutClassification"
         dump(Clf, filename+".pkl")
     else:
         SVMModels= load(Model)

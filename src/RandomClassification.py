@@ -71,8 +71,8 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, FeatureOption,
         BestModel= SVMModels.best_estimator_
         Logger.info("Best Model Selected : {}".format(BestModel))
         print(("The training time for random split classification is %s sec." % (round(time.time() - T0,2))))
-        print("Enter a filename to save the model:")
-        filename = input()
+        # print("Enter a filename to save the model:")
+        filename = "randomClassification"
         dump(Clf, filename + ".pkl")
     else:
         SVMModels = load(Model)
