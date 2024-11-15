@@ -186,6 +186,7 @@ def ListFiles(Directory, Extension, year=""):
                     #get the absolute path for the files
                     if os.path.splitext(filename)[1]==Extension:
                         if os.path.isfile(AbsolutePath):
+                            print(filename[:4], filename[:4] in year)
                             if(year=="" or (year!="" and filename[:4] in year)):
                                 ListOfFiles.append(AbsolutePath)
     else:
@@ -197,6 +198,7 @@ def ListFiles(Directory, Extension, year=""):
             #get the absolute path for the files
             if os.path.splitext(filename)[1]==Extension:
                 if os.path.isfile(AbsolutePath):
+                    print(filename[:4], filename[:4] in year)
                     if(year=="" or (year!="" and filename[:4] in year)):
                         ListOfFiles.append(AbsolutePath)
     return sorted(ListOfFiles)

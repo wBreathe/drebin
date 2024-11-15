@@ -257,11 +257,14 @@ def GetApkData(ProcessNumber, *ApkDirectoryPaths):
         if CM.FileExist(os.path.splitext(ApkFile)[0] + ".data"):
             pass
         else:
-            # ProcessingDataForGetApkData(ApkDirectoryPath, ApkFile, PMap)
-            ApkDirectoryPath = os.path.split(ApkFile)[0]
-            ScheduledTasks.append(ApkFile)
-            ProcessingResults = pool.apply_async(ProcessingDataForGetApkData, args=(ApkDirectoryPath, ApkFile, PMap),
+            try:
+                # ProcessingDataForGetApkData(ApkDirectoryPath, ApkFile, PMap)
+                ApkDirectoryPath = os.path.split(ApkFile)[0]
+                ScheduledTasks.append(ApkFile)
+                ProcessingResults = pool.apply_async(ProcessingDataForGetApkData, args=(ApkDirectoryPath, ApkFile, PMap),
                                                  callback=ProgressBar.CallbackForProgressBar)
+            except Exception as e:
+                print(f"Error processing {ApkFile}: {e}")
     pool.close()
     if (ProcessingResults):
         ProgressBar.DisplayProgressBar(ProcessingResults, len(ScheduledTasks), type="hour")

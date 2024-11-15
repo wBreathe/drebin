@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score, f1_score
 import logging
 import random
 import CommonModules as CM
-from joblib import dump, load
+import joblib
 #from pprint import pprint
 import json, os
 import pickle
@@ -37,13 +37,16 @@ def RandomClassification(years, enable_imbalance, MalwareCorpus, GoodwareCorpus,
     AllMalSamples = CM.ListFiles(MalwareCorpus, ".data", year=years)
     AllGoodSamples = CM.ListFiles(GoodwareCorpus, ".data", year=years)
     if(enable_imbalance):
-        AllMalSamples = random.sample(AllMalSamples, int(0.11*len(AllGoodSamples)))
+        AllMalSamples = random.sample(AllMalSamples, int(0.2*len(AllGoodSamples))) if len(AllMalSamples)>int(0.2*len(AllGoodSamples)) else AllMalSamples
     AllSampleNames = AllMalSamples + AllGoodSamples
+    print(len(AllGoodSamples),len(AllMalSamples), len(AllSampleNames))
     Logger.info("Loaded samples")
 
     FeatureVectorizer = TF(input='filename', tokenizer=lambda x: x.split('\n'), token_pattern=None,
                            binary=FeatureOption)
     x = FeatureVectorizer.fit_transform(AllMalSamples + AllGoodSamples)
+    with open(os.path.join(saveTrainSet, "featureVector.pkl"), "wb") as f:
+        pickle.dump(AllMalSamples+AllGoodSamples, f)
     print(f"dimension of features: {x.shape}")
 
     # label malware as 1 and goodware as -1
@@ -57,9 +60,6 @@ def RandomClassification(years, enable_imbalance, MalwareCorpus, GoodwareCorpus,
     # step 2: split all samples to training set and test set
     x_train_samplenames, x_test_samplenames, y_train, y_test = train_test_split(AllSampleNames, y, test_size=TestSize,
                                                      random_state=random.randint(0, 100), stratify=y)
-    if(saveTrainSet!=""):
-        with open(os.path.join(saveTrainSet,"trainSamples.pkl"),"wb") as f:
-            pickle.dump((x_train_samplenames, y_train), f)
     
     #x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=TestSize,
     #                                             random_state=random.randint(0, 100))
@@ -67,7 +67,10 @@ def RandomClassification(years, enable_imbalance, MalwareCorpus, GoodwareCorpus,
     x_test = FeatureVectorizer.transform(x_test_samplenames)
     Logger.debug("Test set split = %s", TestSize)
     Logger.info("train-test split done")
-
+    if(saveTrainSet!=""):
+        with open(os.path.join(saveTrainSet,"trainSamples.pkl"),"wb") as f:
+            pickle.dump((x_train_samplenames, y_train), f)
+    
     # step 3: train the model
     Logger.info("Perform Classification with SVM Model")
     Parameters= {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000]}
@@ -82,9 +85,9 @@ def RandomClassification(years, enable_imbalance, MalwareCorpus, GoodwareCorpus,
         print(("The training time for random split classification is %s sec." % (round(time.time() - T0,2))))
         # print("Enter a filename to save the model:")
         filename = "randomClassification"
-        dump(Clf, filename + ".pkl")
+        joblib.dump(Clf, filename + ".pkl")
     else:
-        SVMModels = load(Model)
+        SVMModels = joblib.load(Model)
         BestModel= SVMModels.best_estimator
 
     # step 4: Evaluate the best model on test set

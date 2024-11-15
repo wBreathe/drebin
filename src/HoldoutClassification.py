@@ -7,7 +7,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn import metrics
 from sklearn.metrics import accuracy_score, f1_score
 import logging
-from joblib import dump, load
+import joblib
 import json, os
 #from pprint import pprint
 import pickle
@@ -32,18 +32,25 @@ def HoldoutClassification(years, saveTrainSet, enable_imbalance, TestMalSet, Tes
     '''
     # step 1: creating feature vector
     Logger.debug("Loading Malware and Goodware Sample Data for training and testing")
-    with open(os.path.join(saveTrainSet,"trainSamples.pkl"), 'wb') as f:
-        x_train, y_train = pickle.load(f)
-    TestMalSamples = random.sample(CM.ListFiles(TestMalSet, ".data", year=years), int(len(y_train)/(1-TestSize)*TestSize))
-    TestGoodSamples = random.sample(CM.ListFiles(TestGoodSet, ".data", year=years), int(len(y_train)/(1-TestSize)*TestSize))
+    with open(os.path.join(saveTrainSet,"trainSamples.pkl"), 'rb') as f:
+        x_train_names, y_train = pickle.load(f)
+    # print("hello:", len(y_train), len(CM.ListFiles(TestMalSet, ".data", year=years)), len(CM.ListFiles(TestGoodSet, ".data", year=years)), int(len(y_train)/(1-TestSize)*TestSize))
+    sample_num = int(len(y_train)/(1-TestSize)*TestSize)
+    malList = CM.ListFiles(TestMalSet, ".data", year=years)
+    goodList = CM.ListFiles(TestGoodSet, ".data", year=years)
+    TestMalSamples = random.sample(malList, sample_num) if len(malList)>sample_num else malList
+    TestGoodSamples = random.sample(goodList, sample_num) if len(goodList)>sample_num else goodList
     if(enable_imbalance):
-        TestMalSamples = random.sample(TestMalSamples, int(0.11*len(TestGoodSamples)))
+        TestMalSamples = random.sample(TestMalSamples, int(0.2*len(TestGoodSamples))) if len(TestMalSamples)>1 else 1
     AllTestSamples = TestMalSamples + TestGoodSamples
+    print(len(AllTestSamples), len(TestGoodSamples), len(TestMalSamples))
     Logger.info("Loaded Samples")
 
     FeatureVectorizer = TF(input="filename", tokenizer=lambda x: x.split('\n'), token_pattern=None,
                            binary=FeatureOption)
-    
+    # with open(os.path.join(saveTrainSet,"featureVector.pkl"), "rb") as f:
+    #     all_samples = pickle.load(f)
+    x_train = FeatureVectorizer.fit_transform(x_train_names)
     # x_train = FeatureVectorizer.fit_transform(TrainMalSamples + TrainGoodSamples)
     x_test = FeatureVectorizer.transform(TestMalSamples + TestGoodSamples)
 
@@ -76,12 +83,12 @@ def HoldoutClassification(years, saveTrainSet, enable_imbalance, TestMalSet, Tes
         print(("The training time for random split classification is %s sec." % (TrainingTime)))
         # print("Enter a filename to save the model:")
         filename = "houldoutClassification"
-        dump(Clf, filename+".pkl")
+        joblib.dump(Clf, filename+".pkl")
     else:
-        SVMModels= load(Model)
+        SVMModels= joblib.load(Model)
         BestModel= SVMModels.best_estimator_
         TrainingTime = 0
-
+    print("shape", x_train.shape, x_test)
     # step 4: Evaluate the best model on test set
     y_pred = SVMModels.predict(x_test)
     y_train_pred = SVMModels.predict(x_train)

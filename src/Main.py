@@ -17,11 +17,8 @@ def main(Args, FeatureOption):
     NCpuCores= Args.ncpucores
     Model= Args.model
     NumFeatForExp = Args.numfeatforexp
-    train_years = [2018, 2019]
-    #Perform Random Classification
+    train_years = ["2018", "2019"]
     TestSize= Args.testsize
-    # Logger.debug("MalDir: {}, GoodDir: {}, NCpuCores: {}, TestSize: {}, FeatureOption: {}, NumFeatForExp: {}"
-    #              .format(MalDir, GoodDir, NCpuCores, TestSize, FeatureOption, NumFeatForExp))
     GetApkData(NCpuCores, os.path.join(dir,"training",'malware'), os.path.join(dir,"training",'goodware'),os.path.join(dir,"test",'malware'),os.path.join(dir,"test",'goodware'))
     # RandomClassification(years, 
     # enable_imbalance, MalwareCorpus, GoodwareCorpus, 
@@ -29,7 +26,7 @@ def main(Args, FeatureOption):
     RandomClassification(train_years, True, os.path.join(dir, "training", "malware"), os.path.join(dir, "training", "goodware"), TestSize, FeatureOption, Model, NumFeatForExp, os.path.join(dir, "training"))
     #HoldoutClassification(years, saveTrainSet, enable_imbalance, 
     # TestMalSet, TestGoodSet, TestSize, FeatureOption, Model, NumTopFeats):
-    HoldoutClassification([2020], os.path.join(dir, "training"), True, os.path.join(dir, "test", "malware"), os.path.join(dir, "test", "goodware"), TestSize, FeatureOption, Model, NumFeatForExp)
+    HoldoutClassification(["2020"], os.path.join(dir, "training"), True, os.path.join(dir, "test", "malware"), os.path.join(dir, "test", "goodware"), TestSize, FeatureOption, Model, NumFeatForExp)
 
 def ParseArgs():
     Args =  argparse.ArgumentParser(description="Classification of Android Applications")
@@ -37,10 +34,6 @@ def ParseArgs():
                       help="Type of Classification to be performed (0 for Random Classification and 1 for Holdout Classification")
     Args.add_argument("--datadir", default= "/home/wang/Data/android/",
                       help= "Absolute path to directory containing apks")
-    Args.add_argument("--testmaldir", default= "../data/apks/malware",
-                      help= "Absolute path to directory containing malware apks for testing when performing Holdout Classification")
-    Args.add_argument("--testgooddir", default="../data/apks/goodware",
-                      help= "Absolute path to directory containing goodware apks for testing when performing Holdout Classification")
     Args.add_argument("--ncpucores", type= int, default= psutil.cpu_count(),
                       help= "Number of CPUs that will be used for processing")
     Args.add_argument("--testsize", type= float, default= 0.3,
