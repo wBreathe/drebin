@@ -2,7 +2,7 @@ from GetApkData import GetApkData
 from RandomClassification import RandomClassification
 from HoldoutClassification import HoldoutClassification
 import psutil, argparse, logging
-
+import os
 logging.basicConfig(level=logging.INFO)
 Logger = logging.getLogger('main.stdout')
 
@@ -13,35 +13,30 @@ def main(Args, FeatureOption):
     :param FeatureOption: False
     '''
 
-    MalDir= Args.maldir
-    GoodDir= Args.gooddir
+    dir= Args.datadir
     NCpuCores= Args.ncpucores
     Model= Args.model
     NumFeatForExp = Args.numfeatforexp
-
-    if Args.holdout == 0:
-        #Perform Random Classification
-        TestSize= Args.testsize
-        Logger.debug("MalDir: {}, GoodDir: {}, NCpuCores: {}, TestSize: {}, FeatureOption: {}, NumFeatForExp: {}"
-                     .format(MalDir, GoodDir, NCpuCores, TestSize, FeatureOption, NumFeatForExp))
-        GetApkData(NCpuCores, MalDir, GoodDir)
-        RandomClassification(MalDir, GoodDir, TestSize, FeatureOption, Model, NumFeatForExp)
-    else:
-        TestMalDir= Args.testmaldir
-        TestGoodDir= Args.testgooddir
-        Logger.debug("MalDir: {}, GoodDir: {}, TestMalDir: {}, TestGoodDir: {} NCpuCores: {}, FeatureOption: {}, NumFeatForExp: {}"
-                     .format(MalDir, GoodDir, TestMalDir, TestGoodDir, NCpuCores,  FeatureOption, NumFeatForExp))
-        GetApkData(NCpuCores, MalDir, GoodDir, TestMalDir, TestGoodDir)
-        HoldoutClassification(MalDir, GoodDir, TestMalDir, TestGoodDir, FeatureOption, Model, NumFeatForExp)
+    train_years = [2018, 2019]
+    #Perform Random Classification
+    TestSize= Args.testsize
+    # Logger.debug("MalDir: {}, GoodDir: {}, NCpuCores: {}, TestSize: {}, FeatureOption: {}, NumFeatForExp: {}"
+    #              .format(MalDir, GoodDir, NCpuCores, TestSize, FeatureOption, NumFeatForExp))
+    GetApkData(NCpuCores, os.path.join(dir,"training",'malware'), os.path.join(dir,"training",'goodware'),os.path.join(dir,"test",'malware'),os.path.join(dir,"test",'goodware'))
+    # RandomClassification(years, 
+    # enable_imbalance, MalwareCorpus, GoodwareCorpus, 
+    # TestSize, FeatureOption, Model, NumTopFeats, saveTrainSet=""):
+    RandomClassification(train_years, True, os.path.join(dir, "training", "malware"), os.path.join(dir, "training", "goodware"), TestSize, FeatureOption, Model, NumFeatForExp, os.path.join(dir, "training"))
+    #HoldoutClassification(years, saveTrainSet, enable_imbalance, 
+    # TestMalSet, TestGoodSet, TestSize, FeatureOption, Model, NumTopFeats):
+    HoldoutClassification([2020], os.path.join(dir, "training"), True, os.path.join(dir, "test", "malware"), os.path.join(dir, "test", "goodware"), TestSize, FeatureOption, Model, NumFeatForExp)
 
 def ParseArgs():
     Args =  argparse.ArgumentParser(description="Classification of Android Applications")
     Args.add_argument("--holdout", type= int, default= 0,
                       help="Type of Classification to be performed (0 for Random Classification and 1 for Holdout Classification")
-    Args.add_argument("--maldir", default= "../data/small_proto_apks/malware",
-                      help= "Absolute path to directory containing malware apks")
-    Args.add_argument("--gooddir", default= "../data/small_proto_apks/goodware",
-                      help= "Absolute path to directory containing benign apks")
+    Args.add_argument("--datadir", default= "/home/wang/Data/android/",
+                      help= "Absolute path to directory containing apks")
     Args.add_argument("--testmaldir", default= "../data/apks/malware",
                       help= "Absolute path to directory containing malware apks for testing when performing Holdout Classification")
     Args.add_argument("--testgooddir", default="../data/apks/goodware",

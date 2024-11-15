@@ -1,23 +1,24 @@
 import numpy as np
 import time
-import scipy.sparse
 import CommonModules as CM
 from sklearn.feature_extraction.text import TfidfVectorizer as TF
 from sklearn.svm import LinearSVC
 from sklearn.model_selection import GridSearchCV
 from sklearn import metrics
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, f1_score
 import logging
 from joblib import dump, load
 import json, os
 #from pprint import pprint
+import pickle
+import random
 
 logging.basicConfig(level=logging.INFO)
 Logger = logging.getLogger('HoldoutClf.stdout')
 Logger.setLevel("INFO")
 
 
-def HoldoutClassification(TrainMalSet, TrainGoodSet, TestMalSet, TestGoodSet, FeatureOption, Model, NumTopFeats):
+def HoldoutClassification(years, saveTrainSet, enable_imbalance, TestMalSet, TestGoodSet, TestSize, FeatureOption, Model, NumTopFeats):
     '''
     Train a classifier for classifying malwares and goodwares using Support Vector Machine technique.
     Compute the prediction accuracy and f1 score of the classifier.
@@ -31,23 +32,26 @@ def HoldoutClassification(TrainMalSet, TrainGoodSet, TestMalSet, TestGoodSet, Fe
     '''
     # step 1: creating feature vector
     Logger.debug("Loading Malware and Goodware Sample Data for training and testing")
-    TrainMalSamples = CM.ListFiles(TrainMalSet, ".data")
-    TrainGoodSamples = CM.ListFiles(TrainGoodSet, ".data")
-    TestMalSamples = CM.ListFiles(TestMalSet, ".data")
-    TestGoodSamples = CM.ListFiles(TestGoodSet, ".data")
+    with open(os.path.join(saveTrainSet,"trainSamples.pkl"), 'wb') as f:
+        x_train, y_train = pickle.load(f)
+    TestMalSamples = random.sample(CM.ListFiles(TestMalSet, ".data", year=years), int(len(y_train)/(1-TestSize)*TestSize))
+    TestGoodSamples = random.sample(CM.ListFiles(TestGoodSet, ".data", year=years), int(len(y_train)/(1-TestSize)*TestSize))
+    if(enable_imbalance):
+        TestMalSamples = random.sample(TestMalSamples, int(0.11*len(TestGoodSamples)))
     AllTestSamples = TestMalSamples + TestGoodSamples
     Logger.info("Loaded Samples")
 
     FeatureVectorizer = TF(input="filename", tokenizer=lambda x: x.split('\n'), token_pattern=None,
                            binary=FeatureOption)
-    x_train = FeatureVectorizer.fit_transform(TrainMalSamples + TrainGoodSamples)
+    
+    # x_train = FeatureVectorizer.fit_transform(TrainMalSamples + TrainGoodSamples)
     x_test = FeatureVectorizer.transform(TestMalSamples + TestGoodSamples)
 
     # label training sets malware as 1 and goodware as -1
-    Train_Mal_labels = np.ones(len(TrainMalSamples))
-    Train_Good_labels = np.empty(len(TrainGoodSamples))
-    Train_Good_labels.fill(-1)
-    y_train = np.concatenate((Train_Mal_labels, Train_Good_labels), axis=0)
+    # Train_Mal_labels = np.ones(len(TrainMalSamples))
+    # Train_Good_labels = np.empty(len(TrainGoodSamples))
+    # Train_Good_labels.fill(-1)
+    # y_train = np.concatenate((Train_Mal_labels, Train_Good_labels), axis=0)
     Logger.info("Training Label array - generated")
 
     # label testing sets malware as 1 and goodware as -1
@@ -63,7 +67,7 @@ def HoldoutClassification(TrainMalSet, TrainGoodSet, TestMalSet, TestGoodSet, Fe
 
     T0 = time.time()
     if not Model:
-        Clf = GridSearchCV(LinearSVC(), Parameters, cv= 5, scoring= 'f1', n_jobs=-1 )
+        Clf = GridSearchCV(LinearSVC(max_iter=5000), Parameters, cv= 5, scoring= 'f1', n_jobs=-1 )
         SVMModels= Clf.fit(x_train, y_train)
         Logger.info("Processing time to train and find best model with GridSearchCV is %s sec." %(round(time.time() -T0, 2)))
         BestModel= SVMModels.best_estimator_
@@ -80,13 +84,16 @@ def HoldoutClassification(TrainMalSet, TrainGoodSet, TestMalSet, TestGoodSet, Fe
 
     # step 4: Evaluate the best model on test set
     y_pred = SVMModels.predict(x_test)
+    y_train_pred = SVMModels.predict(x_train)
     TestingTime = round(time.time() - TrainingTime - T0,2)
-    Accuracy = accuracy_score(y_test, y_pred)  # Return (x1 == x2) element-wise.
-    print(("Test Set Accuracy = ", Accuracy))
+    Accuracy = f1_score(y_test, y_pred, average='binary')  # Return (x1 == x2) element-wise.
+    TrainAccuracy = f1_score(y_train,y_train_pred, average='binary')
+    print(("Test Set F1 = ", Accuracy))
+    print(("Train Set F1 = ", TrainAccuracy))
     print((metrics.classification_report(y_test,
                                         y_pred, labels=[1, -1],
                                         target_names=['Malware', 'Goodware'])))
-    Report = "Test Set Accuracy = " + str(Accuracy) + "\n" + metrics.classification_report(y_test,
+    Report = "Test Set F1 = " + str(Accuracy) + "\n" + metrics.classification_report(y_test,
                                                                                            y_pred,
                                                                                            labels=[1, -1],
                                                                                            target_names=['Malware',

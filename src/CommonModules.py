@@ -156,7 +156,7 @@ Get the Apk file names for an ApkDirectory in a sorted order. Rerurn an empty li
                 ListOfApkFiles.append(AbsolutePath)
     return sorted(ListOfApkFiles)
 
-def ListFiles(Directory, Extension):
+def ListFiles(Directory, Extension, year=""):
     '''
     Given an extension, get the file names for a Directory in a sorted order. Rerurn an empty list if Directory == "".
 
@@ -186,7 +186,8 @@ def ListFiles(Directory, Extension):
                     #get the absolute path for the files
                     if os.path.splitext(filename)[1]==Extension:
                         if os.path.isfile(AbsolutePath):
-                            ListOfFiles.append(AbsolutePath)
+                            if(year=="" or (year!="" and filename[:4] in year)):
+                                ListOfFiles.append(AbsolutePath)
     else:
         filenames = os.listdir(Directory)
         for filename in filenames:
@@ -196,7 +197,8 @@ def ListFiles(Directory, Extension):
             #get the absolute path for the files
             if os.path.splitext(filename)[1]==Extension:
                 if os.path.isfile(AbsolutePath):
-                    ListOfFiles.append(AbsolutePath)
+                    if(year=="" or (year!="" and filename[:4] in year)):
+                        ListOfFiles.append(AbsolutePath)
     return sorted(ListOfFiles)
 
 def ListAllFiles(Directory, Extension):
