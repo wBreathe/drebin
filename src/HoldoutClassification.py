@@ -32,7 +32,7 @@ def HoldoutClassification(years, saveTrainSet, enable_imbalance, TestMalSet, Tes
     '''
     # step 1: creating feature vector
     Logger.debug("Loading Malware and Goodware Sample Data for training and testing")
-    with open(os.path.join(saveTrainSet,"trainSamples.pkl"), 'rb') as f:
+    with open(os.path.join(saveTrainSet,"trainSamples_1000000.pkl"), 'rb') as f:
         x_train_names, y_train = pickle.load(f)
     # print("hello:", len(y_train), len(CM.ListFiles(TestMalSet, ".data", year=years)), len(CM.ListFiles(TestGoodSet, ".data", year=years)), int(len(y_train)/(1-TestSize)*TestSize))
     sample_num = int(len(y_train)/(1-TestSize)*TestSize)
@@ -41,7 +41,7 @@ def HoldoutClassification(years, saveTrainSet, enable_imbalance, TestMalSet, Tes
     TestMalSamples = random.sample(malList, sample_num) if len(malList)>sample_num else malList
     TestGoodSamples = random.sample(goodList, sample_num) if len(goodList)>sample_num else goodList
     if(enable_imbalance):
-        TestMalSamples = random.sample(TestMalSamples, int(0.2*len(TestGoodSamples))) if len(TestMalSamples)>1 else 1
+        TestMalSamples = random.sample(TestMalSamples, int(0.2*len(TestGoodSamples))) if len(TestMalSamples)>int(0.2*len(TestGoodSamples)) else TestMalSamples
     AllTestSamples = TestMalSamples + TestGoodSamples
     print(len(AllTestSamples), len(TestGoodSamples), len(TestMalSamples))
     Logger.info("Loaded Samples")
@@ -71,10 +71,10 @@ def HoldoutClassification(years, saveTrainSet, enable_imbalance, TestMalSet, Tes
     # step 2: train the model
     Logger.info("Perform Classification with SVM Model")
     Parameters= {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000]}
-
+    print(f"number of samples in training set: {x_train.shape[0]}, number of samples in test set: {x_test.shape[0]}")
     T0 = time.time()
     if not Model:
-        Clf = GridSearchCV(LinearSVC(max_iter=5000), Parameters, cv= 5, scoring= 'f1', n_jobs=-1 )
+        Clf = GridSearchCV(LinearSVC(max_iter=1000000), Parameters, cv= 5, scoring= 'f1', n_jobs=-1 )
         SVMModels= Clf.fit(x_train, y_train)
         Logger.info("Processing time to train and find best model with GridSearchCV is %s sec." %(round(time.time() -T0, 2)))
         BestModel= SVMModels.best_estimator_
@@ -83,7 +83,7 @@ def HoldoutClassification(years, saveTrainSet, enable_imbalance, TestMalSet, Tes
         print(("The training time for random split classification is %s sec." % (TrainingTime)))
         # print("Enter a filename to save the model:")
         filename = "houldoutClassification"
-        joblib.dump(Clf, filename+".pkl")
+        joblib.dump(Clf, filename+"_1000000.pkl")
     else:
         SVMModels= joblib.load(Model)
         BestModel= SVMModels.best_estimator_
@@ -106,6 +106,9 @@ def HoldoutClassification(years, saveTrainSet, enable_imbalance, TestMalSet, Tes
                                                                                            target_names=['Malware',
                                                                                                          'Goodware'])
     # pointwise multiplication between weight and feature vect
+    print(f"actual number of iterations: {BestModel.n_iter_}")
+    num_parameters = np.prod(BestModel.coef_.shape) + BestModel.intercept_.size
+    print(f"number of parameters: {num_parameters}")
     w = BestModel.coef_
     w = w[0].tolist()
     v = x_test.toarray()
@@ -127,7 +130,7 @@ def HoldoutClassification(years, saveTrainSet, enable_imbalance, TestMalSet, Tes
         explanations[os.path.basename(AllTestSamples[i])]['original_label'] = y_test[i]
         explanations[os.path.basename(AllTestSamples[i])]['predicted_label'] = y_pred[i]
 
-    with open('explanations_HC.json','w') as FH:
+    with open('explanations_HC_1000000.json','w') as FH:
         json.dump(explanations,FH,indent=4)
 
     return y_train, y_test, y_pred, TrainingTime, TestingTime

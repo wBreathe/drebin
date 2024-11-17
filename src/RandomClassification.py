@@ -39,13 +39,13 @@ def RandomClassification(years, enable_imbalance, MalwareCorpus, GoodwareCorpus,
     if(enable_imbalance):
         AllMalSamples = random.sample(AllMalSamples, int(0.2*len(AllGoodSamples))) if len(AllMalSamples)>int(0.2*len(AllGoodSamples)) else AllMalSamples
     AllSampleNames = AllMalSamples + AllGoodSamples
-    print(len(AllGoodSamples),len(AllMalSamples), len(AllSampleNames))
+    # print(len(AllGoodSamples),len(AllMalSamples), len(AllSampleNames))
     Logger.info("Loaded samples")
 
     FeatureVectorizer = TF(input='filename', tokenizer=lambda x: x.split('\n'), token_pattern=None,
                            binary=FeatureOption)
     x = FeatureVectorizer.fit_transform(AllMalSamples + AllGoodSamples)
-    with open(os.path.join(saveTrainSet, "featureVector.pkl"), "wb") as f:
+    with open(os.path.join(saveTrainSet, "featureVector_1000000.pkl"), "wb") as f:
         pickle.dump(AllMalSamples+AllGoodSamples, f)
     print(f"dimension of features: {x.shape}")
 
@@ -68,16 +68,16 @@ def RandomClassification(years, enable_imbalance, MalwareCorpus, GoodwareCorpus,
     Logger.debug("Test set split = %s", TestSize)
     Logger.info("train-test split done")
     if(saveTrainSet!=""):
-        with open(os.path.join(saveTrainSet,"trainSamples.pkl"),"wb") as f:
+        with open(os.path.join(saveTrainSet,"trainSamples_1000000.pkl"),"wb") as f:
             pickle.dump((x_train_samplenames, y_train), f)
     
     # step 3: train the model
     Logger.info("Perform Classification with SVM Model")
     Parameters= {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000]}
-
+    print(f"number of samples in training set: {x_train.shape[0]}, number of samples in test set: {x_test.shape[0]}")
     T0 = time.time() 
     if not Model:
-        Clf = GridSearchCV(LinearSVC(max_iter=5000), Parameters, cv= 5, scoring= 'f1', n_jobs=-1 )
+        Clf = GridSearchCV(LinearSVC(max_iter=1000000), Parameters, cv= 5, scoring= 'f1', n_jobs=-1 )
         SVMModels= Clf.fit(x_train, y_train)
         Logger.info("Processing time to train and find best model with GridSearchCV is %s sec." %(round(time.time() -T0, 2)))
         BestModel= SVMModels.best_estimator_
@@ -85,7 +85,7 @@ def RandomClassification(years, enable_imbalance, MalwareCorpus, GoodwareCorpus,
         print(("The training time for random split classification is %s sec." % (round(time.time() - T0,2))))
         # print("Enter a filename to save the model:")
         filename = "randomClassification"
-        joblib.dump(Clf, filename + ".pkl")
+        joblib.dump(Clf, filename + "_1000000.pkl")
     else:
         SVMModels = joblib.load(Model)
         BestModel= SVMModels.best_estimator
@@ -108,6 +108,9 @@ def RandomClassification(years, enable_imbalance, MalwareCorpus, GoodwareCorpus,
                                                                                            target_names=['Malware',
                                                                                                          'Goodware'])
     # pointwise multiplication between weight and feature vect
+    print(f"iteration in sum: {BestModel.n_iter_}")
+    all_parameters = np.prod(BestModel.coef_.shape) + BestModel.intercept_.size
+    print(f"all parameters: {all_parameters}")
     w = BestModel.coef_
     w = w[0].tolist()
     v = x_test.toarray()
@@ -129,7 +132,7 @@ def RandomClassification(years, enable_imbalance, MalwareCorpus, GoodwareCorpus,
         explanations[os.path.basename(x_test_samplenames[i])]['original_label'] = y_test[i]
         explanations[os.path.basename(x_test_samplenames[i])]['predicted_label'] = y_pred[i]
    
-    with open('explanations_RC.json','w') as FH:
+    with open('explanations_RC_1000000.json','w') as FH:
         json.dump(explanations,FH,indent=4)
 
     # return TestLabels, PredictedLabels

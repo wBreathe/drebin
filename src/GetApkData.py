@@ -46,10 +46,10 @@ def GetFromXML(ApkDirectoryPath, ApkFile):
     HardwareComponentsSet = set()
     IntentFilterSet = set()
     try:
-        print(ApkFile)
+        # print(ApkFile)
         ApkFile = os.path.abspath(ApkFile)
         a = apk.APK(ApkFile)
-        print(f'this is a: {a}')
+        # print(f'this is a: {a}')
         f = open(os.path.splitext(ApkFile)[0] + ".xml", "w")
         # f.write(a.xml["AndroidManifest.xml"].toprettyxml())
         f.write(etree.tostring(a.xml["AndroidManifest.xml"], pretty_print=True, encoding='unicode'))
