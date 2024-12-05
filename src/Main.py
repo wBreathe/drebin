@@ -3,8 +3,11 @@ from RandomClassification import RandomClassification
 from HoldoutClassification import HoldoutClassification
 import psutil, argparse, logging
 import os
+import sys
 logging.basicConfig(level=logging.INFO)
 Logger = logging.getLogger('main.stdout')
+from datetime import datetime
+
 
 def main(Args, FeatureOption):
     '''
@@ -19,16 +22,23 @@ def main(Args, FeatureOption):
     NumFeatForExp = Args.numfeatforexp
     train_years = ["2018", "2019", "2020"]
     TestSize= Args.testsize
-    label = Args.label
-    # GetApkData(NCpuCores, os.path.join(dir,"training",'malware'), os.path.join(dir,"training",'goodware'),os.path.join(dir,"test",'malware'),os.path.join(dir,"test",'goodware'))
-    # GetApkData(NCpuCores, os.path.join(dir,"test",'malware'),os.path.join(dir,"test",'goodware'))
-    # RandomClassification(years, 
-    # enable_imbalance, MalwareCorpus, GoodwareCorpus, 
-    # TestSize, FeatureOption, Model, NumTopFeats, saveTrainSet=""):
-    RandomClassification(label, train_years, True, os.path.join(dir, "training", "malware"), os.path.join(dir, "training", "goodware"), TestSize, FeatureOption, Model, NumFeatForExp, os.path.join(dir, "training"))
-    # HoldoutClassification(years, saveTrainSet, enable_imbalance, 
-    # TestMalSet, TestGoodSet, TestSize, FeatureOption, Model, NumTopFeats):
-    HoldoutClassification(label,["2021", "2022"], os.path.join(dir, "training"), True, os.path.join(dir, "test", "malware"), os.path.join(dir, "test", "goodware"), TestSize, FeatureOption, Model, NumFeatForExp)
+    dual = Args.dual
+    penalty = Args.penalty
+    apk = Args.apk
+    i = Args.i
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    label = f"{i}_dual-{dual}_penalty-{penalty}_{current_date}"
+    log_file = open(f"{label}.log", "w")
+    sys.stdout = log_file
+    
+    if(apk):
+        apk_paths = [os.path.join(dir,"training",'malware'), os.path.join(dir,"training",'goodware'),os.path.join(dir,"test",'malware'),os.path.join(dir,"test",'goodware')]
+        GetApkData(NCpuCores, *apk_paths)
+
+    RandomClassification(dual, penalty, train_years, True, os.path.join(dir, "training", "malware"), os.path.join(dir, "training", "goodware"), TestSize, FeatureOption, Model, NumFeatForExp, os.path.join(dir, "training"))
+
+    HoldoutClassification(dual, penalty, ["2021", "2022"], os.path.join(dir, "training"), True, os.path.join(dir, "test", "malware"), os.path.join(dir, "test", "goodware"), TestSize, FeatureOption, Model, NumFeatForExp)
+    log_file.close()
 
 def ParseArgs():
     Args =  argparse.ArgumentParser(description="Classification of Android Applications")
@@ -42,7 +52,10 @@ def ParseArgs():
                       help= "Absolute path to the saved model file(.pkl extension)")
     Args.add_argument("--numfeatforexp", type= int, default = 30,
                       help= "Number of top features to show for each test sample")
-    Args.add_argument("--label")
+    Args.add_argument("--penalty", type=str, default="l2", help="the penalty during training")
+    Args.add_argument("--dual", type=bool, default=False, help="Whether use dual optimization for svm or not")
+    Args.add_argument("--apk", type=bool, default=False, help="Whether to process APKs or not")
+    Args.add_argument("--i", type=int, default=0, help="the i th experiment")
     return Args.parse_args()
 
 if __name__ == "__main__":

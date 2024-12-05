@@ -13,13 +13,14 @@ import json, os
 import pickle
 import random
 from numpy.linalg import norm
+import error
 
 logging.basicConfig(level=logging.INFO)
 Logger = logging.getLogger('HoldoutClf.stdout')
 Logger.setLevel("INFO")
 
 
-def HoldoutClassification(label, years, saveTrainSet, enable_imbalance, TestMalSet, TestGoodSet, TestSize, FeatureOption, Model, NumTopFeats):
+def HoldoutClassification(dual, penalty, years, saveTrainSet, enable_imbalance, TestMalSet, TestGoodSet, TestSize, FeatureOption, Model, NumTopFeats):
     '''
     Train a classifier for classifying malwares and goodwares using Support Vector Machine technique.
     Compute the prediction accuracy and f1 score of the classifier.
@@ -31,11 +32,12 @@ def HoldoutClassification(label, years, saveTrainSet, enable_imbalance, TestMalS
     :param String/List TestGoodSet: absolute path/paths of the goodware corpus for test set
     :param String FeatureOption: tfidf or binary, specify how to construct the feature vector
     '''
+    print("PART HOLDOUT")
     # step 1: creating feature vector
+    label = f"_dual-{dual}_penalty-{penalty}"
     Logger.debug("Loading Malware and Goodware Sample Data for training and testing")
     with open(os.path.join(saveTrainSet,f"trainSamples_{label}.pkl"), 'rb') as f:
         x_train_names, y_train = pickle.load(f)
-    # print("hello:", len(y_train), len(CM.ListFiles(TestMalSet, ".data", year=years)), len(CM.ListFiles(TestGoodSet, ".data", year=years)), int(len(y_train)/(1-TestSize)*TestSize))
     sample_num = int(len(y_train)/(1-TestSize)*TestSize)
     malList = CM.ListFiles(TestMalSet, ".data", year=years)
     goodList = CM.ListFiles(TestGoodSet, ".data", year=years)
@@ -49,20 +51,11 @@ def HoldoutClassification(label, years, saveTrainSet, enable_imbalance, TestMalS
 
     FeatureVectorizer = TF(input="filename", tokenizer=lambda x: x.split('\n'), token_pattern=None,
                            binary=FeatureOption)
-    # with open(os.path.join(saveTrainSet,"featureVector.pkl"), "rb") as f:
-    #     all_samples = pickle.load(f)
     x_train = FeatureVectorizer.fit_transform(x_train_names)
-    # x_train = FeatureVectorizer.fit_transform(TrainMalSamples + TrainGoodSamples)
     x_test = FeatureVectorizer.transform(TestMalSamples + TestGoodSamples)
 
-    # label training sets malware as 1 and goodware as -1
-    # Train_Mal_labels = np.ones(len(TrainMalSamples))
-    # Train_Good_labels = np.empty(len(TrainGoodSamples))
-    # Train_Good_labels.fill(-1)
-    # y_train = np.concatenate((Train_Mal_labels, Train_Good_labels), axis=0)
     Logger.info("Training Label array - generated")
 
-    # label testing sets malware as 1 and goodware as -1
     Test_Mal_labels = np.ones(len(TestMalSamples))
     Test_Good_labels = np.empty(len(TestGoodSamples))
     Test_Good_labels.fill(-1)
@@ -75,14 +68,13 @@ def HoldoutClassification(label, years, saveTrainSet, enable_imbalance, TestMalS
     print(f"number of samples in training set: {x_train.shape[0]}, number of samples in test set: {x_test.shape[0]}")
     T0 = time.time()
     if not Model:
-        Clf = GridSearchCV(LinearSVC(max_iter=1000000, dual=False, penalty='l2'), Parameters, cv= 5, scoring= 'f1', n_jobs=-1 )
+        Clf = GridSearchCV(LinearSVC(max_iter=1000000, dual=dual, penalty=penalty, fit_intercept=False), Parameters, cv= 5, scoring= 'f1', n_jobs=-1 )
         SVMModels= Clf.fit(x_train, y_train)
         Logger.info("Processing time to train and find best model with GridSearchCV is %s sec." %(round(time.time() -T0, 2)))
         BestModel= SVMModels.best_estimator_
         Logger.info("Best Model Selected : {}".format(BestModel))
         TrainingTime = round(time.time() - T0,2)
         print(("The training time for random split classification is %s sec." % (TrainingTime)))
-        # print("Enter a filename to save the model:")
         filename = "houldoutClassification"
         joblib.dump(Clf, filename+f"_{label}_holdout.pkl")
     else:
@@ -113,8 +105,21 @@ def HoldoutClassification(label, years, saveTrainSet, enable_imbalance, TestMalS
     w = BestModel.coef_
     l1_norm = norm(w, ord=1)
     l2_norm = norm(w)
+    print(f"C:{BestModel.C}")
     print(f"weights:{w}")
     print(f"l1_norm:{l1_norm}, l2_norm:{l2_norm}")
+
+    print("Calculating loss ....")
+    num_samples = 50
+    sampled_w = error.sample_spherical_gaussian_from_w(w, 0.1, num_samples)
+    avg_loss, std_loss = error.get_loss(BestModel, sampled_w, x_train, y_train)
+    print(f"loss results for training set for {num_samples} samples: {avg_loss}±{std_loss}. ")
+    sampled_w = error.sample_spherical_gaussian_from_w(w, 0.1, num_samples)
+    avg_loss, std_loss = error.get_loss(BestModel, sampled_w, x_test, y_test)
+    print(f"loss results for test set for {num_samples} samples: {avg_loss}±{std_loss}. ")
+
+    '''
+    print("Start interpreting ....")
     w = w[0].tolist()
     v = x_test.toarray()
     vocab = FeatureVectorizer.get_feature_names_out()
@@ -124,18 +129,14 @@ def HoldoutClassification(label, years, saveTrainSet, enable_imbalance, TestMalS
         wv_vocab = list(zip(wx, vocab))
         if y_pred[i] == 1:
             wv_vocab.sort(reverse=True)
-           # print("pred: {}, org: {}".format(y_pred[i],y_test[i]))
-           # pprint(wv_vocab[:10])
             explanations[os.path.basename(AllTestSamples[i])]['top_features'] = wv_vocab[:NumTopFeats]
         elif y_pred[i] == -1:
             wv_vocab.sort()
-           # print("pred: {}, org: {}".format(y_pred[i],y_test[i]))
-           # pprint(wv_vocab[-10:])
             explanations[os.path.basename(AllTestSamples[i])]['top_features'] = wv_vocab[-NumTopFeats:]
         explanations[os.path.basename(AllTestSamples[i])]['original_label'] = y_test[i]
         explanations[os.path.basename(AllTestSamples[i])]['predicted_label'] = y_pred[i]
 
     with open(f'explanations_HC_{label}.json','w') as FH:
         json.dump(explanations,FH,indent=4)
-
-    return y_train, y_test, y_pred, TrainingTime, TestingTime
+    '''
+    return Report
