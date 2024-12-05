@@ -35,6 +35,7 @@ def RandomClassification(dual, penalty, years, enable_imbalance, MalwareCorpus, 
     :rtype String Report: result report
     '''
     # step 1: creating feature vector
+    print("PART RANDOM")
     Logger.debug("Loading Malware and Goodware Sample Data")
     label = f"_dual-{dual}_penalty-{penalty}"
     AllMalSamples = CM.ListFiles(MalwareCorpus, ".data", year=years)
