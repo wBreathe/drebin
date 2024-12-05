@@ -110,7 +110,7 @@ def RandomClassification(dual, penalty, years, enable_imbalance, MalwareCorpus, 
                                                                                                          'Goodware'])
     # pointwise multiplication between weight and feature vect
     print(f"iteration in sum: {BestModel.n_iter_}")
-    all_parameters = np.prod(BestModel.coef_.shape) + BestModel.intercept_.size
+    all_parameters = np.prod(BestModel.coef_.shape)
     print(f"all parameters: {all_parameters}")
     
     w = BestModel.coef_

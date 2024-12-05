@@ -100,7 +100,7 @@ def HoldoutClassification(dual, penalty, years, saveTrainSet, enable_imbalance, 
                                                                                                          'Goodware'])
     # pointwise multiplication between weight and feature vect
     print(f"actual number of iterations: {BestModel.n_iter_}")
-    num_parameters = np.prod(BestModel.coef_.shape) + BestModel.intercept_.size
+    num_parameters = np.prod(BestModel.coef_.shape)
     print(f"number of parameters: {num_parameters}")
     w = BestModel.coef_
     l1_norm = norm(w, ord=1)
