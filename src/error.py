@@ -3,6 +3,7 @@ import numpy as np
 
 
 def sample_spherical_gaussian_from_w(w, sigma, num_samples):
+    w = w.ravel()
     cov_matrix = np.power(sigma, 2) * np.eye(len(w))
     w_samples = np.random.multivariate_normal(w, cov_matrix, size=num_samples)
     return w_samples
