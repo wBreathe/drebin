@@ -51,7 +51,11 @@ def HoldoutClassification(dual, penalty, years, saveTrainSet, enable_imbalance, 
 
     FeatureVectorizer = TF(input="filename", tokenizer=lambda x: x.split('\n'), token_pattern=None,
                            binary=FeatureOption)
-    x_train = FeatureVectorizer.fit_transform(x_train_names)
+    
+    with open(os.path.join(saveTrainSet, f"featureVector_{label}.pkl"), "rb") as f:
+        allSamples = pickle.dump(f)
+    FeatureVectorizer.fit(allSamples)
+    x_train = FeatureVectorizer.transform(x_train_names)
     x_test = FeatureVectorizer.transform(TestMalSamples + TestGoodSamples)
 
     Logger.info("Training Label array - generated")
@@ -64,27 +68,26 @@ def HoldoutClassification(dual, penalty, years, saveTrainSet, enable_imbalance, 
 
     # step 2: train the model
     Logger.info("Perform Classification with SVM Model")
-    Parameters= {'C': [0.01, 0.1, 1, 10, 100]}
     print(f"number of samples in training set: {x_train.shape[0]}, number of samples in test set: {x_test.shape[0]}")
     T0 = time.time()
     if not Model:
-        Clf = GridSearchCV(LinearSVC(max_iter=1000000, dual=dual, penalty=penalty, fit_intercept=False), Parameters, cv= 5, scoring= 'f1', n_jobs=-1 )
-        SVMModels= Clf.fit(x_train, y_train)
+        BestModel = LinearSVC(max_iter=1000000, dual=dual, penalty=penalty, C=1, fit_intercept=False)
+        BestModel.fit(x_train, y_train)
         Logger.info("Processing time to train and find best model with GridSearchCV is %s sec." %(round(time.time() -T0, 2)))
-        BestModel= SVMModels.best_estimator_
         Logger.info("Best Model Selected : {}".format(BestModel))
         TrainingTime = round(time.time() - T0,2)
         print(("The training time for random split classification is %s sec." % (TrainingTime)))
-        filename = "houldoutClassification"
-        joblib.dump(Clf, filename+f"_{label}_holdout.pkl")
+        # filename = "houldoutClassification"
+        # joblib.dump(Clf, filename+f"_{label}_holdout.pkl")
     else:
-        SVMModels= joblib.load(Model)
-        BestModel= SVMModels.best_estimator_
+        # SVMModels= joblib.load(Model)
+        BestModel = joblib.load(Model)
+        # BestModel= SVMModels.best_estimator_
         TrainingTime = 0
     print("shape", x_train.shape, x_test)
     # step 4: Evaluate the best model on test set
-    y_pred = SVMModels.predict(x_test)
-    y_train_pred = SVMModels.predict(x_train)
+    y_pred = BestModel.predict(x_test)
+    y_train_pred = BestModel.predict(x_train)
     TestingTime = round(time.time() - TrainingTime - T0,2)
     Accuracy = f1_score(y_test, y_pred, average='binary')  # Return (x1 == x2) element-wise.
     TrainAccuracy = f1_score(y_train,y_train_pred, average='binary')
@@ -111,10 +114,10 @@ def HoldoutClassification(dual, penalty, years, saveTrainSet, enable_imbalance, 
 
     print("Calculating loss ....")
     num_samples = 50
-    sampled_w = error.sample_spherical_gaussian_from_w(w, 0.1, num_samples)
+    sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
     avg_loss, std_loss = error.get_loss(BestModel, sampled_w, x_train, y_train)
     print(f"loss results for training set for {num_samples} samples: {avg_loss}±{std_loss}. ")
-    sampled_w = error.sample_spherical_gaussian_from_w(w, 0.1, num_samples)
+    sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
     avg_loss, std_loss = error.get_loss(BestModel, sampled_w, x_test, y_test)
     print(f"loss results for test set for {num_samples} samples: {avg_loss}±{std_loss}. ")
 

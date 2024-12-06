@@ -22,7 +22,7 @@ Logger = logging.getLogger('RandomClf.stdout')
 Logger.setLevel("INFO")
 
 
-def RandomClassification(dual, penalty, years, enable_imbalance, MalwareCorpus, GoodwareCorpus, TestSize, FeatureOption, Model, NumTopFeats, saveTrainSet=""):
+def RandomClassification(dual, penalty, years, enable_imbalance, MalwareCorpus, GoodwareCorpus, TestSize, FeatureOption, Model, NumTopFeats, saveTrainSet="", enableFuture=False, futureYears=None, futureMalwareCorpus=None, futureGoodwareCorpus=None):
     '''
     Train a classifier for classifying malwares and goodwares using Support Vector Machine technique.
     Compute the prediction accuracy and f1 score of the classifier.
@@ -40,17 +40,27 @@ def RandomClassification(dual, penalty, years, enable_imbalance, MalwareCorpus, 
     label = f"_dual-{dual}_penalty-{penalty}"
     AllMalSamples = CM.ListFiles(MalwareCorpus, ".data", year=years)
     AllGoodSamples = CM.ListFiles(GoodwareCorpus, ".data", year=years)
+
+
+    FeatureVectorizer = TF(input='filename', tokenizer=lambda x: x.split('\n'), token_pattern=None,
+                           binary=FeatureOption)
+    if(enableFuture):
+        assert((futureYears is not None) and (futureMalwareCorpus is not None) and (futureGoodwareCorpus is not None))
+        FutureMalSamples = CM.ListFiles(futureMalwareCorpus, ".data", year=futureYears)
+        FutureGoodSamples = CM.ListFiles(futureGoodwareCorpus, ".data", year=futureYears)
+        FeatureVectorizer.fit(AllMalSamples + AllGoodSamples + FutureGoodSamples + FutureMalSamples)
+        with open(os.path.join(saveTrainSet, f"featureVector_{label}.pkl"), "wb") as f:
+            pickle.dump(AllMalSamples+AllGoodSamples+FutureGoodSamples+FutureMalSamples, f)
+    
     if(enable_imbalance):
         AllMalSamples = random.sample(AllMalSamples, int(0.2*len(AllGoodSamples))) if len(AllMalSamples)>int(0.2*len(AllGoodSamples)) else AllMalSamples
     AllSampleNames = AllMalSamples + AllGoodSamples
     Logger.info("Loaded samples")
-
-    FeatureVectorizer = TF(input='filename', tokenizer=lambda x: x.split('\n'), token_pattern=None,
-                           binary=FeatureOption)
-    x = FeatureVectorizer.fit_transform(AllMalSamples + AllGoodSamples)
-    with open(os.path.join(saveTrainSet, "featureVector_{label}.pkl"), "wb") as f:
-        pickle.dump(AllMalSamples+AllGoodSamples, f)
-    print(f"dimension of features: {x.shape}")
+    
+    if(not enableFuture):
+        FeatureVectorizer.fit(AllMalSamples + AllGoodSamples)
+        with open(os.path.join(saveTrainSet, f"featureVector_{label}.pkl"), "wb") as f:
+            pickle.dump(AllMalSamples+AllGoodSamples, f)
 
     # label malware as 1 and goodware as -1
     Mal_labels = np.ones(len(AllMalSamples))
@@ -63,8 +73,8 @@ def RandomClassification(dual, penalty, years, enable_imbalance, MalwareCorpus, 
     # step 2: split all samples to training set and test set
     x_train_samplenames, x_test_samplenames, y_train, y_test = train_test_split(AllSampleNames, y, test_size=TestSize,
                                                      random_state=random.randint(0, 100), stratify=y)
-    
-    x_train = FeatureVectorizer.fit_transform(x_train_samplenames)
+
+    x_train = FeatureVectorizer.transform(x_train_samplenames)
     x_test = FeatureVectorizer.transform(x_test_samplenames)
     Logger.debug("Test set split = %s", TestSize)
     Logger.info("train-test split done")
@@ -74,27 +84,30 @@ def RandomClassification(dual, penalty, years, enable_imbalance, MalwareCorpus, 
     
     # step 3: train the model
     Logger.info("Perform Classification with SVM Model")
-    Parameters= {'C': [0.01, 0.1, 1, 10, 100]}
+    # Parameters= {'C': [0.01, 0.1, 1, 10, 100]}
     print(f"number of samples in training set: {x_train.shape}, number of samples in test set: {x_test.shape}")
     T0 = time.time() 
     if not Model:
-        Clf = GridSearchCV(LinearSVC(max_iter=1000000,dual=dual, penalty=penalty, fit_intercept=False), Parameters, cv= 5, scoring= 'f1', n_jobs=-1 )
-        SVMModels= Clf.fit(x_train, y_train)
-        Logger.info("Processing time to train and find best model with GridSearchCV is %s sec." %(round(time.time() -T0, 2)))
-        BestModel= SVMModels.best_estimator_
+        # Clf = GridSearchCV(LinearSVC(max_iter=1000000,dual=dual, penalty=penalty, fit_intercept=False), Parameters, cv= 5, scoring= 'f1', n_jobs=-1 )
+        # SVMModels= Clf.fit(x_train, y_train)
+        # Logger.info("Processing time to train and find best model with GridSearchCV is %s sec." %(round(time.time() -T0, 2)))
+        # BestModel= SVMModels.best_estimator_
+        BestModel = LinearSVC(max_iter=1000000,dual=dual, penalty=penalty, C=1, fit_intercept=False)
+        BestModel.fit(x_train, y_train)
         Logger.info("Best Model Selected : {}".format(BestModel))
         print(("The training time for random split classification is %s sec." % (round(time.time() - T0,2))))
-        filename = "randomClassification"
-        joblib.dump(Clf, filename + f"_{label}.pkl")
+        # filename = "randomClassification"
+        # joblib.dump(Clf, filename + f"_{label}.pkl")
     else:
-        SVMModels = joblib.load(Model)
-        BestModel= SVMModels.best_estimator
+        # SVMModels = joblib.load(Model)
+        # BestModel= SVMModels.best_estimator
+        BestModel = joblib.load(Model)
 
     # step 4: Evaluate the best model on test set
     print("Start evaluation ......")
     T0 = time.time()
-    y_pred = SVMModels.predict(x_test)
-    y_train_pred = SVMModels.predict(x_train)
+    y_pred = BestModel.predict(x_test)
+    y_train_pred = BestModel.predict(x_train)
     print(("The testing time for random split classification is %s sec." % (round(time.time() - T0,2))))
     Accuracy = f1_score(y_test, y_pred, average='binary')
     print(("Test Set F1 = {}".format(Accuracy)))
@@ -122,10 +135,10 @@ def RandomClassification(dual, penalty, years, enable_imbalance, MalwareCorpus, 
 
     print("Calculating loss ....")
     num_samples = 50
-    sampled_w = error.sample_spherical_gaussian_from_w(w, 0.1, num_samples)
+    sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
     avg_loss, std_loss = error.get_loss(BestModel, sampled_w, x_train, y_train)
     print(f"loss results for training set for {num_samples} samples: {avg_loss}±{std_loss}. ")
-    sampled_w = error.sample_spherical_gaussian_from_w(w, 0.1, num_samples)
+    sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
     avg_loss, std_loss = error.get_loss(BestModel, sampled_w, x_test, y_test)
     print(f"loss results for test set for {num_samples} samples: {avg_loss}±{std_loss}. ")
 

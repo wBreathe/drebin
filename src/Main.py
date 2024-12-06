@@ -35,10 +35,12 @@ def main(Args, FeatureOption):
         apk_paths = [os.path.join(dir,"training",'malware'), os.path.join(dir,"training",'goodware'),os.path.join(dir,"test",'malware'),os.path.join(dir,"test",'goodware')]
         GetApkData(NCpuCores, *apk_paths)
 
-    RandomClassification(dual, penalty, train_years, True, os.path.join(dir, "training", "malware"), os.path.join(dir, "training", "goodware"), TestSize, FeatureOption, Model, NumFeatForExp, os.path.join(dir, "training"))
 
+    RandomClassification(dual, penalty, train_years, True, os.path.join(dir, "training", "malware"), os.path.join(dir, "training", "goodware"), TestSize, FeatureOption, Model, NumFeatForExp, os.path.join(dir, "training"),  saveTrainSet="", enableFuture=True, futureYears=["2021", "2022"], futureMalwareCorpus=os.path.join(dir, "test", "malware"), futureGoodwareCorpus=s.path.join(dir, "test", "goodware"))
+ 
     HoldoutClassification(dual, penalty, ["2021", "2022"], os.path.join(dir, "training"), True, os.path.join(dir, "test", "malware"), os.path.join(dir, "test", "goodware"), TestSize, FeatureOption, Model, NumFeatForExp)
     log_file.close()
+
 
 def ParseArgs():
     Args =  argparse.ArgumentParser(description="Classification of Android Applications")

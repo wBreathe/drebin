@@ -2,9 +2,15 @@ import os
 import numpy as np
 
 
-def sample_spherical_gaussian_from_w(w, sigma, num_samples):
+def sample_spherical_gaussian_from_w(w, num_samples):
+    # w needs to be normalized
     w = w.ravel()
-    cov_matrix = np.power(sigma, 2) * np.eye(len(w))
+    norm_w = np.linalg.norm(w)
+    if(norm_w):
+        w = w/norm_w
+    else:
+        raise Exception("Error: the norm of w equals to zero!")
+    cov_matrix = np.eye(len(w))
     w_samples = np.random.multivariate_normal(w, cov_matrix, size=num_samples)
     return w_samples
 
