@@ -16,9 +16,8 @@ import pickle
 import random
 from numpy.linalg import norm
 import error
-from Main import RandomConfig
-from dataclasses import dataclass
-from typing import Optional, List
+from error import RandomConfig
+
 
 logging.basicConfig(level=logging.INFO)
 Logger = logging.getLogger('RandomClf.stdout')

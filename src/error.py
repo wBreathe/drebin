@@ -5,7 +5,48 @@ from sklearn.metrics import accuracy_score, f1_score
 from sklearn import metrics
 from numpy.linalg import norm
 from multiprocessing import Pool
+from dataclasses import dataclass
+from typing import Optional, List
 
+@dataclass
+class RandomConfig:
+    NCpuCores: int
+    priorPortion: float
+    eta: float
+    mu: float
+    dual: bool
+    penalty: str
+    years: List[int]
+    enable_imbalance: bool
+    MalwareCorpus: str
+    GoodwareCorpus: str
+    TestSize: float
+    FeatureOption: str
+    Model: str
+    NumTopFeats: int
+    saveTrainSet: str = ""
+    enableFuture: bool = False
+    futureYears: Optional[List[int]] = None
+    futureMalwareCorpus: Optional[str] = None
+    futureGoodwareCorpus: Optional[str] = None
+
+@dataclass
+class HoldoutConfig:
+    NCpuCores: int
+    priorPortion: float
+    eta: float
+    mu: float
+    dual: bool
+    penalty: str
+    years: list
+    saveTrainSet: str
+    enable_imbalance: bool
+    TestMalSet: str
+    TestGoodSet: str
+    TestSize: float
+    FeatureOption: str
+    Model: str
+    NumTopFeats: int
 
 def sample_spherical_gaussian_from_w(w, num_samples):
     # w needs to be normalized

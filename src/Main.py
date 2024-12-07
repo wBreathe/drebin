@@ -7,48 +7,9 @@ import sys
 logging.basicConfig(level=logging.INFO)
 Logger = logging.getLogger('main.stdout')
 from datetime import datetime
-from dataclasses import dataclass
-from typing import Optional, List
+from error import RandomConfig, HoldoutConfig
 
-@dataclass
-class RandomConfig:
-    NCpuCores: int
-    priorPortion: float
-    eta: float
-    mu: float
-    dual: bool
-    penalty: str
-    years: List[int]
-    enable_imbalance: bool
-    MalwareCorpus: str
-    GoodwareCorpus: str
-    TestSize: float
-    FeatureOption: str
-    Model: str
-    NumTopFeats: int
-    saveTrainSet: str = ""
-    enableFuture: bool = False
-    futureYears: Optional[List[int]] = None
-    futureMalwareCorpus: Optional[str] = None
-    futureGoodwareCorpus: Optional[str] = None
-    
-@dataclass
-class HoldoutConfig:
-    NCpuCores: int
-    priorPortion: float
-    eta: float
-    mu: float
-    dual: bool
-    penalty: str
-    years: list
-    saveTrainSet: str
-    enable_imbalance: bool
-    TestMalSet: str
-    TestGoodSet: str
-    TestSize: float
-    FeatureOption: str
-    Model: str
-    NumTopFeats: int
+
 
 def main(Args, FeatureOption):
     '''

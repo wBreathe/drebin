@@ -14,9 +14,7 @@ import pickle
 import random
 from numpy.linalg import norm
 import error
-from dataclasses import dataclass
-from typing import Optional, List
-from Main import HoldoutConfig
+from error import HoldoutConfig
 
 logging.basicConfig(level=logging.INFO)
 Logger = logging.getLogger('HoldoutClf.stdout')
