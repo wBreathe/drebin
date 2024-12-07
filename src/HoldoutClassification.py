@@ -115,11 +115,13 @@ def HoldoutClassification(config: HoldoutConfig):
         error.theory_specifics("holdout classification without prior", BestModel)
 
     Logger.info(f"Calculating loss with priorportion-{priorPortion}....")
-    num_samples = 50
+    num_samples = 10
     sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
+    Logger.info(f"get {num_samples} weight distribution using for training set")
     avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_train, y_train,NCpuCores)
     Logger.info(f"loss results for training set for {num_samples} weights: {avg_loss}±{std_loss}. ")
     sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
+    Logger.info(f"get {num_samples} weight distribution using for test set")
     avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_test, y_test,NCpuCores)
     Logger.info(f"loss results for test set for {num_samples} weights: {avg_loss}±{std_loss}. ")
     

@@ -61,7 +61,9 @@ def sample_spherical_gaussian_from_w(w, num_samples):
     else:
         raise Exception("Error: the norm of w equals to zero!")
     cov_matrix = np.eye(len(w))
+    Logger.info("before sample")
     w_samples = np.random.multivariate_normal(w, cov_matrix, size=num_samples)
+    Logger.info("sample finished")
     return w_samples
 
 
