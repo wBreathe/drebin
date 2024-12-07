@@ -34,7 +34,22 @@ def HoldoutClassification(config: HoldoutConfig):
     :param String FeatureOption: tfidf or binary, specify how to construct the feature vector
     '''
     print("PART HOLDOUT")
-    locals().update(vars(config))
+    NCpuCores = config.NCpuCores
+    priorPortion = config.priorPortion
+    eta = config.eta
+    mu = config.mu
+    dual = config.dual
+    penalty = config.penalty
+    years = config.years
+    saveTrainSet = config.saveTrainSet
+    enable_imbalance = config.enable_imbalance
+    TestMalSet = config.TestMalSet
+    TestGoodSet = config.TestGoodSet
+    TestSize = config.TestSize
+    FeatureOption = config.FeatureOption
+    Model = config.Model
+    NumTopFeats = config.NumTopFeats
+
     # step 1: creating feature vector
     label = f"_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}"
     Logger.debug("Loading Malware and Goodware Sample Data for training and testing")

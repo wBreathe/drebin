@@ -37,7 +37,26 @@ def RandomClassification(config: RandomConfig):
     :rtype String Report: result report
     '''
     # step 1: creating feature vector
-    locals().update(vars(config))
+    NCpuCores = config.NCpuCores
+    priorPortion = config.priorPortion
+    eta = config.eta
+    mu = config.mu
+    dual = config.dual
+    penalty = config.penalty
+    years = config.years
+    enable_imbalance = config.enable_imbalance
+    MalwareCorpus = config.MalwareCorpus
+    GoodwareCorpus = config.GoodwareCorpus
+    TestSize = config.TestSize
+    FeatureOption = config.FeatureOption
+    Model = config.Model
+    NumTopFeats = config.NumTopFeats
+    saveTrainSet = config.saveTrainSet
+    enableFuture = config.enableFuture
+    futureYears = config.futureYears
+    futureMalwareCorpus = config.futureMalwareCorpus
+    futureGoodwareCorpus = config.futureGoodwareCorpus
+    
     print("PART RANDOM")
     Logger.debug("Loading Malware and Goodware Sample Data")
     label = f"_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}"
