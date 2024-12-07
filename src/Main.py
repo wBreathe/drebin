@@ -33,7 +33,7 @@ def main(Args, FeatureOption):
     mu = Args.mu
     future = Args.future
     current_date = datetime.now().strftime("%Y-%m-%d")
-    label = f"{i}_dual-{dual}_penalty-{penalty}_{current_date}"
+    label = f"{i}_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}_future-{future}_{current_date}"
     log_file = open(f"{label}.log", "w")
     sys.stdout = log_file
     
