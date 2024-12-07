@@ -97,7 +97,7 @@ def RandomClassification(config: RandomConfig):
 
     if(priorPortion!=0):
         x_train_samplenames, x_train_prior_samplenames, y_train, y_train_prior = train_test_split(x_train_samplenames, y_train, test_size=priorPortion,
-                                                                                                  random_state=random.randint(255,65535), stratify=y)
+                                                                                                  random_state=random.randint(255,65535), stratify=y_train)
         x_train_prior = FeatureVectorizer.transform(x_train_prior_samplenames)
     
     x_train = FeatureVectorizer.transform(x_train_samplenames)  
