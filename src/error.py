@@ -7,6 +7,10 @@ from numpy.linalg import norm
 from multiprocessing import Pool
 from dataclasses import dataclass
 from typing import Optional, List
+import logging
+logging.basicConfig(level=logging.INFO)
+Logger = logging.getLogger('general.stdout')
+Logger.setLevel("INFO")
 
 @dataclass
 class RandomConfig:
@@ -83,39 +87,40 @@ def get_loss_multiprocessing(model, w_samples, x, y_true, num_processes=4):
     return avg_loss, std_loss
 
 def evaluation_metrics(label, model, x_test, x_train, y_test, y_train):
-    print("Start evaluation ......")
+    Logger.info("Start evaluation ......")
     T0 = time.time()
     y_pred = model.predict(x_test)
     y_train_pred = model.predict(x_train)
-    print((f"The testing time for {label} is %s sec." % (round(time.time() - T0,2))))
+    Logger.info((f"The testing time for {label} is %s sec." % (round(time.time() - T0,2))))
     Accuracy = f1_score(y_test, y_pred, average='binary')
-    print(("Test Set F1 = {}".format(Accuracy)))
+    Logger.info(("Test Set F1 = {}".format(Accuracy)))
     Train_Accuracy = f1_score(y_train, y_train_pred, average='binary')
-    print(("Train Set F1 = {}".format(Train_Accuracy)))
-    print((metrics.classification_report(y_test,
+    Logger.info(("Train Set F1 = {}".format(Train_Accuracy)))
+    Logger.info((metrics.classification_report(y_test,
                                          y_pred, labels=[1, -1],
                                          target_names=['Malware', 'Goodware'])))
     Report = "Test Set F1 = " + str(Accuracy) + "\n" + metrics.classification_report(y_test,
                                                                                      y_pred,
                                                                                      labels=[1, -1],
                                                                                      target_names=['Malware',
-                                                                                                   'Goodware'])
+                                                                                                'Goodware'])
+    Logger.info(Report)
     return Report
 
 
 def theory_specifics(label, model, prior=None, eta=0, mu=1):
     # pointwise multiplication between weight and feature vect
-    print(f"The specifics for theoretical bounds: {label}")
-    print(f"iteration in sum: {model.n_iter_}")
+    Logger.info(f"The specifics for theoretical bounds: {label}")
+    Logger.info(f"iteration in sum: {model.n_iter_}")
     all_parameters = np.prod(model.coef_.shape)
-    print(f"all parameters: {all_parameters}")
+    Logger.info(f"all parameters: {all_parameters}")
     
     w = model.coef_
     l1_norm = norm(w, ord=1)
     l2_norm = norm(w)
-    print(f"C:{model.C}")
-    print(f"weights: {w}")
-    print(f"l1 norm:{l1_norm}, l2 norm:{l2_norm}")
+    Logger.info(f"C:{model.C}")
+    Logger.info(f"weights: {w}")
+    Logger.info(f"l1 norm:{l1_norm}, l2 norm:{l2_norm}")
     
     if(prior):
         wr = prior.coef_
@@ -130,4 +135,4 @@ def theory_specifics(label, model, prior=None, eta=0, mu=1):
         l2_norm = norm(eta*wr-mu*w)
         if wr.shape != w.shape:
             raise ValueError("The shapes of wr and w do not match!")
-        print(f"eta:{eta}, mu:{mu}, ||eta*wr-mu*w||2: {l2_norm}")
+        Logger.info(f"eta:{eta}, mu:{mu}, ||eta*wr-mu*w||2: {l2_norm}")

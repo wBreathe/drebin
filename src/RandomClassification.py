@@ -115,7 +115,7 @@ def RandomClassification(config: RandomConfig):
     # step 3: train the model
     Logger.info("Perform Classification with SVM Model")
     # Parameters= {'C': [0.01, 0.1, 1, 10, 100]}
-    print(f"number of samples in training set: {x_train.shape}, number of samples in test set: {x_test.shape}")
+    Logger.info(f"number of samples in training set: {x_train.shape}, number of samples in test set: {x_test.shape}")
     T0 = time.time() 
     if not Model:
         # Clf = GridSearchCV(LinearSVC(max_iter=1000000,dual=dual, penalty=penalty, fit_intercept=False), Parameters, cv= 5, scoring= 'f1', n_jobs=-1 )
@@ -129,7 +129,7 @@ def RandomClassification(config: RandomConfig):
         BestModel = LinearSVC(max_iter=1000000,dual=dual, penalty=penalty, C=1, fit_intercept=False)
         BestModel.fit(x_train, y_train)
         Logger.info("Best Model Selected : {}".format(BestModel))
-        print(("The training time for random split classification is %s sec." % (round(time.time() - T0,2))))
+        # Logger.info(("The training time for random split classification is %s sec." % (round(time.time() - T0,2))))
         # filename = "randomClassification"
         # joblib.dump(Clf, filename + f"_{label}.pkl")
     else:
@@ -146,14 +146,14 @@ def RandomClassification(config: RandomConfig):
     else:
         error.theory_specifics("random classification without prior", BestModel)
 
-    print(f"Calculating loss with priorportion-{priorPortion}....")
+    Logger.info(f"Calculating loss with priorportion-{priorPortion}....")
     num_samples = 50
     sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
     avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_train, y_train,NCpuCores)
-    print(f"loss results for training set for {num_samples} weights: {avg_loss}±{std_loss}. ")
+    Logger.info(f"loss results for training set for {num_samples} weights: {avg_loss}±{std_loss}. ")
     sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
     avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_test, y_test,NCpuCores)
-    print(f"loss results for test set for {num_samples} weights: {avg_loss}±{std_loss}. ")
+    Logger.info(f"loss results for test set for {num_samples} weights: {avg_loss}±{std_loss}. ")
     
 
     '''

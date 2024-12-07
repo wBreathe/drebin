@@ -33,7 +33,7 @@ def HoldoutClassification(config: HoldoutConfig):
     :param String/List TestGoodSet: absolute path/paths of the goodware corpus for test set
     :param String FeatureOption: tfidf or binary, specify how to construct the feature vector
     '''
-    print("PART HOLDOUT")
+    Logger.info("PART HOLDOUT")
     NCpuCores = config.NCpuCores
     priorPortion = config.priorPortion
     eta = config.eta
@@ -66,7 +66,7 @@ def HoldoutClassification(config: HoldoutConfig):
     if(enable_imbalance):
         TestMalSamples = random.sample(TestMalSamples, int(0.2*len(TestGoodSamples))) if len(TestMalSamples)>int(0.2*len(TestGoodSamples)) else TestMalSamples
     AllTestSamples = TestMalSamples + TestGoodSamples
-    print(len(AllTestSamples), len(TestGoodSamples), len(TestMalSamples))
+    Logger.info(len(AllTestSamples), len(TestGoodSamples), len(TestMalSamples))
     Logger.info("Loaded Samples")
 
     FeatureVectorizer = TF(input="filename", tokenizer=lambda x: x.split('\n'), token_pattern=None,
@@ -88,7 +88,7 @@ def HoldoutClassification(config: HoldoutConfig):
 
     # step 2: train the model
     Logger.info("Perform Classification with SVM Model")
-    print(f"number of samples in training set: {x_train.shape[0]}, number of samples in test set: {x_test.shape[0]}")
+    Logger.info(f"number of samples in training set: {x_train.shape[0]}, number of samples in test set: {x_test.shape[0]}")
     T0 = time.time()
     if not Model:
         if(priorPortion!=0):
@@ -104,7 +104,7 @@ def HoldoutClassification(config: HoldoutConfig):
         BestModel = joblib.load(Model)
         # BestModel= SVMModels.best_estimator_
         TrainingTime = 0
-    print("shape", x_train.shape, x_test)
+    Logger.info("shape", x_train.shape, x_test)
     # step 4: Evaluate the best model on test set
     w = BestModel.coef_
     Report = error.evaluation_metrics(f"holdout classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
@@ -114,14 +114,14 @@ def HoldoutClassification(config: HoldoutConfig):
     else:
         error.theory_specifics("holdout classification without prior", BestModel)
 
-    print(f"Calculating loss with priorportion-{priorPortion}....")
+    Logger.info(f"Calculating loss with priorportion-{priorPortion}....")
     num_samples = 50
     sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
     avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_train, y_train,NCpuCores)
-    print(f"loss results for training set for {num_samples} weights: {avg_loss}±{std_loss}. ")
+    Logger.info(f"loss results for training set for {num_samples} weights: {avg_loss}±{std_loss}. ")
     sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
     avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_test, y_test,NCpuCores)
-    print(f"loss results for test set for {num_samples} weights: {avg_loss}±{std_loss}. ")
+    Logger.info(f"loss results for test set for {num_samples} weights: {avg_loss}±{std_loss}. ")
     
 
     '''
