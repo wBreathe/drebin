@@ -14,13 +14,16 @@ import pickle
 import random
 from numpy.linalg import norm
 import error
+from dataclasses import dataclass
+from typing import Optional, List
+from Main import HoldoutConfig
 
 logging.basicConfig(level=logging.INFO)
 Logger = logging.getLogger('HoldoutClf.stdout')
 Logger.setLevel("INFO")
 
 
-def HoldoutClassification(dual, penalty, years, saveTrainSet, enable_imbalance, TestMalSet, TestGoodSet, TestSize, FeatureOption, Model, NumTopFeats):
+def HoldoutClassification(config: HoldoutConfig):
     '''
     Train a classifier for classifying malwares and goodwares using Support Vector Machine technique.
     Compute the prediction accuracy and f1 score of the classifier.
@@ -33,11 +36,15 @@ def HoldoutClassification(dual, penalty, years, saveTrainSet, enable_imbalance, 
     :param String FeatureOption: tfidf or binary, specify how to construct the feature vector
     '''
     print("PART HOLDOUT")
+    locals().update(vars(config))
     # step 1: creating feature vector
-    label = f"_dual-{dual}_penalty-{penalty}"
+    label = f"_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}"
     Logger.debug("Loading Malware and Goodware Sample Data for training and testing")
     with open(os.path.join(saveTrainSet,f"trainSamples_{label}.pkl"), 'rb') as f:
         x_train_names, y_train = pickle.load(f)
+    if(priorPortion!=0):
+        with open(os.path.join(saveTrainSet,f"priorSamples_{label}.pkl"), 'rb') as f:
+            x_train_prior_names, y_train_prior = pickle.load(f)
     sample_num = int(len(y_train)/(1-TestSize)*TestSize)
     malList = CM.ListFiles(TestMalSet, ".data", year=years)
     goodList = CM.ListFiles(TestGoodSet, ".data", year=years)
@@ -71,12 +78,12 @@ def HoldoutClassification(dual, penalty, years, saveTrainSet, enable_imbalance, 
     print(f"number of samples in training set: {x_train.shape[0]}, number of samples in test set: {x_test.shape[0]}")
     T0 = time.time()
     if not Model:
+        if(priorPortion!=0):
+            x_train_prior = FeatureVectorizer.transform(x_train_prior_names)
+            PriorModel = LinearSVC(max_iter=1000000, dual=dual, penalty=penalty, C=1, fit_intercept=False)
+            PriorModel.fit(x_train_prior, y_train_prior)
         BestModel = LinearSVC(max_iter=1000000, dual=dual, penalty=penalty, C=1, fit_intercept=False)
         BestModel.fit(x_train, y_train)
-        Logger.info("Processing time to train and find best model with GridSearchCV is %s sec." %(round(time.time() -T0, 2)))
-        Logger.info("Best Model Selected : {}".format(BestModel))
-        TrainingTime = round(time.time() - T0,2)
-        print(("The training time for random split classification is %s sec." % (TrainingTime)))
         # filename = "houldoutClassification"
         # joblib.dump(Clf, filename+f"_{label}_holdout.pkl")
     else:
@@ -86,40 +93,23 @@ def HoldoutClassification(dual, penalty, years, saveTrainSet, enable_imbalance, 
         TrainingTime = 0
     print("shape", x_train.shape, x_test)
     # step 4: Evaluate the best model on test set
-    y_pred = BestModel.predict(x_test)
-    y_train_pred = BestModel.predict(x_train)
-    TestingTime = round(time.time() - TrainingTime - T0,2)
-    Accuracy = f1_score(y_test, y_pred, average='binary')  # Return (x1 == x2) element-wise.
-    TrainAccuracy = f1_score(y_train,y_train_pred, average='binary')
-    print(("Test Set F1 = ", Accuracy))
-    print(("Train Set F1 = ", TrainAccuracy))
-    print((metrics.classification_report(y_test,
-                                        y_pred, labels=[1, -1],
-                                        target_names=['Malware', 'Goodware'])))
-    Report = "Test Set F1 = " + str(Accuracy) + "\n" + metrics.classification_report(y_test,
-                                                                                           y_pred,
-                                                                                           labels=[1, -1],
-                                                                                           target_names=['Malware',
-                                                                                                         'Goodware'])
-    # pointwise multiplication between weight and feature vect
-    print(f"actual number of iterations: {BestModel.n_iter_}")
-    num_parameters = np.prod(BestModel.coef_.shape)
-    print(f"number of parameters: {num_parameters}")
     w = BestModel.coef_
-    l1_norm = norm(w, ord=1)
-    l2_norm = norm(w)
-    print(f"C:{BestModel.C}")
-    print(f"weights:{w}")
-    print(f"l1_norm:{l1_norm}, l2_norm:{l2_norm}")
+    Report = error.evaluation_metrics(f"holdout classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
+    if(priorPortion!=0):
+        _ = error.evaluation_metrics("holdout classification using priorModel", PriorModel, x_test, x_train, y_test, y_train)
+        error.theory_specifics(f"holdout classification with priorportion-{priorPortion}", BestModel, prior=PriorModel, eta=eta, mu=mu)
+    else:
+        error.theory_specifics("holdout classification without prior", BestModel)
 
-    print("Calculating loss ....")
+    print(f"Calculating loss with priorportion-{priorPortion}....")
     num_samples = 50
     sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
-    avg_loss, std_loss = error.get_loss(BestModel, sampled_w, x_train, y_train)
-    print(f"loss results for training set for {num_samples} samples: {avg_loss}±{std_loss}. ")
+    avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_train, y_train,NCpuCores)
+    print(f"loss results for training set for {num_samples} weights: {avg_loss}±{std_loss}. ")
     sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
-    avg_loss, std_loss = error.get_loss(BestModel, sampled_w, x_test, y_test)
-    print(f"loss results for test set for {num_samples} samples: {avg_loss}±{std_loss}. ")
+    avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_test, y_test,NCpuCores)
+    print(f"loss results for test set for {num_samples} weights: {avg_loss}±{std_loss}. ")
+    
 
     '''
     print("Start interpreting ....")

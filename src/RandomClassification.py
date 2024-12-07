@@ -16,13 +16,16 @@ import pickle
 import random
 from numpy.linalg import norm
 import error
+from Main import RandomConfig
+from dataclasses import dataclass
+from typing import Optional, List
 
 logging.basicConfig(level=logging.INFO)
 Logger = logging.getLogger('RandomClf.stdout')
 Logger.setLevel("INFO")
 
 
-def RandomClassification(dual, penalty, years, enable_imbalance, MalwareCorpus, GoodwareCorpus, TestSize, FeatureOption, Model, NumTopFeats, saveTrainSet="", enableFuture=False, futureYears=None, futureMalwareCorpus=None, futureGoodwareCorpus=None):
+def RandomClassification(config: RandomConfig):
     '''
     Train a classifier for classifying malwares and goodwares using Support Vector Machine technique.
     Compute the prediction accuracy and f1 score of the classifier.
@@ -35,9 +38,10 @@ def RandomClassification(dual, penalty, years, enable_imbalance, MalwareCorpus, 
     :rtype String Report: result report
     '''
     # step 1: creating feature vector
+    locals().update(vars(config))
     print("PART RANDOM")
     Logger.debug("Loading Malware and Goodware Sample Data")
-    label = f"_dual-{dual}_penalty-{penalty}"
+    label = f"_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}"
     AllMalSamples = CM.ListFiles(MalwareCorpus, ".data", year=years)
     AllGoodSamples = CM.ListFiles(GoodwareCorpus, ".data", year=years)
 
@@ -69,18 +73,26 @@ def RandomClassification(dual, penalty, years, enable_imbalance, MalwareCorpus, 
     y = np.concatenate((Mal_labels, Good_labels), axis=0)
     Logger.info("Label array - generated")
 
-
     # step 2: split all samples to training set and test set
     x_train_samplenames, x_test_samplenames, y_train, y_test = train_test_split(AllSampleNames, y, test_size=TestSize,
                                                      random_state=random.randint(0, 100), stratify=y)
 
-    x_train = FeatureVectorizer.transform(x_train_samplenames)
+    if(priorPortion!=0):
+        x_train_samplenames, x_train_prior_samplenames, y_train, y_train_prior = train_test_split(x_train_samplenames, y_train, test_size=priorPortion,
+                                                                                                  random_state=random.randint(255,65535), stratify=y)
+        x_train_prior = FeatureVectorizer.transform(x_train_prior_samplenames)
+    
+    x_train = FeatureVectorizer.transform(x_train_samplenames)  
     x_test = FeatureVectorizer.transform(x_test_samplenames)
     Logger.debug("Test set split = %s", TestSize)
     Logger.info("train-test split done")
     if(saveTrainSet!=""):
         with open(os.path.join(saveTrainSet,f"trainSamples_{label}.pkl"),"wb") as f:
             pickle.dump((x_train_samplenames, y_train), f)
+        if(priorPortion!=0):
+            with open(os.path.join(saveTrainSet,f"priorSamples_{label}.pkl"),"wb") as f:
+                pickle.dump((x_train_prior_samplenames, y_train_prior), f)
+        
     
     # step 3: train the model
     Logger.info("Perform Classification with SVM Model")
@@ -92,6 +104,10 @@ def RandomClassification(dual, penalty, years, enable_imbalance, MalwareCorpus, 
         # SVMModels= Clf.fit(x_train, y_train)
         # Logger.info("Processing time to train and find best model with GridSearchCV is %s sec." %(round(time.time() -T0, 2)))
         # BestModel= SVMModels.best_estimator_
+        if(priorPortion!=0):
+            PriorModel = LinearSVC(max_iter=1000000, dual=dual, penalty=penalty, C=1, fit_intercept=False)
+            PriorModel.fit(x_train_prior, y_train_prior)
+            
         BestModel = LinearSVC(max_iter=1000000,dual=dual, penalty=penalty, C=1, fit_intercept=False)
         BestModel.fit(x_train, y_train)
         Logger.info("Best Model Selected : {}".format(BestModel))
@@ -104,43 +120,23 @@ def RandomClassification(dual, penalty, years, enable_imbalance, MalwareCorpus, 
         BestModel = joblib.load(Model)
 
     # step 4: Evaluate the best model on test set
-    print("Start evaluation ......")
-    T0 = time.time()
-    y_pred = BestModel.predict(x_test)
-    y_train_pred = BestModel.predict(x_train)
-    print(("The testing time for random split classification is %s sec." % (round(time.time() - T0,2))))
-    Accuracy = f1_score(y_test, y_pred, average='binary')
-    print(("Test Set F1 = {}".format(Accuracy)))
-    Train_Accuracy = f1_score(y_train, y_train_pred, average='binary')
-    print(("Train Set F1 = {}".format(Train_Accuracy)))
-    print((metrics.classification_report(y_test,
-                                         y_pred, labels=[1, -1],
-                                         target_names=['Malware', 'Goodware'])))
-    Report = "Test Set F1 = " + str(Accuracy) + "\n" + metrics.classification_report(y_test,
-                                                                                           y_pred,
-                                                                                           labels=[1, -1],
-                                                                                           target_names=['Malware',
-                                                                                                         'Goodware'])
-    # pointwise multiplication between weight and feature vect
-    print(f"iteration in sum: {BestModel.n_iter_}")
-    all_parameters = np.prod(BestModel.coef_.shape)
-    print(f"all parameters: {all_parameters}")
-    
     w = BestModel.coef_
-    l1_norm = norm(w, ord=1)
-    l2_norm = norm(w)
-    print(f"C:{BestModel.C}")
-    print(f"weights: {w}")
-    print(f"l1 norm:{l1_norm}, l2 norm:{l2_norm}")
+    Report = error.evaluation_metrics(f"random classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
+    if(priorPortion!=0):
+        _ = error.evaluation_metrics("random classification using priorModel", PriorModel, x_test, x_train, y_test, y_train)
+        error.theory_specifics(f"random classification with priorportion-{priorPortion}", BestModel, prior=PriorModel, eta=eta, mu=mu)
+    else:
+        error.theory_specifics("random classification without prior", BestModel)
 
-    print("Calculating loss ....")
+    print(f"Calculating loss with priorportion-{priorPortion}....")
     num_samples = 50
     sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
-    avg_loss, std_loss = error.get_loss(BestModel, sampled_w, x_train, y_train)
-    print(f"loss results for training set for {num_samples} samples: {avg_loss}±{std_loss}. ")
+    avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_train, y_train,NCpuCores)
+    print(f"loss results for training set for {num_samples} weights: {avg_loss}±{std_loss}. ")
     sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
-    avg_loss, std_loss = error.get_loss(BestModel, sampled_w, x_test, y_test)
-    print(f"loss results for test set for {num_samples} samples: {avg_loss}±{std_loss}. ")
+    avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_test, y_test,NCpuCores)
+    print(f"loss results for test set for {num_samples} weights: {avg_loss}±{std_loss}. ")
+    
 
     '''
     print("Start interpreting ....")
