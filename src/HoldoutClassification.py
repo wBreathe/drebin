@@ -102,7 +102,7 @@ def HoldoutClassification(config: HoldoutConfig):
         BestModel = joblib.load(Model)
         # BestModel= SVMModels.best_estimator_
         TrainingTime = 0
-    Logger.info("shape", x_train.shape, x_test)
+    # Logger.info("shape", x_train.shape, x_test)
     # step 4: Evaluate the best model on test set
     w = BestModel.coef_
     Report = error.evaluation_metrics(f"holdout classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
