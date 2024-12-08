@@ -136,11 +136,11 @@ def RandomClassification(i:int, config: RandomConfig):
     w = BestModel.coef_
     w_norm = w/norm(w)
     ptest_f1, ptrain_f1, ptest_loss, ptrain_loss = 0,0,0,0
-    test_f1, train_f1, test_loss, train_loss = error.evaluation_metrics(f"random classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
+    test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
     BestModel.coef_ = w_norm
-    test_f1, train_f1, test_loss, train_loss = error.evaluation_metrics(f"random classification with normed priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
+    test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with normed priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
     if(priorPortion!=0):
-        ptest_f1, ptrain_f1, ptest_loss, ptrain_loss = error.evaluation_metrics("random classification using priorModel", PriorModel, x_test, x_train, y_test, y_train)
+        ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss = error.evaluation_metrics("random classification using priorModel", PriorModel, x_test, x_train, y_test, y_train)
         l1_norm, l2_norm, full = error.theory_specifics(f"random classification with priorportion-{priorPortion}", BestModel, prior=PriorModel, eta=eta, mu=mu)
     else:
         l1_norm, l2_norm, full = error.theory_specifics("random classification without prior", BestModel)
@@ -179,4 +179,4 @@ def RandomClassification(i:int, config: RandomConfig):
         json.dump(explanations,FH,indent=4)
     '''
 
-    return {'f1_test':test_f1, 'f1_train':train_f1, 'loss_test':test_loss, "loss_train":train_loss, "f1_test_prior":ptest_f1, "f1_train_prior": ptrain_f1, "loss_test_prior":ptest_loss, "loss_train_prior":ptrain_loss, "l1_norm":l1_norm, "l2_norm":l2_norm, "full":full}
+    return {'f1_test':test_f1, 'f1_train':train_f1, 'acc_test':acc, 'acc_train':train_acc,'loss_test':test_loss, "loss_train":train_loss, "f1_test_prior":ptest_f1, "f1_train_prior": ptrain_f1, "acc_test_prior":pacc, "acc_train_prior":ptrain_acc, "loss_test_prior":ptest_loss, "loss_train_prior":ptrain_loss, "l1_norm":l1_norm, "l2_norm":l2_norm, "full":full}

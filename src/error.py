@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import time
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, accuracy_score
 from sklearn import metrics
 from numpy.linalg import norm
 from dataclasses import dataclass
@@ -95,10 +95,14 @@ def evaluation_metrics(label, model, x_test, x_train, y_test, y_train):
     y_pred = model.predict(x_test)
     y_train_pred = model.predict(x_train)
     print((f"The testing time for {label} is %s sec." % (round(time.time() - T0,2))))
-    Accuracy = f1_score(y_test, y_pred, average='binary')
-    print(("Test Set F1 = {}".format(Accuracy)))
-    Train_Accuracy = f1_score(y_train, y_train_pred, average='binary')
-    print(("Train Set F1 = {}".format(Train_Accuracy)))
+    f1 = f1_score(y_test, y_pred, average='binary')
+    print(("Test Set F1 = {}".format(f1)))
+    Train_f1 = f1_score(y_train, y_train_pred, average='binary')
+    print(("Train Set F1 = {}".format(Train_f1)))
+    Acc = accuracy_score(y_test, y_pred, average='binary')
+    print(("Test Set acc = {}".format(Acc)))
+    Train_Acc = accuracy_score(y_train, y_train_pred, average='binary')
+    print(("Train Set acc = {}".format(Train_Acc)))
     train_loss = np.mean(y_train != y_train_pred)
     test_loss = np.mean(y_test != y_pred)
     print("Train set zero-one-loss: ", test_loss)
@@ -106,13 +110,13 @@ def evaluation_metrics(label, model, x_test, x_train, y_test, y_train):
     print((metrics.classification_report(y_test,
                                          y_pred, labels=[1, -1],
                                          target_names=['Malware', 'Goodware'])))
-    Report = "Test Set F1 = " + str(Accuracy) + "\n" + metrics.classification_report(y_test,
+    Report = "Test Set F1 = " + str(f1) + "\n" + metrics.classification_report(y_test,
                                                                                      y_pred,
                                                                                      labels=[1, -1],
                                                                                      target_names=['Malware',
                                                                                                 'Goodware'])
     print(Report)
-    return Accuracy, Train_Accuracy, test_loss, train_loss
+    return f1, Train_f1, Acc, Train_Acc, test_loss, train_loss
 
 
 def theory_specifics(label, model, prior=None, eta=0, mu=1):
