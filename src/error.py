@@ -68,29 +68,22 @@ def sample_spherical_gaussian_from_w(w, num_samples):
 
 
 def zero_one_loss(y_true, y_pred):
-    print('zero_one_loss',y_true, y_pred)
-    return np.mean(y_true != y_pred)
+    return np.mean(y_true != y_pred), f1_score(y_true, y_pred, average='binary')
 
-
-# def get_loss(model, w_samples, x, y_true):
-#     losses = [zero_one_loss(y_true, model.predict(x, w_prime)) for w_prime in w_samples]
-#     avg_loss = np.mean(losses)
-#     std_loss = np.std(losses)
-#     return avg_loss, std_loss
 
 
 def get_loss_multiprocessing(model, w_samples, x, y_true, num_processes=4):
     def compute_loss(w_prime):
         model.coef_ = w_prime.reshape(1,-1)
         y_pred = model.predict(x)
-        print("f1 score: ", f1_score(y_true, y_pred, average='binary'))
         return zero_one_loss(y_true, y_pred)
     
-    losses = Parallel(n_jobs=num_processes)(
+    results = Parallel(n_jobs=num_processes)(
         delayed(compute_loss)(w_prime) for w_prime in w_samples
     )
-    
+    losses, f1_scores = zip(*results)
     print('losses', losses)
+    print('f1s', f1_scores)
     avg_loss = np.mean(losses)
     std_loss = np.std(losses)
     return avg_loss, std_loss
