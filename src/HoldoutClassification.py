@@ -73,7 +73,7 @@ def HoldoutClassification(config: HoldoutConfig):
                            binary=FeatureOption)
     
     with open(os.path.join(saveTrainSet, f"featureVector_{label}.pkl"), "rb") as f:
-        allSamples = pickle.dump(f)
+        allSamples = pickle.load(f)
     FeatureVectorizer.fit(allSamples)
     x_train = FeatureVectorizer.transform(x_train_names)
     x_test = FeatureVectorizer.transform(TestMalSamples + TestGoodSamples)
