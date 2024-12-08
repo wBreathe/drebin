@@ -99,8 +99,8 @@ def evaluation_metrics(label, model, x_test, x_train, y_test, y_train):
     print(("Test Set F1 = {}".format(Accuracy)))
     Train_Accuracy = f1_score(y_train, y_train_pred, average='binary')
     print(("Train Set F1 = {}".format(Train_Accuracy)))
-    test_loss = np.mean(y_train != y_train_pred)
-    train_loss = np.mean(y_test != y_pred)
+    train_loss = np.mean(y_train != y_train_pred)
+    test_loss = np.mean(y_test != y_pred)
     print("Train set zero-one-loss: ", test_loss)
     print("Test set zero-one-loss: ", train_loss)
     print((metrics.classification_report(y_test,

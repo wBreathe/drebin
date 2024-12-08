@@ -49,7 +49,6 @@ def HoldoutClassification(i:int, config: HoldoutConfig):
     FeatureOption = config.FeatureOption
     Model = config.Model
     NumTopFeats = config.NumTopFeats
-    i = config.i
 
     # step 1: creating feature vector
     label = f"_{i}_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}"
@@ -103,6 +102,7 @@ def HoldoutClassification(i:int, config: HoldoutConfig):
         BestModel = joblib.load(Model)
         # BestModel= SVMModels.best_estimator_
         TrainingTime = 0
+    
     # Logger.info("shape", x_train.shape, x_test)
     # step 4: Evaluate the best model on test set
     w = BestModel.coef_
