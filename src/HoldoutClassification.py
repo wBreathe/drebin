@@ -107,7 +107,7 @@ def HoldoutClassification(i:int, config: HoldoutConfig):
     # step 4: Evaluate the best model on test set
     w = BestModel.coef_
     w_norm = w/norm(w)
-    ptest_f1, ptrain_f1, ptest_loss, ptrain_loss = 0,0,0,0
+    pacc, ptrain_acc, ptest_f1, ptrain_f1, ptest_loss, ptrain_loss = 0,0,0,0,0,0
     test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"holdout classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
     BestModel.coef_ = w_norm
     test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"holdout classification with normed priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
