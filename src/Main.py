@@ -31,7 +31,7 @@ def main(Args, FeatureOption):
     priorPortion = Args.priorPortion
     eta = Args.eta
     mu = Args.mu
-    future = Args.future
+    future = True if(Args.future!=0) else False
     current_date = datetime.now().strftime("%Y-%m-%d")
     label = f"{i}_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}_future-{future}_{current_date}"
     log_file = open(f"{label}.log", "w")
@@ -106,7 +106,7 @@ def ParseArgs():
                       help="Whether use dual optimization for svm or not")
     Args.add_argument("--priorPortion", type=float, default=0,
                       help="The portion of samples randomly extracted as prior, the default value 0 indicates no prior is considred.")
-    Args.add_argument("--future", type=bool, default=True,
+    Args.add_argument("--future", type=int, default=1,
                       help="Whether use future set for feature vectorization or not")
     Args.add_argument("--eta", type=int, default=10,
                       help="the scaling for prior distribution")
