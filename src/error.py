@@ -139,9 +139,10 @@ def theory_specifics(label, model, prior=None, eta=0, mu=1):
         norm_wr = norm(wr)
         if(norm_wr):
             wr = wr/norm_wr
-        l2_norm = norm(eta*wr-mu*w)
+        full = norm(eta*wr-mu*w)
         if wr.shape != w.shape:
             raise ValueError("The shapes of wr and w do not match!")
-        print(f"eta:{eta}, mu:{mu}, ||eta*wr-mu*w||2: {l2_norm}")
+        print("wr-w", wr-w)
+        print(f"eta:{eta}, mu:{mu}, ||eta*wr-mu*w||2: {full}")
     return l1_norm, l2_norm, eta, mu, full
     
