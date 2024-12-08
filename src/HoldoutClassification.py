@@ -33,7 +33,7 @@ def HoldoutClassification(config: HoldoutConfig):
     :param String/List TestGoodSet: absolute path/paths of the goodware corpus for test set
     :param String FeatureOption: tfidf or binary, specify how to construct the feature vector
     '''
-    Logger.info("PART HOLDOUT")
+    print("PART HOLDOUT")
     NCpuCores = config.NCpuCores
     priorPortion = config.priorPortion
     eta = config.eta
@@ -66,9 +66,7 @@ def HoldoutClassification(config: HoldoutConfig):
     if(enable_imbalance):
         TestMalSamples = random.sample(TestMalSamples, int(0.2*len(TestGoodSamples))) if len(TestMalSamples)>int(0.2*len(TestGoodSamples)) else TestMalSamples
     AllTestSamples = TestMalSamples + TestGoodSamples
-    Logger.info(len(AllTestSamples), len(TestGoodSamples), len(TestMalSamples))
-    Logger.info("Loaded Samples")
-
+    print("all test samples, test good samples, test malware samples", len(AllTestSamples), len(TestGoodSamples), len(TestMalSamples))
     FeatureVectorizer = TF(input="filename", tokenizer=lambda x: x.split('\n'), token_pattern=None,
                            binary=FeatureOption)
     
@@ -88,7 +86,7 @@ def HoldoutClassification(config: HoldoutConfig):
 
     # step 2: train the model
     Logger.info("Perform Classification with SVM Model")
-    Logger.info(f"number of samples in training set: {x_train.shape[0]}, number of samples in test set: {x_test.shape[0]}")
+    print(f"number of samples in training set: {x_train.shape[0]}, number of samples in test set: {x_test.shape[0]}")
     T0 = time.time()
     if not Model:
         if(priorPortion!=0):
@@ -114,16 +112,16 @@ def HoldoutClassification(config: HoldoutConfig):
     else:
         error.theory_specifics("holdout classification without prior", BestModel)
 
-    Logger.info(f"Calculating loss with priorportion-{priorPortion}....")
-    num_samples = 10
+    print(f"Calculating loss with priorportion-{priorPortion}....")
+    num_samples = 100
     sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
-    Logger.info(f"get {num_samples} weight distribution using for training set")
+    print(f"get {num_samples} weight distribution using for training set")
     avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_train, y_train,NCpuCores)
-    Logger.info(f"loss results for training set for {num_samples} weights: {avg_loss}±{std_loss}. ")
+    print(f"loss results for training set for {num_samples} weights: {avg_loss}±{std_loss}. ")
     sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
-    Logger.info(f"get {num_samples} weight distribution using for test set")
+    print(f"get {num_samples} weight distribution using for test set")
     avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_test, y_test,NCpuCores)
-    Logger.info(f"loss results for test set for {num_samples} weights: {avg_loss}±{std_loss}. ")
+    print(f"loss results for test set for {num_samples} weights: {avg_loss}±{std_loss}. ")
     
 
     '''
