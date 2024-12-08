@@ -128,7 +128,7 @@ def theory_specifics(label, model, prior=None, eta=0, mu=1):
     print(f"C:{model.C}")
     print(f"weights: {w}")
     print(f"l1 norm:{l1_norm}, l2 norm:{l2_norm}")
-    eta, mu, full = 0,0,0
+    full = 0
     if(prior):
         wr = prior.coef_
         w = w.ravel()
@@ -143,6 +143,7 @@ def theory_specifics(label, model, prior=None, eta=0, mu=1):
         if wr.shape != w.shape:
             raise ValueError("The shapes of wr and w do not match!")
         print("wr-w", wr-w)
+        print(norm(wr-w))
         print(f"eta:{eta}, mu:{mu}, ||eta*wr-mu*w||2: {full}")
-    return l1_norm, l2_norm, eta, mu, full
+    return l1_norm, l2_norm, full
     
