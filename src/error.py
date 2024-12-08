@@ -73,16 +73,19 @@ def zero_one_loss(y_true, y_pred):
     return np.mean(y_true != y_pred)
 
 
-def get_loss(model, w_samples, x, y_true):
-    losses = [zero_one_loss(y_true, model.predict(x, w_prime)) for w_prime in w_samples]
-    avg_loss = np.mean(losses)
-    std_loss = np.std(losses)
-    return avg_loss, std_loss
+# def get_loss(model, w_samples, x, y_true):
+#     losses = [zero_one_loss(y_true, model.predict(x, w_prime)) for w_prime in w_samples]
+#     avg_loss = np.mean(losses)
+#     std_loss = np.std(losses)
+#     return avg_loss, std_loss
+
 
 def get_loss_multiprocessing(model, w_samples, x, y_true, num_processes=4):
     def compute_loss(w_prime):
+        print(model.coef_.shape, w_prime.shape)
         model.coef_ = w_prime
         y_pred = model.predict(x)
+        print(y_pred.shape, y_true.shape)
         return zero_one_loss(y_true, y_pred)
     
     losses = Parallel(n_jobs=num_processes)(
@@ -92,6 +95,7 @@ def get_loss_multiprocessing(model, w_samples, x, y_true, num_processes=4):
     avg_loss = np.mean(losses)
     std_loss = np.std(losses)
     return avg_loss, std_loss
+
 
 def evaluation_metrics(label, model, x_test, x_train, y_test, y_train):
     Logger.info("Start evaluation ......")
