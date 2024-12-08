@@ -1,13 +1,13 @@
 import os
 import numpy as np
 import time
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import f1_score
 from sklearn import metrics
 from numpy.linalg import norm
-from multiprocessing import Pool
 from dataclasses import dataclass
 from typing import Optional, List
 import logging
+from joblib import Parallel, delayed
 
 logging.basicConfig(level=logging.INFO)
 Logger = logging.getLogger('general.stdout')
@@ -81,10 +81,12 @@ def get_loss(model, w_samples, x, y_true):
 
 def get_loss_multiprocessing(model, w_samples, x, y_true, num_processes=4):
     def compute_loss(w_prime):
-        return zero_one_loss(y_true, model.predict(x, w_prime))
+        y_pred = model.predict(x, w_prime)
+        return zero_one_loss(y_true, y_pred)
     
-    with Pool(processes=num_processes) as pool:
-        losses = pool.map(compute_loss, w_samples)
+    losses = Parallel(n_jobs=num_processes)(
+        delayed(compute_loss)(w_prime) for w_prime in w_samples
+    )
     
     avg_loss = np.mean(losses)
     std_loss = np.std(losses)
