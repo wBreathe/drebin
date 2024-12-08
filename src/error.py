@@ -88,6 +88,7 @@ def get_loss_multiprocessing(model, w_samples, x, y_true, num_processes=4):
         delayed(compute_loss)(w_prime) for w_prime in w_samples
     )
     
+    print('losses', losses)
     avg_loss = np.mean(losses)
     std_loss = np.std(losses)
     return avg_loss, std_loss
