@@ -8,6 +8,7 @@ from multiprocessing import Pool
 from dataclasses import dataclass
 from typing import Optional, List
 import logging
+
 logging.basicConfig(level=logging.INFO)
 Logger = logging.getLogger('general.stdout')
 Logger.setLevel("INFO")
@@ -60,9 +61,10 @@ def sample_spherical_gaussian_from_w(w, num_samples):
         w = w/norm_w
     else:
         raise Exception("Error: the norm of w equals to zero!")
-    cov_matrix = np.eye(len(w))
+    # cov_matrix = np.eye(len(w))
     Logger.info("before sample")
-    w_samples = np.random.multivariate_normal(w, cov_matrix, size=num_samples)
+    # w_samples = np.random.multivariate_normal(w, cov_matrix, size=num_samples)
+    w_samples = np.random.normal(loc=w, scale=1.0, size=(num_samples, len(w)))
     Logger.info("sample finished")
     return w_samples
 
