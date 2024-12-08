@@ -139,7 +139,10 @@ def RandomClassification(config: RandomConfig):
 
     # step 4: Evaluate the best model on test set
     w = BestModel.coef_
+    w_norm = w/norm(w)
     Report = error.evaluation_metrics(f"random classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
+    BestModel.coef_ = w_norm
+    Report_norm = error.evaluation_metrics(f"random classification with normed priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
     if(priorPortion!=0):
         _ = error.evaluation_metrics("random classification using priorModel", PriorModel, x_test, x_train, y_test, y_train)
         error.theory_specifics(f"random classification with priorportion-{priorPortion}", BestModel, prior=PriorModel, eta=eta, mu=mu)
