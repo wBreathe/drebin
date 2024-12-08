@@ -1,0 +1,75 @@
+PART RANDOM
+number of samples in training set: (37415, 228378), number of samples in test set: (16036, 228378)
+Start evaluation ......
+The testing time for random classification with priorportion-0 is 0.01 sec.
+Test Set F1 = 0.8879225143308954
+Train Set F1 = 0.9637883008356546
+              precision    recall  f1-score   support
+
+     Malware       0.94      0.84      0.89      2673
+    Goodware       0.97      0.99      0.98     13363
+
+    accuracy                           0.96     16036
+   macro avg       0.96      0.91      0.93     16036
+weighted avg       0.96      0.96      0.96     16036
+
+Test Set F1 = 0.8879225143308954
+              precision    recall  f1-score   support
+
+     Malware       0.94      0.84      0.89      2673
+    Goodware       0.97      0.99      0.98     13363
+
+    accuracy                           0.96     16036
+   macro avg       0.96      0.91      0.93     16036
+weighted avg       0.96      0.96      0.96     16036
+
+The specifics for theoretical bounds: random classification without prior
+iteration in sum: 64
+all parameters: 228378
+C:1
+weights: [[-0.38486478  0.88025456 -0.13345734 ... -0.13879154 -0.20433411
+  -0.21763209]]
+l1 norm:6.6834233870900634, l2 norm:51.2182406812464
+Calculating loss with priorportion-0....
+get 100 weight distribution using for training set
+loss results for training set for 100 weights: 0.49814726713884816±0.10873174419314129. 
+get 100 weight distribution using for test set
+loss results for test set for 100 weights: 0.5084291593913693±0.09806931486092918. 
+PART HOLDOUT
+all test samples, test good samples, test malware samples 6958 6004 954
+number of samples in training set: 37415, number of samples in test set: 6958
+Start evaluation ......
+The testing time for holdout classification with priorportion-0 is 0.01 sec.
+Test Set F1 = 0.678030303030303
+Train Set F1 = 0.9637883008356546
+              precision    recall  f1-score   support
+
+     Malware       0.85      0.56      0.68       954
+    Goodware       0.93      0.98      0.96      6004
+
+    accuracy                           0.93      6958
+   macro avg       0.89      0.77      0.82      6958
+weighted avg       0.92      0.93      0.92      6958
+
+Test Set F1 = 0.678030303030303
+              precision    recall  f1-score   support
+
+     Malware       0.85      0.56      0.68       954
+    Goodware       0.93      0.98      0.96      6004
+
+    accuracy                           0.93      6958
+   macro avg       0.89      0.77      0.82      6958
+weighted avg       0.92      0.93      0.92      6958
+
+The specifics for theoretical bounds: holdout classification without prior
+iteration in sum: 64
+all parameters: 228378
+C:1
+weights: [[-0.38486478  0.88025456 -0.13345734 ... -0.13879154 -0.20433411
+  -0.21763209]]
+l1 norm:6.6834233870900634, l2 norm:51.2182406812464
+Calculating loss with priorportion-0....
+get 100 weight distribution using for training set
+loss results for training set for 100 weights: 0.4876333021515435±0.10975387851104292. 
+get 100 weight distribution using for test set
+loss results for test set for 100 weights: 0.48718597298074157±0.08078940301694273. 
