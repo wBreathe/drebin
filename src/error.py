@@ -99,6 +99,8 @@ def evaluation_metrics(label, model, x_test, x_train, y_test, y_train):
     print(("Test Set F1 = {}".format(Accuracy)))
     Train_Accuracy = f1_score(y_train, y_train_pred, average='binary')
     print(("Train Set F1 = {}".format(Train_Accuracy)))
+    print("Train set zero-one-loss: ", np.mean(y_train != y_train_pred))
+    print("Test set zero-one-loss: ", np.mean(y_test != y_pred))
     print((metrics.classification_report(y_test,
                                          y_pred, labels=[1, -1],
                                          target_names=['Malware', 'Goodware'])))
