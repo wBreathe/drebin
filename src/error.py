@@ -82,10 +82,10 @@ def zero_one_loss(y_true, y_pred):
 
 def get_loss_multiprocessing(model, w_samples, x, y_true, num_processes=4):
     def compute_loss(w_prime):
-        print(model.coef_.shape, w_prime.shape)
-        model.coef_ = w_prime
+        Logger.info(model.coef_.shape, w_prime.shape)
+        model.coef_ = w_prime.reshape(1,-1)
         y_pred = model.predict(x)
-        print(y_pred.shape, y_true.shape)
+        Logger.info(y_pred.shape, y_true.shape)
         return zero_one_loss(y_true, y_pred)
     
     losses = Parallel(n_jobs=num_processes)(
