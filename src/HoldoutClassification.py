@@ -21,7 +21,7 @@ Logger = logging.getLogger('HoldoutClf.stdout')
 Logger.setLevel("INFO")
 
 
-def HoldoutClassification(config: HoldoutConfig):
+def HoldoutClassification(i:int, config: HoldoutConfig):
     '''
     Train a classifier for classifying malwares and goodwares using Support Vector Machine technique.
     Compute the prediction accuracy and f1 score of the classifier.
@@ -49,9 +49,10 @@ def HoldoutClassification(config: HoldoutConfig):
     FeatureOption = config.FeatureOption
     Model = config.Model
     NumTopFeats = config.NumTopFeats
+    i = config.i
 
     # step 1: creating feature vector
-    label = f"_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}"
+    label = f"_{i}_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}"
     Logger.debug("Loading Malware and Goodware Sample Data for training and testing")
     with open(os.path.join(saveTrainSet,f"trainSamples_{label}.pkl"), 'rb') as f:
         x_train_names, y_train = pickle.load(f)
@@ -105,23 +106,27 @@ def HoldoutClassification(config: HoldoutConfig):
     # Logger.info("shape", x_train.shape, x_test)
     # step 4: Evaluate the best model on test set
     w = BestModel.coef_
-    Report = error.evaluation_metrics(f"holdout classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
+    w_norm = w/norm(w)
+    ptest_f1, ptrain_f1, ptest_loss, ptrain_loss = 0,0,0,0
+    test_f1, train_f1, test_loss, train_loss = error.evaluation_metrics(f"holdout classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
+    BestModel.coef_ = w_norm
+    test_f1, train_f1, test_loss, train_loss = error.evaluation_metrics(f"holdout classification with normed priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
     if(priorPortion!=0):
-        _ = error.evaluation_metrics("holdout classification using priorModel", PriorModel, x_test, x_train, y_test, y_train)
-        error.theory_specifics(f"holdout classification with priorportion-{priorPortion}", BestModel, prior=PriorModel, eta=eta, mu=mu)
+        ptest_f1, ptrain_f1, ptest_loss, ptrain_loss = error.evaluation_metrics("holdout classification using priorModel", PriorModel, x_test, x_train, y_test, y_train)
+        l1_norm, l2_norm, full = error.theory_specifics(f"holdout classification with priorportion-{priorPortion}", BestModel, prior=PriorModel, eta=eta, mu=mu)
     else:
-        error.theory_specifics("holdout classification without prior", BestModel)
+        l1_norm, l2_norm, full = error.theory_specifics("holdout classification without prior", BestModel)
 
-    print(f"Calculating loss with priorportion-{priorPortion}....")
-    num_samples = 100
-    sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
-    print(f"get {num_samples} weight distribution using for training set")
-    avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_train, y_train,NCpuCores)
-    print(f"loss results for training set for {num_samples} weights: {avg_loss}±{std_loss}. ")
-    sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
-    print(f"get {num_samples} weight distribution using for test set")
-    avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_test, y_test,NCpuCores)
-    print(f"loss results for test set for {num_samples} weights: {avg_loss}±{std_loss}. ")
+    # print(f"Calculating loss with priorportion-{priorPortion}....")
+    # num_samples = 100
+    # sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
+    # print(f"get {num_samples} weight distribution using for training set")
+    # avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_train, y_train,NCpuCores)
+    # print(f"loss results for training set for {num_samples} weights: {avg_loss}±{std_loss}. ")
+    # sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
+    # print(f"get {num_samples} weight distribution using for test set")
+    # avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_test, y_test,NCpuCores)
+    # print(f"loss results for test set for {num_samples} weights: {avg_loss}±{std_loss}. ")
     
 
     '''
@@ -145,4 +150,4 @@ def HoldoutClassification(config: HoldoutConfig):
     with open(f'explanations_HC_{label}.json','w') as FH:
         json.dump(explanations,FH,indent=4)
     '''
-    return Report
+    return {'f1_test':test_f1, 'f1_train':train_f1, 'loss_test':test_loss, "loss_train":train_loss, "f1_test_prior":ptest_f1, "f1_train_prior": ptrain_f1, "loss_test_prior":ptest_loss, "loss_train_prior":ptrain_loss, "l1_norm":l1_norm, "l2_norm":l2_norm, "full":full}

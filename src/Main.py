@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO)
 Logger = logging.getLogger('main.stdout')
 from datetime import datetime
 from error import RandomConfig, HoldoutConfig
-
+import numpy as np
 
 
 def main(Args, FeatureOption):
@@ -27,13 +27,13 @@ def main(Args, FeatureOption):
     dual = Args.dual
     penalty = Args.penalty
     apk = Args.apk
-    i = Args.i
+    num = Args.num
     priorPortion = Args.priorPortion
     eta = Args.eta
     mu = Args.mu
     future = True if(Args.future!=0) else False
     current_date = datetime.now().strftime("%Y-%m-%d")
-    label = f"{i}_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}_future-{future}_{current_date}"
+    label = f"{num}_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}_future-{future}_{current_date}"
     log_file = open(f"{label}.log", "w")
     sys.stdout = log_file
     
@@ -81,12 +81,33 @@ def main(Args, FeatureOption):
         Model=Model,
         NumTopFeats=NumFeatForExp
     )
+    
+    for i in range(num):
+        temp_results_random = RandomClassification(i, randomConfig)
+        temp_results_holdout = HoldoutClassification(i, holdoutConfig)
+        if(i==0):
+            results_random = {key: [] for key in temp_results_random}
+            results_holdout = {key: [] for key in temp_results_holdout}
+        else:
+            for key, value in temp_results_random.items():
+                results_random[key].append(value)
+            for key, value in temp_results_holdout.items():
+                results_holdout[key].append(value)
+    
+    random_means = {key: np.mean(values) for key, values in results_random.items()}
+    random_stds = {key: np.std(values) for key, values in results_random.items()}
+    holdout_means = {key: np.mean(values) for key, values in results_holdout.items()}
+    holdout_stds = {key: np.std(values) for key, values in results_holdout.items()}
+    
+    print('random_means', random_means)
+    print('random_stds', random_stds)
+    print('holdout_means', holdout_means)
+    print('holdout_stds', holdout_stds)
 
-    RandomClassification(randomConfig)
-    HoldoutClassification(holdoutConfig)
     log_file.close()
 
 
+    
 def ParseArgs():
     Args =  argparse.ArgumentParser(description="Classification of Android Applications")
 
@@ -114,7 +135,7 @@ def ParseArgs():
                       help="the scaling for posterior distribution")
     Args.add_argument("--apk", type=bool, default=False, 
                       help= "Whether to process APKs or not")
-    Args.add_argument("--i", type=int, default=0, 
+    Args.add_argument("--num", type=int, default=50, 
                       help= "the i th experiment")
     
     return Args.parse_args()

@@ -99,8 +99,10 @@ def evaluation_metrics(label, model, x_test, x_train, y_test, y_train):
     print(("Test Set F1 = {}".format(Accuracy)))
     Train_Accuracy = f1_score(y_train, y_train_pred, average='binary')
     print(("Train Set F1 = {}".format(Train_Accuracy)))
-    print("Train set zero-one-loss: ", np.mean(y_train != y_train_pred))
-    print("Test set zero-one-loss: ", np.mean(y_test != y_pred))
+    test_loss = np.mean(y_train != y_train_pred)
+    train_loss = np.mean(y_test != y_pred)
+    print("Train set zero-one-loss: ", test_loss)
+    print("Test set zero-one-loss: ", train_loss)
     print((metrics.classification_report(y_test,
                                          y_pred, labels=[1, -1],
                                          target_names=['Malware', 'Goodware'])))
@@ -110,7 +112,7 @@ def evaluation_metrics(label, model, x_test, x_train, y_test, y_train):
                                                                                      target_names=['Malware',
                                                                                                 'Goodware'])
     print(Report)
-    return Report
+    return Accuracy, Train_Accuracy, test_loss, train_loss
 
 
 def theory_specifics(label, model, prior=None, eta=0, mu=1):
@@ -126,7 +128,7 @@ def theory_specifics(label, model, prior=None, eta=0, mu=1):
     print(f"C:{model.C}")
     print(f"weights: {w}")
     print(f"l1 norm:{l1_norm}, l2 norm:{l2_norm}")
-    
+    eta, mu, full = 0,0,0
     if(prior):
         wr = prior.coef_
         w = w.ravel()
@@ -141,3 +143,5 @@ def theory_specifics(label, model, prior=None, eta=0, mu=1):
         if wr.shape != w.shape:
             raise ValueError("The shapes of wr and w do not match!")
         print(f"eta:{eta}, mu:{mu}, ||eta*wr-mu*w||2: {l2_norm}")
+    return l1_norm, l2_norm, eta, mu, full
+    
