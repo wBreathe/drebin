@@ -110,6 +110,8 @@ def main(Args, FeatureOption):
             print('holdout_stds', holdout_stds)
             results.append((eta, mu, random_means, random_stds, holdout_means, holdout_stds))
             log_file.close()
+    with open("grid_search.pkl","wb") as f:
+        pickle.dump(results, f)
 
 
     
