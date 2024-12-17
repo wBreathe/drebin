@@ -45,7 +45,7 @@ def main(Args, FeatureOption):
     etas = [1, 10, 100, 500]
     results = []
     for eta in etas:
-        for mu in range(1, int(eta) + 1, 5):
+        for mu in range(1, 750, 5):
             randomConfig = RandomConfig(
                 NCpuCores=NCpuCores,
                 priorPortion=priorPortion,
@@ -109,9 +109,9 @@ def main(Args, FeatureOption):
             print('holdout_means', holdout_means)
             print('holdout_stds', holdout_stds)
             results.append((eta, mu, random_means, random_stds, holdout_means, holdout_stds))
-            log_file.close()
     with open("grid_search.pkl","wb") as f:
         pickle.dump(results, f)
+    log_file.close()
 
 
     
