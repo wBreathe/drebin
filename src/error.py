@@ -18,7 +18,6 @@ class RandomConfig:
     NCpuCores: int
     priorPortion: float
     eta: float
-    mu: float
     dual: bool
     penalty: str
     years: List[int]
@@ -31,6 +30,7 @@ class RandomConfig:
     NumTopFeats: int
     saveTrainSet: str = ""
     enableFuture: bool = False
+    enableSample: bool = False
     futureYears: Optional[List[int]] = None
     futureMalwareCorpus: Optional[str] = None
     futureGoodwareCorpus: Optional[str] = None
@@ -40,7 +40,6 @@ class HoldoutConfig:
     NCpuCores: int
     priorPortion: float
     eta: float
-    mu: float
     dual: bool
     penalty: str
     years: list
@@ -52,6 +51,7 @@ class HoldoutConfig:
     FeatureOption: str
     Model: str
     NumTopFeats: int
+    enableSample: bool=False
 
 def sample_spherical_gaussian_from_w(w, num_samples):
     # w needs to be normalized
@@ -119,7 +119,7 @@ def evaluation_metrics(label, model, x_test, x_train, y_test, y_train):
     return f1, Train_f1, Acc, Train_Acc, test_loss, train_loss
 
 
-def theory_specifics(label, model, prior=None, eta=0, mu=1):
+def theory_specifics(label, model, mu=1, prior=None, eta=0):
     # pointwise multiplication between weight and feature vect
     print(f"The specifics for theoretical bounds: {label}")
     print(f"iteration in sum: {model.n_iter_}")
@@ -149,5 +149,5 @@ def theory_specifics(label, model, prior=None, eta=0, mu=1):
         print("wr-w", wr-w)
         print(norm(wr-w))
         print(f"eta:{eta}, mu:{mu}, ||eta*wr-mu*w||2: {full}")
-    return l1_norm, l2_norm, full
+    return full
     

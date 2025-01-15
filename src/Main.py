@@ -9,7 +9,9 @@ Logger = logging.getLogger('main.stdout')
 from datetime import datetime
 from error import RandomConfig, HoldoutConfig
 import numpy as np
-
+import pickle
+from collections import defaultdict
+import time
 
 def main(Args, FeatureOption):
     '''
@@ -42,15 +44,14 @@ def main(Args, FeatureOption):
         apk_paths = [os.path.join(dir,"training",'malware'), os.path.join(dir,"training",'goodware'),os.path.join(dir,"test",'malware'),os.path.join(dir,"test",'goodware')]
         GetApkData(NCpuCores, *apk_paths)
 
-    etas = [1, 10, 100, 500]
-    results = []
+    etas = [i for i in range(1, 100, 5)]
+    random_results, holdout_results = [], [], []
     for eta in etas:
-        for mu in range(1, 750, 5):
+        for index in range(num):
             randomConfig = RandomConfig(
                 NCpuCores=NCpuCores,
                 priorPortion=priorPortion,
                 eta=eta,
-                mu=mu,
                 dual=dual,
                 penalty=penalty,
                 years=train_years,
@@ -71,7 +72,6 @@ def main(Args, FeatureOption):
                 NCpuCores=NCpuCores,
                 priorPortion=priorPortion,
                 eta=eta,
-                mu=mu,
                 dual=dual,
                 penalty=penalty,
                 years=["2021", "2022"],
@@ -84,37 +84,51 @@ def main(Args, FeatureOption):
                 Model=Model,
                 NumTopFeats=NumFeatForExp
             )
-    
-            for i in range(num):
-                temp_results_random = RandomClassification(i, randomConfig)
-                temp_results_holdout = HoldoutClassification(i, holdoutConfig)
-                if(i==0):
-                    results_random = {key: [] for key in temp_results_random}
-                    results_holdout = {key: [] for key in temp_results_holdout}
-                else:
-                    for key, value in temp_results_random.items():
-                        results_random[key].append(value)
-                    for key, value in temp_results_holdout.items():
-                        results_holdout[key].append(value)
-    
-            random_means = {key: np.mean(values) for key, values in results_random.items()}
-            random_stds = {key: np.std(values) for key, values in results_random.items()}
-            holdout_means = {key: np.mean(values) for key, values in results_holdout.items()}
-            holdout_stds = {key: np.std(values) for key, values in results_holdout.items()}
+            temp_results_random, model, rounded = RandomClassification(index, randomConfig)
+            temp_results_holdout = HoldoutClassification(index, models, rounded, holdoutConfig)
+            random_results.extend(temp_results_random)
+            holdout_results.extend(temp_results_holdout)
 
-            print('eta', eta)
-            print('mu', mu)
-            print('random_means', random_means)
-            print('random_stds', random_stds)
-            print('holdout_means', holdout_means)
-            print('holdout_stds', holdout_stds)
-            results.append((eta, mu, random_means, random_stds, holdout_means, holdout_stds))
-    with open("grid_search.pkl","wb") as f:
+
+    stats = defaultdict(lambda: defaultdict(list))
+    results = defaultdict(dict)
+    # full, test_f1, future_test_f1, test_acc, future_test_acc, test_loss, future_test_loss, train_loss 
+
+    for eta, num, mu, f, t_f, train_f1, t_a, train_acc, t_l, train_loss in random_results:
+        key = (eta, num, mu)            
+        stats["full"][key].append(f)
+        stats["test_f1"][key].append(t_f)
+        stats["test_acc"][key].append(t_a)
+        stats["test_loss"][key].append(t_l)
+        stats["train_loss"][key].append(train_loss)
+
+    for eta, i, mu, ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss in holdout_results:
+        key = (eta, i, mu)
+        stats['future_test_f1'][key].append(ptest_f1)
+        stats["future_test_acc"][key].append(pacc)
+        stats["future_test_loss"][key].append(ptest_loss)
+
+    for metric, value_dict in stats.items():
+        for key, values in value_dict.items():
+            avg = np.mean(np.array(values))
+            std = np.std(np.array(values))
+            results[key][metric] = (avg, std)
+
+    for key, metrics in results.items():
+        print(f"Results for {key}:")
+        for metric, (avg, std) in metrics.items():
+            print(f"  {metric}: Mean = {avg:.4f}, Std = {std:.4f}")
+    
+    with open(os.path.join(dir, f"stats_{int(time.time())}"), "wb") as f:
         pickle.dump(results, f)
+    with open(os.path.join(dir, f"results_of_random_{int(time.time())}"),"wb") as f:
+        pickle.dump(random_results, f)
+    with open(os.path.join(dir, f"results_of_holdout_{int(time.time())}"),"wb") as f:
+        pickle.dump(holdout_results, f)
     log_file.close()
 
 
-    
+
 def ParseArgs():
     Args =  argparse.ArgumentParser(description="Classification of Android Applications")
 
@@ -142,7 +156,7 @@ def ParseArgs():
     #                   help="the scaling for posterior distribution")
     Args.add_argument("--apk", type=bool, default=False, 
                       help= "Whether to process APKs or not")
-    Args.add_argument("--num", type=int, default=50, 
+    Args.add_argument("--num", type=int, default=10, 
                       help= "the i th experiment")
     
     return Args.parse_args()

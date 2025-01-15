@@ -21,7 +21,7 @@ Logger = logging.getLogger('HoldoutClf.stdout')
 Logger.setLevel("INFO")
 
 
-def HoldoutClassification(i:int, config: HoldoutConfig):
+def HoldoutClassification(i:int, model, rounded:int, config: HoldoutConfig):
     '''
     Train a classifier for classifying malwares and goodwares using Support Vector Machine technique.
     Compute the prediction accuracy and f1 score of the classifier.
@@ -37,7 +37,6 @@ def HoldoutClassification(i:int, config: HoldoutConfig):
     NCpuCores = config.NCpuCores
     priorPortion = config.priorPortion
     eta = config.eta
-    mu = config.mu
     dual = config.dual
     penalty = config.penalty
     years = config.years
@@ -51,7 +50,7 @@ def HoldoutClassification(i:int, config: HoldoutConfig):
     NumTopFeats = config.NumTopFeats
 
     # step 1: creating feature vector
-    label = f"_{i}_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}"
+    label = f"_eta-{eta}_num-{i}_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}"
     Logger.debug("Loading Malware and Goodware Sample Data for training and testing")
     with open(os.path.join(saveTrainSet,f"trainSamples_{label}.pkl"), 'rb') as f:
         x_train_names, y_train = pickle.load(f)
@@ -88,35 +87,34 @@ def HoldoutClassification(i:int, config: HoldoutConfig):
     Logger.info("Perform Classification with SVM Model")
     print(f"number of samples in training set: {x_train.shape[0]}, number of samples in test set: {x_test.shape[0]}")
     T0 = time.time()
-    if not Model:
-        if(priorPortion!=0):
-            x_train_prior = FeatureVectorizer.transform(x_train_prior_names)
-            PriorModel = LinearSVC(max_iter=1000000, dual=dual, penalty=penalty, C=1, fit_intercept=False)
-            PriorModel.fit(x_train_prior, y_train_prior)
-        BestModel = LinearSVC(max_iter=1000000, dual=dual, penalty=penalty, C=1, fit_intercept=False)
-        BestModel.fit(x_train, y_train)
+    # if not Model:
+    #     if(priorPortion!=0):
+    #         x_train_prior = FeatureVectorizer.transform(x_train_prior_names)
+    #         PriorModel = LinearSVC(max_iter=1000000, dual=dual, penalty=penalty, C=1, fit_intercept=False)
+    #         PriorModel.fit(x_train_prior, y_train_prior)
+    #     BestModel = LinearSVC(max_iter=1000000, dual=dual, penalty=penalty, C=1, fit_intercept=False)
+    #     BestModel.fit(x_train, y_train)
         # filename = "houldoutClassification"
         # joblib.dump(Clf, filename+f"_{label}_holdout.pkl")
-    else:
-        # SVMModels= joblib.load(Model)
-        BestModel = joblib.load(Model)
-        # BestModel= SVMModels.best_estimator_
-        TrainingTime = 0
-    
+    # else:
+        # # SVMModels= joblib.load(Model)
+        # BestModel = joblib.load(Model)
+        # # BestModel= SVMModels.best_estimator_
+        # TrainingTime = 0
     # Logger.info("shape", x_train.shape, x_test)
     # step 4: Evaluate the best model on test set
-    w = BestModel.coef_
-    w_norm = w/norm(w)
-    pacc, ptrain_acc, ptest_f1, ptrain_f1, ptest_loss, ptrain_loss = 0,0,0,0,0,0
-    test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"holdout classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
-    BestModel.coef_ = w_norm
-    test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"holdout classification with normed priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
-    if(priorPortion!=0):
-        ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss = error.evaluation_metrics("holdout classification using priorModel", PriorModel, x_test, x_train, y_test, y_train)
-        l1_norm, l2_norm, full = error.theory_specifics(f"holdout classification with priorportion-{priorPortion}", BestModel, prior=PriorModel, eta=eta, mu=mu)
-    else:
-        l1_norm, l2_norm, full = error.theory_specifics("holdout classification without prior", BestModel)
-
+    # w = BestModel.coef_
+    # w_norm = w/norm(w)
+    step = rounded * 0.01
+    mu_values = [rounded + step * i for i in range(-5, 6)]
+    results = []
+    for mu in mu_values:
+        pacc,ptrain_acc,ptest_f1, ptrain_f1, ptest_loss, ptrain_loss = 0,0,0,0,0,0
+        # test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
+        BestModel = model
+        BestModel.coef_ = mu*model.coef_
+        test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with normed priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
+        results.append([eta, i, mu, test_f1, train_f1, acc, train_acc, test_loss, train_loss])
     # print(f"Calculating loss with priorportion-{priorPortion}....")
     # num_samples = 100
     # sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
@@ -150,4 +148,5 @@ def HoldoutClassification(i:int, config: HoldoutConfig):
     with open(f'explanations_HC_{label}.json','w') as FH:
         json.dump(explanations,FH,indent=4)
     '''
-    return {'f1_test':test_f1, 'f1_train':train_f1, 'acc_test':acc, "acc_train":train_acc, 'loss_test':test_loss, "loss_train":train_loss, "f1_test_prior":ptest_f1, "f1_train_prior": ptrain_f1, "acc_test_prior":pacc, "acc_train_prior":ptrain_acc,"loss_test_prior":ptest_loss, "loss_train_prior":ptrain_loss, "l1_norm":l1_norm, "l2_norm":l2_norm, "full":full}
+    return results
+    # return {'f1_test':test_f1, 'f1_train':train_f1, 'acc_test':acc, "acc_train":train_acc, 'loss_test':test_loss, "loss_train":train_loss, "f1_test_prior":ptest_f1, "f1_train_prior": ptrain_f1, "acc_test_prior":pacc, "acc_train_prior":ptrain_acc,"loss_test_prior":ptest_loss, "loss_train_prior":ptrain_loss, "l1_norm":l1_norm, "l2_norm":l2_norm, "full":full}

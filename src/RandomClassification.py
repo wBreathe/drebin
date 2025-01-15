@@ -24,7 +24,7 @@ Logger = logging.getLogger('RandomClf.stdout')
 Logger.setLevel("INFO")
 
 
-def RandomClassification(i:int, config: RandomConfig):
+def RandomClassification(num:int, config: RandomConfig):
     '''
     Train a classifier for classifying malwares and goodwares using Support Vector Machine technique.
     Compute the prediction accuracy and f1 score of the classifier.
@@ -40,7 +40,6 @@ def RandomClassification(i:int, config: RandomConfig):
     NCpuCores = config.NCpuCores
     priorPortion = config.priorPortion
     eta = config.eta
-    mu = config.mu
     dual = config.dual
     penalty = config.penalty
     years = config.years
@@ -59,7 +58,7 @@ def RandomClassification(i:int, config: RandomConfig):
     
     print("PART RANDOM")
     Logger.debug("Loading Malware and Goodware Sample Data")
-    label = f"_{i}_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}"
+    label = f"_eta-{eta}_num-{num}_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}"
     AllMalSamples = CM.ListFiles(MalwareCorpus, ".data", year=years)
     AllGoodSamples = CM.ListFiles(GoodwareCorpus, ".data", year=years)
 
@@ -135,48 +134,26 @@ def RandomClassification(i:int, config: RandomConfig):
     # step 4: Evaluate the best model on test set
     w = BestModel.coef_
     w_norm = w/norm(w)
-    pacc,ptrain_acc,ptest_f1, ptrain_f1, ptest_loss, ptrain_loss = 0,0,0,0,0,0
-    test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
-    BestModel.coef_ = w_norm
-    test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with normed priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
-    if(priorPortion!=0):
-        ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss = error.evaluation_metrics("random classification using priorModel", PriorModel, x_test, x_train, y_test, y_train)
-        l1_norm, l2_norm, full = error.theory_specifics(f"random classification with priorportion-{priorPortion}", BestModel, prior=PriorModel, eta=eta, mu=mu)
-    else:
-        l1_norm, l2_norm, full = error.theory_specifics("random classification without prior", BestModel)
+    rounded = round(norm(w)/5)*5 
+    if(rounded == 0):
+        rounded = norm(w)
+    step = rounded * 0.01
+    mu_values = [rounded + step * i for i in range(-5, 6)]
+    results = []
+    full = 0
+    for mu in mu_values:
+        pacc,ptrain_acc,ptest_f1, ptrain_f1, ptest_loss, ptrain_loss = 0,0,0,0,0,0
+        # test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
+        BestModel.coef_ = w_norm
+        model = BestModel
+        test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with normed priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
+        if(priorPortion!=0):
+            BestModel.coef_ = mu*w_norm
+            ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss = error.evaluation_metrics("random classification using priorModel", BestModel, x_test, x_train, y_test, y_train)
+            full = error.theory_specifics(f"random classification with priorportion-{priorPortion}", BestModel, mu=mu, prior=PriorModel, eta=eta)
+            results.append([eta, num, mu, full, ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss])
+        else:
+            full = error.theory_specifics("random classification without prior", BestModel)
+            results.append([eta, num, mu, full, test_f1, train_f1, acc, train_acc, test_loss, train_loss])
 
-    # print(f"Calculating loss with priorportion-{priorPortion}....")
-    # num_samples = 100
-    # sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
-    # print(f"get {num_samples} weight distribution using for training set")
-    # avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_train, y_train,NCpuCores)
-    # print(f"loss results for training set for {num_samples} weights: {avg_loss}±{std_loss}. ")
-    # sampled_w = error.sample_spherical_gaussian_from_w(w, num_samples)
-    # print(f"get {num_samples} weight distribution using for test set")
-    # avg_loss, std_loss = error.get_loss_multiprocessing(BestModel, sampled_w, x_test, y_test,NCpuCores)
-    # print(f"loss results for test set for {num_samples} weights: {avg_loss}±{std_loss}. ")
-    
-
-    '''
-    print("Start interpreting ....")
-    w = w[0].tolist()
-    v = x_test.toarray()
-    vocab = FeatureVectorizer.get_feature_names_out()
-    explanations = {os.path.basename(s):{} for s in x_test_samplenames}
-    for i in range(v.shape[0]):
-        wx = v[i, :] * w
-        wv_vocab = list(zip(wx, vocab))
-        if y_pred[i] == 1:
-            wv_vocab.sort(reverse=True)
-            explanations[os.path.basename(x_test_samplenames[i])]['top_features'] = wv_vocab[:NumTopFeats]
-        elif y_pred[i] == -1:
-            wv_vocab.sort()
-            explanations[os.path.basename(x_test_samplenames[i])]['top_features'] = wv_vocab[-NumTopFeats:]
-        explanations[os.path.basename(x_test_samplenames[i])]['original_label'] = y_test[i]
-        explanations[os.path.basename(x_test_samplenames[i])]['predicted_label'] = y_pred[i]
-   
-    with open(f'explanations_RC_{label}.json','w') as FH:
-        json.dump(explanations,FH,indent=4)
-    '''
-
-    return {'f1_test':test_f1, 'f1_train':train_f1, 'acc_test':acc, 'acc_train':train_acc,'loss_test':test_loss, "loss_train":train_loss, "f1_test_prior":ptest_f1, "f1_train_prior": ptrain_f1, "acc_test_prior":pacc, "acc_train_prior":ptrain_acc, "loss_test_prior":ptest_loss, "loss_train_prior":ptrain_loss, "l1_norm":l1_norm, "l2_norm":l2_norm, "full":full}
+    return results, model, rounded
