@@ -95,7 +95,7 @@ def main(Args, FeatureOption):
     # full, test_f1, future_test_f1, test_acc, future_test_acc, test_loss, future_test_loss, train_loss 
 
     for eta, num, mu, f, t_f, train_f1, t_a, train_acc, t_l, train_loss in random_results:
-        key = (eta, num, mu)            
+        key = (eta, mu)            
         stats["full"][key].append(f)
         stats["test_f1"][key].append(t_f)
         stats["test_acc"][key].append(t_a)
@@ -103,7 +103,7 @@ def main(Args, FeatureOption):
         stats["train_loss"][key].append(train_loss)
 
     for eta, i, mu, ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss in holdout_results:
-        key = (eta, i, mu)
+        key = (eta, mu)
         stats['future_test_f1'][key].append(ptest_f1)
         stats["future_test_acc"][key].append(pacc)
         stats["future_test_loss"][key].append(ptest_loss)
