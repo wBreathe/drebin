@@ -45,7 +45,7 @@ def main(Args, FeatureOption):
         GetApkData(NCpuCores, *apk_paths)
 
     etas = [i for i in range(1, 100, 5)]
-    random_results, holdout_results = [], [], []
+    random_results, holdout_results = [], []
     for eta in etas:
         for index in range(num):
             randomConfig = RandomConfig(
@@ -85,7 +85,7 @@ def main(Args, FeatureOption):
                 NumTopFeats=NumFeatForExp
             )
             temp_results_random, model, rounded = RandomClassification(index, randomConfig)
-            temp_results_holdout = HoldoutClassification(index, models, rounded, holdoutConfig)
+            temp_results_holdout = HoldoutClassification(index, model, rounded, holdoutConfig)
             random_results.extend(temp_results_random)
             holdout_results.extend(temp_results_holdout)
 
