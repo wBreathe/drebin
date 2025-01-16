@@ -33,6 +33,7 @@ def main(Args, FeatureOption):
     priorPortion = Args.priorPortion
     # eta = Args.eta
     # mu = Args.mu
+    kernel = Args.kernel
     future = True if(Args.future!=0) else False
     current_date = datetime.now().strftime("%Y-%m-%d")
     label = f"{num}_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}_future-{future}_{current_date}"
@@ -49,6 +50,7 @@ def main(Args, FeatureOption):
     for eta in etas:
         for index in range(num):
             randomConfig = RandomConfig(
+                kernel=kernel,
                 NCpuCores=NCpuCores,
                 priorPortion=priorPortion,
                 eta=eta,
@@ -69,6 +71,7 @@ def main(Args, FeatureOption):
                 futureGoodwareCorpus=os.path.join(dir, "test", "goodware")
             )
             holdoutConfig = HoldoutConfig(
+                kernel=kernel,
                 NCpuCores=NCpuCores,
                 priorPortion=priorPortion,
                 eta=eta,
@@ -119,11 +122,11 @@ def main(Args, FeatureOption):
         for metric, (avg, std) in metrics.items():
             print(f"  {metric}: Mean = {avg:.4f}, Std = {std:.4f}")
     
-    with open(os.path.join(dir, f"stats_{int(time.time())}"), "wb") as f:
+    with open(os.path.join(dir, f"{kernel}_stats_{int(time.time())}"), "wb") as f:
         pickle.dump(results, f)
-    with open(os.path.join(dir, f"results_of_random_{int(time.time())}"),"wb") as f:
+    with open(os.path.join(dir, f"{kernel}_results_of_random_{int(time.time())}"),"wb") as f:
         pickle.dump(random_results, f)
-    with open(os.path.join(dir, f"results_of_holdout_{int(time.time())}"),"wb") as f:
+    with open(os.path.join(dir, f"{kernel}_results_of_holdout_{int(time.time())}"),"wb") as f:
         pickle.dump(holdout_results, f)
     log_file.close()
 
@@ -158,7 +161,7 @@ def ParseArgs():
                       help= "Whether to process APKs or not")
     Args.add_argument("--num", type=int, default=100, 
                       help= "the i th experiment")
-    
+    Args.add_argument('--kernel', type=str, choices=['linear', 'poly', 'rbf', 'sigmoid'], default="linear", help='Kernel type (linear, poly, rbf, sigmoid)')
     return Args.parse_args()
 
 if __name__ == "__main__":

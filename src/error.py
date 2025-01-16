@@ -15,6 +15,7 @@ Logger.setLevel("INFO")
 
 @dataclass
 class RandomConfig:
+    kernel: str
     NCpuCores: int
     priorPortion: float
     eta: float
@@ -37,6 +38,7 @@ class RandomConfig:
 
 @dataclass
 class HoldoutConfig:
+    kernel: str
     NCpuCores: int
     priorPortion: float
     eta: float

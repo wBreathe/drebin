@@ -2,7 +2,7 @@ import numpy as np
 import time
 import CommonModules as CM
 from sklearn.feature_extraction.text import TfidfVectorizer as TF
-from sklearn.svm import LinearSVC
+from sklearn.svm import LinearSVC,SVC
 from sklearn.model_selection import GridSearchCV
 from sklearn import metrics
 from sklearn.metrics import accuracy_score, f1_score
@@ -34,6 +34,7 @@ def HoldoutClassification(i:int, model, rounded:int, config: HoldoutConfig):
     :param String FeatureOption: tfidf or binary, specify how to construct the feature vector
     '''
     print("PART HOLDOUT")
+    kernel = config.kernel
     NCpuCores = config.NCpuCores
     priorPortion = config.priorPortion
     eta = config.eta
@@ -50,7 +51,7 @@ def HoldoutClassification(i:int, model, rounded:int, config: HoldoutConfig):
     NumTopFeats = config.NumTopFeats
 
     # step 1: creating feature vector
-    label = f"_eta-{eta}_num-{i}_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}"
+    label = f"_eta-{eta}_num-{i}_kernel-{kernel}_penalty-{penalty}_priorPortion-{priorPortion}"
     Logger.debug("Loading Malware and Goodware Sample Data for training and testing")
     with open(os.path.join(saveTrainSet,f"trainSamples_{label}.pkl"), 'rb') as f:
         x_train_names, y_train = pickle.load(f)

@@ -3,7 +3,7 @@ import time
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer as TF
 from sklearn.model_selection import GridSearchCV
-from sklearn.svm import LinearSVC
+from sklearn.svm import LinearSVC, SVC
 from sklearn import metrics
 from sklearn.metrics import accuracy_score, f1_score
 import logging
@@ -37,6 +37,7 @@ def RandomClassification(num:int, config: RandomConfig):
     :rtype String Report: result report
     '''
     # step 1: creating feature vector
+    kernel = config.kernel
     NCpuCores = config.NCpuCores
     priorPortion = config.priorPortion
     eta = config.eta
@@ -58,13 +59,12 @@ def RandomClassification(num:int, config: RandomConfig):
     
     print("PART RANDOM")
     Logger.debug("Loading Malware and Goodware Sample Data")
-    label = f"_eta-{eta}_num-{num}_dual-{dual}_penalty-{penalty}_priorPortion-{priorPortion}"
+    label = f"_eta-{eta}_num-{num}_kernel-{kernel}_penalty-{penalty}_priorPortion-{priorPortion}"
     AllMalSamples = CM.ListFiles(MalwareCorpus, ".data", year=years)
     AllGoodSamples = CM.ListFiles(GoodwareCorpus, ".data", year=years)
 
 
-    FeatureVectorizer = TF(input='filename', tokenizer=lambda x: x.split('\n'), token_pattern=None,
-                           binary=FeatureOption)
+    FeatureVectorizer = TF(input='filename', tokenizer=lambda x: x.split('\n'), token_pattern=None,binary=FeatureOption)
     if(enableFuture):
         assert((futureYears is not None) and (futureMalwareCorpus is not None) and (futureGoodwareCorpus is not None))
         FutureMalSamples = CM.ListFiles(futureMalwareCorpus, ".data", year=futureYears)
@@ -121,11 +121,17 @@ def RandomClassification(num:int, config: RandomConfig):
         # SVMModels= Clf.fit(x_train, y_train)
         # Logger.info("Processing time to train and find best model with GridSearchCV is %s sec." %(round(time.time() -T0, 2)))
         # BestModel= SVMModels.best_estimator_
+        def create_model(kernel):
+            if kernel == 'linear':
+                return LinearSVC(max_iter=1000000, C=1, dual=dual, fit_intercept=False)
+            else:
+                return SVC(kernel=kernel, max_iter=1000000, C=1)
         if(priorPortion!=0):
-            PriorModel = LinearSVC(max_iter=1000000, dual=dual, penalty=penalty, C=1, fit_intercept=False)
+            PriorModel = create_model(kernel)
             PriorModel.fit(x_train_prior, y_train_prior)
             
-        BestModel = LinearSVC(max_iter=1000000,dual=dual, penalty=penalty, C=1, fit_intercept=False)
+        # BestModel = LinearSVC(max_iter=1000000,dual=dual, penalty=penalty, C=1, fit_intercept=False)
+        BestModel = create_model(kernel)
         BestModel.fit(x_train, y_train)
         Logger.info("Best Model Selected : {}".format(BestModel))
     else:
