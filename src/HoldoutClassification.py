@@ -106,7 +106,7 @@ def HoldoutClassification(i:int, model, rounded:int, config: HoldoutConfig):
     # w = BestModel.coef_
     # w_norm = w/norm(w)
     step = rounded * 0.01
-    mu_values = [rounded + step * i for i in range(-5, 6)]
+    mu_values = [rounded + step * i for i in range(-25, 26)]
     results = []
     for mu in mu_values:
         pacc,ptrain_acc,ptest_f1, ptrain_f1, ptest_loss, ptrain_loss = 0,0,0,0,0,0

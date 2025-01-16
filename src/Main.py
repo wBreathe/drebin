@@ -156,7 +156,7 @@ def ParseArgs():
     #                   help="the scaling for posterior distribution")
     Args.add_argument("--apk", type=bool, default=False, 
                       help= "Whether to process APKs or not")
-    Args.add_argument("--num", type=int, default=10, 
+    Args.add_argument("--num", type=int, default=100, 
                       help= "the i th experiment")
     
     return Args.parse_args()

@@ -138,7 +138,7 @@ def RandomClassification(num:int, config: RandomConfig):
     if(rounded == 0):
         rounded = norm(w)
     step = rounded * 0.01
-    mu_values = [rounded + step * i for i in range(-5, 6)]
+    mu_values = [rounded + step * i for i in range(-25, 26)]
     results = []
     full = 0
     for mu in mu_values:
