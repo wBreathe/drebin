@@ -16,15 +16,15 @@ import pickle
 import random
 from numpy.linalg import norm
 import error
-from error import RandomConfig
-
+from error import RandomConfig, HoldoutConfig, sample_spherical_gaussian_from_w
+from HoldoutClassification import HoldoutClassification
 
 logging.basicConfig(level=logging.INFO)
 Logger = logging.getLogger('RandomClf.stdout')
 Logger.setLevel("INFO")
 
 
-def RandomClassification(num:int, config: RandomConfig):
+def RandomClassification(config: RandomConfig, holdoutConfig:HoldoutConfig):
     '''
     Train a classifier for classifying malwares and goodwares using Support Vector Machine technique.
     Compute the prediction accuracy and f1 score of the classifier.
@@ -131,8 +131,6 @@ def RandomClassification(num:int, config: RandomConfig):
                 return LinearSVC(max_iter=1000000, C=1, dual=dual, fit_intercept=False, class_weight=class_weights)
             else:
                 return SVC(kernel=kernel, max_iter=1000000, C=1, class_weight=class_weights)
-        
-
 
         if(priorPortion!=0):
             PriorModel = create_model(kernel)
@@ -170,11 +168,11 @@ def RandomClassification(num:int, config: RandomConfig):
     mu_values = [rounded + step * i for i in range(-15, 16)]
     results = []
     full = 0
+    holdout_results = []
     for mu in mu_values:
         pacc,ptrain_acc,ptest_f1, ptrain_f1, ptest_loss, ptrain_loss = 0,0,0,0,0,0
         # test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
         # BestModel.coef_ = w_norm
-        model = BestModel
         # test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with normed priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
         if(priorPortion!=0):
             BestModel = multiply_mu(kernel, BestModel, mu)
@@ -185,4 +183,4 @@ def RandomClassification(num:int, config: RandomConfig):
         #     full = error.theory_specifics("random classification without prior", BestModel)
         #     results.append([eta, num, mu, full, test_f1, train_f1, acc, train_acc, test_loss, train_loss])
 
-    return results, model, rounded
+    return results, holdout_results

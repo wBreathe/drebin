@@ -53,12 +53,12 @@ class HoldoutConfig:
     NumTopFeats: int
     enableSample: bool=False
 
-def sample_spherical_gaussian_from_w(w, num_samples):
+def sample_spherical_gaussian_from_w(mu, w, num_samples):
     # w needs to be normalized
     w = w.ravel()
     norm_w = norm(w)
     if(norm_w):
-        w = w/norm_w
+        w = mu*w/norm_w
     else:
         raise Exception("Error: the norm of w equals to zero!")
     # cov_matrix = np.eye(len(w))
@@ -132,7 +132,12 @@ def theory_specifics(label, model, mu=1, prior=None):
     # print(f"C:{model.C}")
     # print(f"weights: {w}")
     # print(f"l1 norm:{l1_norm}, l2 norm:{l2_norm}")
-    
+    def get_eta(w1, w2):
+        w1 = w1 / np.linalg.norm(w1)
+        w2 = w2 / np.linalg.norm(w2)
+        cos_theta = np.dot(w1, w2)
+        return cos_theta
+        
     full = 0
     if(prior):
         wr = prior.coef_
