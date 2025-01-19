@@ -40,7 +40,6 @@ def RandomClassification(num:int, config: RandomConfig):
     kernel = config.kernel
     NCpuCores = config.NCpuCores
     priorPortion = config.priorPortion
-    eta = config.eta
     dual = config.dual
     penalty = config.penalty
     years = config.years
@@ -59,7 +58,7 @@ def RandomClassification(num:int, config: RandomConfig):
     
     print("PART RANDOM")
     Logger.debug("Loading Malware and Goodware Sample Data")
-    label = f"_eta-{eta}_num-{num}_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
+    label = f"_partition_num-{num}_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
     AllMalSamples = CM.ListFiles(MalwareCorpus, ".data", year=years)
     AllGoodSamples = CM.ListFiles(GoodwareCorpus, ".data", year=years)
     print("number of samples: ", len(AllMalSamples), len(AllGoodSamples))
@@ -168,7 +167,7 @@ def RandomClassification(num:int, config: RandomConfig):
     if(rounded == 0):
         rounded = norm_w
     step = rounded * 0.01
-    mu_values = [rounded + step * i for i in range(-25, 26)]
+    mu_values = [rounded + step * i for i in range(-15, 16)]
     results = []
     full = 0
     for mu in mu_values:
@@ -180,8 +179,8 @@ def RandomClassification(num:int, config: RandomConfig):
         if(priorPortion!=0):
             BestModel = multiply_mu(kernel, BestModel, mu)
             ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss = error.evaluation_metrics("random classification using priorModel", BestModel, x_test, x_train, y_test, y_train)
-            full = error.theory_specifics(f"random classification with priorportion-{priorPortion}", BestModel, mu=mu, prior=PriorModel, eta=eta)
-            results.append([eta, num, mu, full, ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss])
+            full = error.theory_specifics(f"random classification with priorportion-{priorPortion}", BestModel, mu=mu, prior=PriorModel)
+            results.append([num, mu, full, ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss])
         # else:
         #     full = error.theory_specifics("random classification without prior", BestModel)
         #     results.append([eta, num, mu, full, test_f1, train_f1, acc, train_acc, test_loss, train_loss])

@@ -37,7 +37,6 @@ def HoldoutClassification(i:int, model, rounded:int, config: HoldoutConfig):
     kernel = config.kernel
     NCpuCores = config.NCpuCores
     priorPortion = config.priorPortion
-    eta = config.eta
     dual = config.dual
     penalty = config.penalty
     years = config.years
@@ -51,7 +50,7 @@ def HoldoutClassification(i:int, model, rounded:int, config: HoldoutConfig):
     NumTopFeats = config.NumTopFeats
 
     # step 1: creating feature vector
-    label = f"_eta-{eta}_num-{i}_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
+    label = f"_partition_num-{i}_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
     Logger.debug("Loading Malware and Goodware Sample Data for training and testing")
     with open(os.path.join(saveTrainSet,f"trainSamples_{label}.pkl"), 'rb') as f:
         x_train_names, y_train = pickle.load(f)

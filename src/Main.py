@@ -45,16 +45,14 @@ def main(Args, FeatureOption):
         apk_paths = [os.path.join(dir,"training",'malware'), os.path.join(dir,"training",'goodware'),os.path.join(dir,"test",'malware'),os.path.join(dir,"test",'goodware')]
         GetApkData(NCpuCores, *apk_paths)
 
-    etas = [i for i in range(1, 100, 5)]
     random_results, holdout_results = [], []
     
-    for eta in etas:
-        for index in range(num):
-            randomConfig = RandomConfig(
+
+    for index in range(num):
+        randomConfig = RandomConfig(
                 kernel=kernel,
                 NCpuCores=NCpuCores,
                 priorPortion=priorPortion,
-                eta=eta,
                 dual=dual,
                 penalty=penalty,
                 years=train_years,
@@ -70,12 +68,11 @@ def main(Args, FeatureOption):
                 futureYears=["2021", "2022"],
                 futureMalwareCorpus=os.path.join(dir, "test", "malware"),
                 futureGoodwareCorpus=os.path.join(dir, "test", "goodware")
-            )
-            holdoutConfig = HoldoutConfig(
+        )
+        holdoutConfig = HoldoutConfig(
                 kernel=kernel,
                 NCpuCores=NCpuCores,
                 priorPortion=priorPortion,
-                eta=eta,
                 dual=dual,
                 penalty=penalty,
                 years=["2021", "2022"],
@@ -87,27 +84,27 @@ def main(Args, FeatureOption):
                 FeatureOption=FeatureOption,
                 Model=Model,
                 NumTopFeats=NumFeatForExp
-            )
-            temp_results_random, model, rounded = RandomClassification(index, randomConfig)
-            temp_results_holdout = HoldoutClassification(index, model, rounded, holdoutConfig)
-            random_results.extend(temp_results_random)
-            holdout_results.extend(temp_results_holdout)
+        )
+        temp_results_random, model, rounded = RandomClassification(index, randomConfig)
+        temp_results_holdout = HoldoutClassification(index, model, rounded, holdoutConfig)
+        random_results.extend(temp_results_random)
+        holdout_results.extend(temp_results_holdout)
 
 
     stats = defaultdict(lambda: defaultdict(list))
     results = defaultdict(dict)
     # full, test_f1, future_test_f1, test_acc, future_test_acc, test_loss, future_test_loss, train_loss 
 
-    for eta, num, mu, f, t_f, train_f1, t_a, train_acc, t_l, train_loss in random_results:
-        key = (eta, mu)            
+    for num, mu, f, t_f, train_f1, t_a, train_acc, t_l, train_loss in random_results:
+        key = mu            
         stats["full"][key].append(f)
         stats["test_f1"][key].append(t_f)
         stats["test_acc"][key].append(t_a)
         stats["test_loss"][key].append(t_l)
         stats["train_loss"][key].append(train_loss)
 
-    for eta, i, mu, ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss in holdout_results:
-        key = (eta, mu)
+    for i, mu, ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss in holdout_results:
+        key = mu
         stats['future_test_f1'][key].append(ptest_f1)
         stats["future_test_acc"][key].append(pacc)
         stats["future_test_loss"][key].append(ptest_loss)
@@ -123,7 +120,7 @@ def main(Args, FeatureOption):
         for metric, (avg, std) in metrics.items():
             print(f"  {metric}: Mean = {avg:.4f}, Std = {std:.4f}")
     
-    label = f"num-{Args.num}_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
+    label = f"partition_num-{i}_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
     with open(os.path.join(dir, f"{label}_stats_{int(time.time())}"), "wb") as f:
         pickle.dump(results, f)
     with open(os.path.join(dir, f"{label}_results_of_random_{int(time.time())}"),"wb") as f:

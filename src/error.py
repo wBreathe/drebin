@@ -18,7 +18,6 @@ class RandomConfig:
     kernel: str
     NCpuCores: int
     priorPortion: float
-    eta: float
     dual: bool
     penalty: str
     years: List[int]
@@ -41,7 +40,6 @@ class HoldoutConfig:
     kernel: str
     NCpuCores: int
     priorPortion: float
-    eta: float
     dual: bool
     penalty: str
     years: list
@@ -121,7 +119,7 @@ def evaluation_metrics(label, model, x_test, x_train, y_test, y_train):
     return f1, Train_f1, Acc, Train_Acc, test_loss, train_loss
 
 
-def theory_specifics(label, model, mu=1, prior=None, eta=0):
+def theory_specifics(label, model, mu=1, prior=None):
     # pointwise multiplication between weight and feature vect
     print(f"The specifics for theoretical bounds: {label}")
     print(f"iteration in sum: {model.n_iter_}")
@@ -139,13 +137,14 @@ def theory_specifics(label, model, mu=1, prior=None, eta=0):
     if(prior):
         wr = prior.coef_
         w = w.ravel()
-        norm_w = norm(w)
-        if(norm_w):
-            w = w/norm_w
         wr = wr.ravel()
-        # norm_wr = norm(wr)
-        # if(norm_wr):
-            # wr = wr/norm_wr
+        norm_wr = norm(wr)
+        if(norm_wr):
+            wr = wr/norm_wr
+        def get_eta(w1, w2):
+            w1 = w1 / np.linalg.norm(w1)
+            return np.dot(w1, w2)
+        eta = get_eta(wr, w)
         full = norm(eta*wr-w)
         if wr.shape != w.shape:
             raise ValueError("The shapes of wr and w do not match!")
