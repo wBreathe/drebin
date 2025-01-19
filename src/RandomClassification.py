@@ -16,15 +16,15 @@ import pickle
 import random
 from numpy.linalg import norm
 import error
-from error import RandomConfig
-
+from error import RandomConfig, HoldoutConfig, sample_spherical_gaussian_from_w
+from HoldoutClassification import HoldoutClassification
 
 logging.basicConfig(level=logging.INFO)
 Logger = logging.getLogger('RandomClf.stdout')
 Logger.setLevel("INFO")
 
 
-def RandomClassification(num:int, config: RandomConfig):
+def RandomClassification(config: RandomConfig, holdoutConfig:HoldoutConfig):
     '''
     Train a classifier for classifying malwares and goodwares using Support Vector Machine technique.
     Compute the prediction accuracy and f1 score of the classifier.
@@ -40,7 +40,6 @@ def RandomClassification(num:int, config: RandomConfig):
     kernel = config.kernel
     NCpuCores = config.NCpuCores
     priorPortion = config.priorPortion
-    eta = config.eta
     dual = config.dual
     penalty = config.penalty
     years = config.years
@@ -59,7 +58,7 @@ def RandomClassification(num:int, config: RandomConfig):
     
     print("PART RANDOM")
     Logger.debug("Loading Malware and Goodware Sample Data")
-    label = f"_eta-{eta}_num-{num}_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
+    label = f"_sample_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
     AllMalSamples = CM.ListFiles(MalwareCorpus, ".data", year=years)
     AllGoodSamples = CM.ListFiles(GoodwareCorpus, ".data", year=years)
     print("number of samples: ", len(AllMalSamples), len(AllGoodSamples))
@@ -132,8 +131,6 @@ def RandomClassification(num:int, config: RandomConfig):
                 return LinearSVC(max_iter=1000000, C=1, dual=dual, fit_intercept=False, class_weight=class_weights)
             else:
                 return SVC(kernel=kernel, max_iter=1000000, C=1, class_weight=class_weights)
-        
-
 
         if(priorPortion!=0):
             PriorModel = create_model(kernel)
@@ -167,23 +164,30 @@ def RandomClassification(num:int, config: RandomConfig):
     rounded = round(norm_w/5)*5 
     if(rounded == 0):
         rounded = norm_w
-    step = rounded * 0.01
-    mu_values = [rounded + step * i for i in range(-25, 26)]
+    step = rounded * 0.1
+    mu_values = [rounded + step * i for i in range(-5, 6)]
     results = []
     full = 0
+    holdout_results = []
     for mu in mu_values:
         pacc,ptrain_acc,ptest_f1, ptrain_f1, ptest_loss, ptrain_loss = 0,0,0,0,0,0
         # test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
         # BestModel.coef_ = w_norm
-        model = BestModel
         # test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with normed priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
         if(priorPortion!=0):
-            BestModel = multiply_mu(kernel, BestModel, mu)
-            ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss = error.evaluation_metrics("random classification using priorModel", BestModel, x_test, x_train, y_test, y_train)
-            full = error.theory_specifics(f"random classification with priorportion-{priorPortion}", BestModel, mu=mu, prior=PriorModel, eta=eta)
-            results.append([eta, num, mu, full, ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss])
+            w_samples = sample_spherical_gaussian_from_w(mu, BestModel.coef_, 100)
+            index = 0
+            for wtemp in w_samples:
+                # BestModel = multiply_mu(kernel, BestModel, mu)
+                BestModel.coef_ = wtemp
+                ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss = error.evaluation_metrics("random classification using priorModel", BestModel, x_test, x_train, y_test, y_train)
+                full = error.theory_specifics(f"random classification with priorportion-{priorPortion}", BestModel, mu=mu, prior=PriorModel)
+                results.append([mu, index, full, ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss])
+                temp_holdout_results = HoldoutClassification(mu, BestModel, index, holdoutConfig)
+                holdout_results.append(temp_holdout_results)
+                index += 1
         # else:
         #     full = error.theory_specifics("random classification without prior", BestModel)
         #     results.append([eta, num, mu, full, test_f1, train_f1, acc, train_acc, test_loss, train_loss])
 
-    return results, model, rounded
+    return results, holdout_results

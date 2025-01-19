@@ -18,7 +18,6 @@ class RandomConfig:
     kernel: str
     NCpuCores: int
     priorPortion: float
-    eta: float
     dual: bool
     penalty: str
     years: List[int]
@@ -41,7 +40,6 @@ class HoldoutConfig:
     kernel: str
     NCpuCores: int
     priorPortion: float
-    eta: float
     dual: bool
     penalty: str
     years: list
@@ -55,12 +53,12 @@ class HoldoutConfig:
     NumTopFeats: int
     enableSample: bool=False
 
-def sample_spherical_gaussian_from_w(w, num_samples):
+def sample_spherical_gaussian_from_w(mu, w, num_samples):
     # w needs to be normalized
     w = w.ravel()
     norm_w = norm(w)
     if(norm_w):
-        w = w/norm_w
+        w = mu*w/norm_w
     else:
         raise Exception("Error: the norm of w equals to zero!")
     # cov_matrix = np.eye(len(w))
@@ -121,7 +119,7 @@ def evaluation_metrics(label, model, x_test, x_train, y_test, y_train):
     return f1, Train_f1, Acc, Train_Acc, test_loss, train_loss
 
 
-def theory_specifics(label, model, mu=1, prior=None, eta=0):
+def theory_specifics(label, model, mu=1, prior=None):
     # pointwise multiplication between weight and feature vect
     print(f"The specifics for theoretical bounds: {label}")
     print(f"iteration in sum: {model.n_iter_}")
@@ -134,18 +132,21 @@ def theory_specifics(label, model, mu=1, prior=None, eta=0):
     # print(f"C:{model.C}")
     # print(f"weights: {w}")
     # print(f"l1 norm:{l1_norm}, l2 norm:{l2_norm}")
-    
+    def get_eta(w1, w2):
+        w1 = w1 / np.linalg.norm(w1)
+        w2 = w2 / np.linalg.norm(w2)
+        cos_theta = np.dot(w1, w2)
+        return cos_theta
+        
     full = 0
     if(prior):
         wr = prior.coef_
         w = w.ravel()
-        norm_w = norm(w)
-        if(norm_w):
-            w = w/norm_w
         wr = wr.ravel()
-        # norm_wr = norm(wr)
-        # if(norm_wr):
-            # wr = wr/norm_wr
+        norm_wr = norm(wr)
+        if(norm_wr):
+            wr = wr/norm_wr
+        eta = get_eta(wr, w)
         full = norm(eta*wr-w)
         if wr.shape != w.shape:
             raise ValueError("The shapes of wr and w do not match!")
