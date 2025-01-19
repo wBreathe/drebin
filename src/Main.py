@@ -123,11 +123,12 @@ def main(Args, FeatureOption):
         for metric, (avg, std) in metrics.items():
             print(f"  {metric}: Mean = {avg:.4f}, Std = {std:.4f}")
     
-    with open(os.path.join(dir, f"{kernel}_stats_{int(time.time())}"), "wb") as f:
+    label = f"num-{Args.num}_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
+    with open(os.path.join(dir, f"{label}_stats_{int(time.time())}"), "wb") as f:
         pickle.dump(results, f)
-    with open(os.path.join(dir, f"{kernel}_results_of_random_{int(time.time())}"),"wb") as f:
+    with open(os.path.join(dir, f"{label}_results_of_random_{int(time.time())}"),"wb") as f:
         pickle.dump(random_results, f)
-    with open(os.path.join(dir, f"{kernel}_results_of_holdout_{int(time.time())}"),"wb") as f:
+    with open(os.path.join(dir, f"{label}_results_of_holdout_{int(time.time())}"),"wb") as f:
         pickle.dump(holdout_results, f)
     log_file.close()
 
@@ -161,7 +162,7 @@ def ParseArgs():
     Args.add_argument("--apk", type=bool, default=False, 
                       help= "Whether to process APKs or not")
     Args.add_argument("--num", type=int, default=100, 
-                      help= "the i th experiment")
+                      help= "the number of different splits")
     Args.add_argument('--kernel', type=str, choices=['linear', 'poly', 'rbf', 'sigmoid'], default="linear", help='Kernel type (linear, poly, rbf, sigmoid)')
     return Args.parse_args()
 
