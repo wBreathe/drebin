@@ -142,10 +142,10 @@ def theory_specifics(label, model, mu=1, prior=None, eta=0):
         if(norm_w):
             w = w/norm_w
         wr = wr.ravel()
-        norm_wr = norm(wr)
-        if(norm_wr):
-            wr = wr/norm_wr
-        full = norm(eta*wr-mu*w)
+        # norm_wr = norm(wr)
+        # if(norm_wr):
+            # wr = wr/norm_wr
+        full = norm(eta*wr-w)
         if wr.shape != w.shape:
             raise ValueError("The shapes of wr and w do not match!")
         print("wr-w", wr-w)
