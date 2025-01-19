@@ -50,7 +50,7 @@ def HoldoutClassification(mu:float, model, i:int, config: HoldoutConfig):
     NumTopFeats = config.NumTopFeats
 
     # step 1: creating feature vector
-    label = f"_sample_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
+    label = f"_rounded_sample_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
     Logger.debug("Loading Malware and Goodware Sample Data for training and testing")
     with open(os.path.join(saveTrainSet,f"trainSamples_{label}.pkl"), 'rb') as f:
         x_train_names, y_train = pickle.load(f)

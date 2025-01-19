@@ -58,7 +58,7 @@ def RandomClassification(config: RandomConfig, holdoutConfig:HoldoutConfig):
     
     print("PART RANDOM")
     Logger.debug("Loading Malware and Goodware Sample Data")
-    label = f"_sample_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
+    label = f"_rounded_sample_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
     AllMalSamples = CM.ListFiles(MalwareCorpus, ".data", year=years)
     AllGoodSamples = CM.ListFiles(GoodwareCorpus, ".data", year=years)
     print("number of samples: ", len(AllMalSamples), len(AllGoodSamples))
@@ -164,8 +164,8 @@ def RandomClassification(config: RandomConfig, holdoutConfig:HoldoutConfig):
     rounded = round(norm_w/5)*5 
     if(rounded == 0):
         rounded = norm_w
-    step = rounded * 0.1
-    mu_values = [400 + step * i for i in range(-15,16)]
+    step = rounded * 0.01
+    mu_values = [rounded + step * i for i in range(-25,26)]
     results = []
     full = 0
     holdout_results = []
