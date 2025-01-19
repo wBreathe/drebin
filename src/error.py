@@ -132,11 +132,6 @@ def theory_specifics(label, model, mu=1, prior=None):
     # print(f"C:{model.C}")
     # print(f"weights: {w}")
     # print(f"l1 norm:{l1_norm}, l2 norm:{l2_norm}")
-    def get_eta(w1, w2):
-        w1 = w1 / np.linalg.norm(w1)
-        w2 = w2 / np.linalg.norm(w2)
-        cos_theta = np.dot(w1, w2)
-        return cos_theta
         
     full = 0
     if(prior):
