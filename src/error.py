@@ -69,26 +69,26 @@ def sample_spherical_gaussian_from_w(w, num_samples):
     return w_samples
 
 
-def zero_one_loss(y_true, y_pred):
-    return np.mean(y_true != y_pred), f1_score(y_true, y_pred, average='binary')
+# def zero_one_loss(y_true, y_pred):
+#     return np.mean(y_true != y_pred), f1_score(y_true, y_pred, average='binary')
 
 
 
-def get_loss_multiprocessing(model, w_samples, x, y_true, num_processes=4):
-    def compute_loss(w_prime):
-        model.coef_ = w_prime.reshape(1,-1)
-        y_pred = model.predict(x)
-        return zero_one_loss(y_true, y_pred)
+# def get_loss_multiprocessing(model, w_samples, x, y_true, num_processes=4):
+#     def compute_loss(w_prime):
+#         model.coef_ = w_prime.reshape(1,-1)
+#         y_pred = model.predict(x)
+#         return zero_one_loss(y_true, y_pred)
     
-    results = Parallel(n_jobs=num_processes)(
-        delayed(compute_loss)(w_prime) for w_prime in w_samples
-    )
-    losses, f1_scores = zip(*results)
-    print('losses', losses)
-    print('f1s', f1_scores)
-    avg_loss = np.mean(losses)
-    std_loss = np.std(losses)
-    return avg_loss, std_loss
+#     results = Parallel(n_jobs=num_processes)(
+#         delayed(compute_loss)(w_prime) for w_prime in w_samples
+#     )
+#     losses, f1_scores = zip(*results)
+#     print('losses', losses)
+#     print('f1s', f1_scores)
+#     avg_loss = np.mean(losses)
+#     std_loss = np.std(losses)
+#     return avg_loss, std_loss
 
 
 def evaluation_metrics(label, model, x_test, x_train, y_test, y_train):
@@ -125,15 +125,16 @@ def theory_specifics(label, model, mu=1, prior=None, eta=0):
     # pointwise multiplication between weight and feature vect
     print(f"The specifics for theoretical bounds: {label}")
     print(f"iteration in sum: {model.n_iter_}")
-    all_parameters = np.prod(model.coef_.shape)
-    print(f"all parameters: {all_parameters}")
+    # all_parameters = np.prod(model.coef_.shape)
+    # print(f"all parameters: {all_parameters}")
     
     w = model.coef_
-    l1_norm = norm(w, ord=1)
-    l2_norm = norm(w)
-    print(f"C:{model.C}")
-    print(f"weights: {w}")
-    print(f"l1 norm:{l1_norm}, l2 norm:{l2_norm}")
+    # l1_norm = norm(w, ord=1)
+    # l2_norm = norm(w)
+    # print(f"C:{model.C}")
+    # print(f"weights: {w}")
+    # print(f"l1 norm:{l1_norm}, l2 norm:{l2_norm}")
+    
     full = 0
     if(prior):
         wr = prior.coef_

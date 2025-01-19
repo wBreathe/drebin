@@ -119,7 +119,7 @@ def RandomClassification(num:int, config: RandomConfig):
     # step 3: train the model
     Logger.info("Perform Classification with SVM Model")
     # Parameters= {'C': [0.01, 0.1, 1, 10, 100]}
-    print(f"number of samples in training set: {x_train.shape}, number of samples in test set: {x_test.shape}")
+    print(f"number of samples in training set: {x_train.shape}, number of samples in test set: {x_test.shape}, number of samples in prior set: {x_train_prior.shape}")
     T0 = time.time() 
     if not Model:
         # Clf = GridSearchCV(LinearSVC(max_iter=1000000,dual=dual, penalty=penalty, fit_intercept=False), Parameters, cv= 5, scoring= 'f1', n_jobs=-1 )
@@ -132,6 +132,9 @@ def RandomClassification(num:int, config: RandomConfig):
                 return LinearSVC(max_iter=1000000, C=1, dual=dual, fit_intercept=False, class_weight=class_weights)
             else:
                 return SVC(kernel=kernel, max_iter=1000000, C=1, class_weight=class_weights)
+        
+
+
         if(priorPortion!=0):
             PriorModel = create_model(kernel)
             PriorModel.fit(x_train_prior, y_train_prior)
@@ -143,12 +146,27 @@ def RandomClassification(num:int, config: RandomConfig):
     else:
         BestModel = joblib.load(Model)
 
+    def normalize_weight(kernel, model):
+        if kernel == 'linear':
+            w = model.coef_
+            norm_w = norm(w)
+            model.coef_ = w/norm_w
+        else:
+            pass
+        return norm_w, model
+    
+    def multiply_mu(kernel, model, mu):
+        if kernel == 'linear':
+            w = model.coef_
+            model.coef_ = mu*w
+        else:
+            pass
+        return model
     # step 4: Evaluate the best model on test set
-    w = BestModel.coef_
-    w_norm = w/norm(w)
-    rounded = round(norm(w)/5)*5 
+    norm_w, BestModel = normalize_weight(kernel, BestModel)
+    rounded = round(norm_w/5)*5 
     if(rounded == 0):
-        rounded = norm(w)
+        rounded = norm_w
     step = rounded * 0.01
     mu_values = [rounded + step * i for i in range(-25, 26)]
     results = []
@@ -156,16 +174,16 @@ def RandomClassification(num:int, config: RandomConfig):
     for mu in mu_values:
         pacc,ptrain_acc,ptest_f1, ptrain_f1, ptest_loss, ptrain_loss = 0,0,0,0,0,0
         # test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
-        BestModel.coef_ = w_norm
+        # BestModel.coef_ = w_norm
         model = BestModel
-        test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with normed priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
+        # test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with normed priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
         if(priorPortion!=0):
-            BestModel.coef_ = mu*w_norm
+            BestModel = multiply_mu(kernel, BestModel, mu)
             ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss = error.evaluation_metrics("random classification using priorModel", BestModel, x_test, x_train, y_test, y_train)
             full = error.theory_specifics(f"random classification with priorportion-{priorPortion}", BestModel, mu=mu, prior=PriorModel, eta=eta)
             results.append([eta, num, mu, full, ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss])
-        else:
-            full = error.theory_specifics("random classification without prior", BestModel)
-            results.append([eta, num, mu, full, test_f1, train_f1, acc, train_acc, test_loss, train_loss])
+        # else:
+        #     full = error.theory_specifics("random classification without prior", BestModel)
+        #     results.append([eta, num, mu, full, test_f1, train_f1, acc, train_acc, test_loss, train_loss])
 
     return results, model, rounded
