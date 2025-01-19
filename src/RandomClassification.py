@@ -126,7 +126,7 @@ def RandomClassification(num:int, config: RandomConfig):
         # Logger.info("Processing time to train and find best model with GridSearchCV is %s sec." %(round(time.time() -T0, 2)))
         # BestModel= SVMModels.best_estimator_
         def create_model(kernel):
-            class_weights = {1: TestSize, 0: 1-TestSize}
+            class_weights = {1: TestSize, -1: 1-TestSize}
             if kernel == 'linear':
                 return LinearSVC(max_iter=1000000, C=1, dual=dual, fit_intercept=False, class_weight=class_weights)
             else:
