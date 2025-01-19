@@ -75,7 +75,7 @@ def RandomClassification(num:int, config: RandomConfig):
     
     if(enable_imbalance):
         # AllMalSamples = random.sample(AllMalSamples, int(0.2*len(AllGoodSamples))) if len(AllMalSamples)>int(0.2*len(AllGoodSamples)) else AllMalSamples
-        num_good_samples = len(AllMalSamples) / TestSize  
+        num_good_samples = (len(AllMalSamples) / TestSize)  
         if(num_good_samples > len(AllGoodSamples)):
             raise Exception("Error: Not enough good wares!")
         AllGoodSamples = random.sample(AllGoodSamples, num_good_samples)
