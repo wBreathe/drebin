@@ -47,6 +47,7 @@ def main(Args, FeatureOption):
 
     etas = [i for i in range(1, 100, 5)]
     random_results, holdout_results = [], []
+    
     for eta in etas:
         for index in range(num):
             randomConfig = RandomConfig(
@@ -139,7 +140,7 @@ def ParseArgs():
                       help= "Absolute path to directory containing apks")
     Args.add_argument("--ncpucores", type= int, default= 8,
                       help= "Number of CPUs that will be used for processing")
-    Args.add_argument("--testsize", type= float, default= 0.3,
+    Args.add_argument("--testsize", type= float, default= 0.5,
                       help= "Size of the test set when split by Scikit Learn's Train Test Split module")
     Args.add_argument("--model",
                       help= "Absolute path to the saved model file(.pkl extension)")

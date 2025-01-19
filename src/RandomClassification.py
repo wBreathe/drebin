@@ -59,10 +59,10 @@ def RandomClassification(num:int, config: RandomConfig):
     
     print("PART RANDOM")
     Logger.debug("Loading Malware and Goodware Sample Data")
-    label = f"_eta-{eta}_num-{num}_kernel-{kernel}_penalty-{penalty}_priorPortion-{priorPortion}"
+    label = f"_eta-{eta}_num-{num}_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
     AllMalSamples = CM.ListFiles(MalwareCorpus, ".data", year=years)
     AllGoodSamples = CM.ListFiles(GoodwareCorpus, ".data", year=years)
-
+    print("number of samples: ", len(AllMalSamples), len(AllGoodSamples))
 
     FeatureVectorizer = TF(input='filename', tokenizer=lambda x: x.split('\n'), token_pattern=None,binary=FeatureOption)
     if(enableFuture):
@@ -74,7 +74,11 @@ def RandomClassification(num:int, config: RandomConfig):
             pickle.dump(AllMalSamples+AllGoodSamples+FutureGoodSamples+FutureMalSamples, f)
     
     if(enable_imbalance):
-        AllMalSamples = random.sample(AllMalSamples, int(0.2*len(AllGoodSamples))) if len(AllMalSamples)>int(0.2*len(AllGoodSamples)) else AllMalSamples
+        # AllMalSamples = random.sample(AllMalSamples, int(0.2*len(AllGoodSamples))) if len(AllMalSamples)>int(0.2*len(AllGoodSamples)) else AllMalSamples
+        num_good_samples = len(AllMalSamples) / TestSize  
+        if(num_good_samples > len(AllGoodSamples)):
+            raise Exception("Error: Not enough good wares!")
+        AllGoodSamples = random.sample(AllGoodSamples, num_good_samples)
     AllSampleNames = AllMalSamples + AllGoodSamples
     Logger.info("Loaded samples")
     
@@ -122,10 +126,11 @@ def RandomClassification(num:int, config: RandomConfig):
         # Logger.info("Processing time to train and find best model with GridSearchCV is %s sec." %(round(time.time() -T0, 2)))
         # BestModel= SVMModels.best_estimator_
         def create_model(kernel):
+            class_weights = {1: TestSize, 0: 1-TestSize}
             if kernel == 'linear':
-                return LinearSVC(max_iter=1000000, C=1, dual=dual, fit_intercept=False)
+                return LinearSVC(max_iter=1000000, C=1, dual=dual, fit_intercept=False, class_weight=class_weights)
             else:
-                return SVC(kernel=kernel, max_iter=1000000, C=1)
+                return SVC(kernel=kernel, max_iter=1000000, C=1, class_weight=class_weights)
         if(priorPortion!=0):
             PriorModel = create_model(kernel)
             PriorModel.fit(x_train_prior, y_train_prior)

@@ -51,18 +51,20 @@ def HoldoutClassification(i:int, model, rounded:int, config: HoldoutConfig):
     NumTopFeats = config.NumTopFeats
 
     # step 1: creating feature vector
-    label = f"_eta-{eta}_num-{i}_kernel-{kernel}_penalty-{penalty}_priorPortion-{priorPortion}"
+    label = f"_eta-{eta}_num-{i}_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
     Logger.debug("Loading Malware and Goodware Sample Data for training and testing")
     with open(os.path.join(saveTrainSet,f"trainSamples_{label}.pkl"), 'rb') as f:
         x_train_names, y_train = pickle.load(f)
-    if(priorPortion!=0):
-        with open(os.path.join(saveTrainSet,f"priorSamples_{label}.pkl"), 'rb') as f:
-            x_train_prior_names, y_train_prior = pickle.load(f)
-    sample_num = int(len(y_train)/(1-TestSize)*TestSize)
-    malList = CM.ListFiles(TestMalSet, ".data", year=years)
-    goodList = CM.ListFiles(TestGoodSet, ".data", year=years)
-    TestMalSamples = random.sample(malList, sample_num) if len(malList)>sample_num else malList
-    TestGoodSamples = random.sample(goodList, sample_num) if len(goodList)>sample_num else goodList
+    # if(priorPortion!=0):
+    #     with open(os.path.join(saveTrainSet,f"priorSamples_{label}.pkl"), 'rb') as f:
+    #         x_train_prior_names, y_train_prior = pickle.load(f)
+    # sample_num = int(len(y_train)/(1-TestSize)*TestSize)
+    # malList = CM.ListFiles(TestMalSet, ".data", year=years)
+    # goodList = CM.ListFiles(TestGoodSet, ".data", year=years)
+    # TestMalSamples = random.sample(malList, sample_num) if len(malList)>sample_num else malList
+    # TestGoodSamples = random.sample(goodList, sample_num) if len(goodList)>sample_num else goodList
+    TestMalSamples = CM.ListFiles(TestMalSet, ".data", year=years)
+    TestGoodSamples = CM.ListFiles(TestGoodSet, ".data", year=years)
     if(enable_imbalance):
         TestMalSamples = random.sample(TestMalSamples, int(0.2*len(TestGoodSamples))) if len(TestMalSamples)>int(0.2*len(TestGoodSamples)) else TestMalSamples
     AllTestSamples = TestMalSamples + TestGoodSamples
