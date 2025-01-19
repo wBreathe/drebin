@@ -136,7 +136,7 @@ def theory_specifics(label, model, mu=1, prior=None):
         w1 = w1 / np.linalg.norm(w1)
         w2 = w2 / np.linalg.norm(w2)
         cos_theta = np.dot(w1, w2)
-        return cos_theta
+        return mu*cos_theta
         
     full = 0
     if(prior):

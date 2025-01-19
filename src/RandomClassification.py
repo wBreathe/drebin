@@ -165,7 +165,7 @@ def RandomClassification(config: RandomConfig, holdoutConfig:HoldoutConfig):
     if(rounded == 0):
         rounded = norm_w
     step = rounded * 0.1
-    mu_values = [rounded + step * i for i in range(-5, 6)]
+    mu_values = [400 + step * i for i in range(-15,16)]
     results = []
     full = 0
     holdout_results = []
@@ -175,11 +175,12 @@ def RandomClassification(config: RandomConfig, holdoutConfig:HoldoutConfig):
         # BestModel.coef_ = w_norm
         # test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with normed priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
         if(priorPortion!=0):
-            w_samples = sample_spherical_gaussian_from_w(mu, BestModel.coef_, 100)
+            w_samples = sample_spherical_gaussian_from_w(mu, BestModel.coef_, 50)
             index = 0
             for wtemp in w_samples:
                 # BestModel = multiply_mu(kernel, BestModel, mu)
-                BestModel.coef_ = wtemp
+                print(BestModel.coef_.shape, wtemp.shape)
+                BestModel.coef_ = wtemp.reshape(1,-1)
                 ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss = error.evaluation_metrics("random classification using priorModel", BestModel, x_test, x_train, y_test, y_train)
                 full = error.theory_specifics(f"random classification with priorportion-{priorPortion}", BestModel, mu=mu, prior=PriorModel)
                 results.append([mu, index, full, ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss])
