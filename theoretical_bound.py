@@ -27,13 +27,15 @@ if __name__ == "__main__":
         print("testSize:", test_size)
         total_samples = samples[test_size] 
         delta = 0.05
-        bounds = [("norm_diff", "train_loss", "test_loss", "bound")]
+        bounds = [("norm_diff", "train_loss", "test_loss", "test_acc", "test_f1", "bound")]
         for _, v in record.items():
-            assert("full" in v.keys() and "train_loss" in v.keys() and "test_loss" in v.keys())
+            assert("full" in v.keys() and "train_loss" in v.keys() and "test_loss" in v.keys() and "test_acc" in v.keys() and "test_f1" in v.keys())
             norm_diff = v["full"][0]
             train_loss = v["train_loss"][0]
             test_loss = v["test_loss"][0]
-            bounds.append((norm_diff, train_loss, test_loss, error_bound(train_loss, total_samples, delta, norm_diff)))
+            test_acc = v["test_acc"][0]
+            test_f1 = v["test_f1"][0]
+            bounds.append((norm_diff, train_loss, test_loss, test_acc, test_f1, error_bound(train_loss, total_samples, delta, norm_diff)))
     
         csv_file = f"{file_name}.csv"
 
