@@ -77,8 +77,9 @@ def RandomClassification(num:int, config: RandomConfig):
         # AllMalSamples = random.sample(AllMalSamples, int(0.2*len(AllGoodSamples))) if len(AllMalSamples)>int(0.2*len(AllGoodSamples)) else AllMalSamples
         num_good_samples = len(AllMalSamples) / TestSize  
         if(num_good_samples > len(AllGoodSamples)):
-            raise Exception("Error: Not enough good wares!")
-        AllGoodSamples = random.sample(AllGoodSamples, num_good_samples)
+            AllMalSamples = random.sample(AllMalSamples, int(TestSize*len(AllGoodSamples)))
+        else:
+            AllGoodSamples = random.sample(AllGoodSamples, num_good_samples)
     AllSampleNames = AllMalSamples + AllGoodSamples
     Logger.info("Loaded samples")
     
