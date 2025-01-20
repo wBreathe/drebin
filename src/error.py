@@ -115,8 +115,10 @@ def evaluation_metrics(label, model, x_test, x_train, y_test, y_train, class_wei
     print(("Test Set acc = {}".format(Acc)))
     Train_Acc = accuracy_score(y_train, y_train_pred)
     print(("Train Set acc = {}".format(Train_Acc)))
-    train_loss = weighted_hinge_loss(y_train, y_train_pred, class_weights)
-    # train_loss = np.mean(y_train != y_train_pred)
+    if(class_weights != 0):
+        train_loss = weighted_hinge_loss(y_train, y_train_pred, class_weights)
+    else:
+        train_loss = np.mean(y_train != y_train_pred)
     test_loss = np.mean(y_test != y_pred)
     print("Train set zero-one-loss: ", test_loss)
     print("Test set zero-one-loss: ", train_loss)
