@@ -58,7 +58,7 @@ def RandomClassification(config: RandomConfig, holdoutConfig:HoldoutConfig):
     
     print("PART RANDOM")
     Logger.debug("Loading Malware and Goodware Sample Data")
-    label = f"_rounded_sample_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
+    label = f"_400_sample_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
     AllMalSamples = CM.ListFiles(MalwareCorpus, ".data", year=years)
     AllGoodSamples = CM.ListFiles(GoodwareCorpus, ".data", year=years)
     print("number of samples: ", len(AllMalSamples), len(AllGoodSamples))
@@ -126,7 +126,7 @@ def RandomClassification(config: RandomConfig, holdoutConfig:HoldoutConfig):
         # Logger.info("Processing time to train and find best model with GridSearchCV is %s sec." %(round(time.time() -T0, 2)))
         # BestModel= SVMModels.best_estimator_
         def create_model(kernel):
-            class_weights = {1: TestSize, -1: 1-TestSize}
+            class_weights = {1: 1-TestSize, -1: TestSize}
             if kernel == 'linear':
                 return LinearSVC(max_iter=1000000, C=1, dual=dual, fit_intercept=False, class_weight=class_weights)
             else:
@@ -165,7 +165,7 @@ def RandomClassification(config: RandomConfig, holdoutConfig:HoldoutConfig):
     if(rounded == 0):
         rounded = norm_w
     step = rounded * 0.01
-    mu_values = [rounded + step * i for i in range(-25,26)]
+    mu_values = [400 + step * i for i in range(-25,26)]
     results = []
     full = 0
     holdout_results = []

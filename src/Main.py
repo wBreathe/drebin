@@ -118,7 +118,7 @@ def main(Args, FeatureOption):
         for metric, (avg, std) in metrics.items():
             print(f"  {metric}: Mean = {avg:.4f}, Std = {std:.4f}")
     
-    label = f"rounded_sample_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
+    label = f"400_sample_kernel-{kernel}_testSize-{TestSize}_priorPortion-{priorPortion}"
     with open(os.path.join(dir, f"{label}_stats_{int(time.time())}"), "wb") as f:
         pickle.dump(results, f)
     with open(os.path.join(dir, f"{label}_results_of_random_{int(time.time())}"),"wb") as f:

@@ -88,6 +88,7 @@ def sample_spherical_gaussian_from_w(mu, w, num_samples):
 #     std_loss = np.std(losses)
 #     return avg_loss, std_loss
 
+def weighted_hinge_loss(x_train, y_pred):
 
 def evaluation_metrics(label, model, x_test, x_train, y_test, y_train):
     print("Start evaluation ......")
