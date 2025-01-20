@@ -120,13 +120,14 @@ def RandomClassification(num:int, config: RandomConfig):
     # Parameters= {'C': [0.01, 0.1, 1, 10, 100]}
     print(f"number of samples in training set: {x_train.shape}, number of samples in test set: {x_test.shape}")
     T0 = time.time() 
+    class_weights = {1: 1-TestSize, -1: TestSize}
     if not Model:
         # Clf = GridSearchCV(LinearSVC(max_iter=1000000,dual=dual, penalty=penalty, fit_intercept=False), Parameters, cv= 5, scoring= 'f1', n_jobs=-1 )
         # SVMModels= Clf.fit(x_train, y_train)
         # Logger.info("Processing time to train and find best model with GridSearchCV is %s sec." %(round(time.time() -T0, 2)))
         # BestModel= SVMModels.best_estimator_
         def create_model(kernel):
-            class_weights = {1: TestSize, -1: 1-TestSize}
+            
             if kernel == 'linear':
                 return LinearSVC(max_iter=1000000, C=1, dual=dual, fit_intercept=False, class_weight=class_weights)
             else:
@@ -149,7 +150,7 @@ def RandomClassification(num:int, config: RandomConfig):
     if(rounded == 0):
         rounded = norm(w)
     step = rounded * 0.01
-    mu_values = [rounded + step * i for i in range(-15, 16)]
+    mu_values = [rounded + step * i for i in range(-5, 6)]
     results = []
     full = 0
     for mu in mu_values:
@@ -160,7 +161,7 @@ def RandomClassification(num:int, config: RandomConfig):
         test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"random classification with normed priorportion-{priorPortion}", BestModel, x_test, x_train, y_test, y_train)
         if(priorPortion!=0):
             BestModel.coef_ = mu*w_norm
-            ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss = error.evaluation_metrics("random classification using priorModel", BestModel, x_test, x_train, y_test, y_train)
+            ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss = error.evaluation_metrics("random classification using priorModel", BestModel, x_test, x_train, y_test, y_train, class_weights)
             full = error.theory_specifics(f"random classification with priorportion-{priorPortion}", BestModel, mu=mu, prior=PriorModel)
             results.append([num, mu, full, ptest_f1, ptrain_f1, pacc, ptrain_acc, ptest_loss, ptrain_loss])
         else:

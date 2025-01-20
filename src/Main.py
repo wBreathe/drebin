@@ -158,7 +158,7 @@ def ParseArgs():
     #                   help="the scaling for posterior distribution")
     Args.add_argument("--apk", type=bool, default=False, 
                       help= "Whether to process APKs or not")
-    Args.add_argument("--num", type=int, default=100, 
+    Args.add_argument("--num", type=int, default=20, 
                       help= "the number of different splits")
     Args.add_argument('--kernel', type=str, choices=['linear', 'poly', 'rbf', 'sigmoid'], default="linear", help='Kernel type (linear, poly, rbf, sigmoid)')
     return Args.parse_args()

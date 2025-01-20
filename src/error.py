@@ -87,9 +87,21 @@ def sample_spherical_gaussian_from_w(mu, w, num_samples):
 #     avg_loss = np.mean(losses)
 #     std_loss = np.std(losses)
 #     return avg_loss, std_loss
+def weighted_hinge_loss(y_true, y_pred, class_weights):
+    # Compute weights for each sample based on its class
+    sample_weights = np.array([class_weights[y] for y in y_true])
+    
+    # Compute hinge loss for each sample
+    hinge_losses = np.maximum(0, 1 - y_true * y_pred)
+    
+    # Compute weighted hinge loss
+    weighted_loss = np.mean(sample_weights * hinge_losses)
+    return weighted_loss
 
 
-def evaluation_metrics(label, model, x_test, x_train, y_test, y_train):
+
+
+def evaluation_metrics(label, model, x_test, x_train, y_test, y_train, class_weights=0):
     print("Start evaluation ......")
     T0 = time.time()
     y_pred = model.predict(x_test)
@@ -103,7 +115,8 @@ def evaluation_metrics(label, model, x_test, x_train, y_test, y_train):
     print(("Test Set acc = {}".format(Acc)))
     Train_Acc = accuracy_score(y_train, y_train_pred)
     print(("Train Set acc = {}".format(Train_Acc)))
-    train_loss = np.mean(y_train != y_train_pred)
+    train_loss = weighted_hinge_loss(y_train, y_train_pred, class_weights)
+    # train_loss = np.mean(y_train != y_train_pred)
     test_loss = np.mean(y_test != y_pred)
     print("Train set zero-one-loss: ", test_loss)
     print("Test set zero-one-loss: ", train_loss)
