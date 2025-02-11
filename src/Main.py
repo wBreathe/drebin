@@ -24,7 +24,7 @@ def main(Args, FeatureOption):
     NCpuCores= Args.ncpucores
     Model= Args.model
     NumFeatForExp = Args.numfeatforexp
-    train_years = ["2018", "2019", "2020"]
+    train_years = ["2014", "2013", "2012", "2011", "2010"]
     TestSize= Args.testsize
     dual = Args.dual
     penalty = Args.penalty
@@ -45,6 +45,7 @@ def main(Args, FeatureOption):
         apk_paths = [os.path.join(dir,"training",'malware'), os.path.join(dir,"training",'goodware'),os.path.join(dir,"test",'malware'),os.path.join(dir,"test",'goodware')]
         GetApkData(NCpuCores, *apk_paths)
 
+    '''
     random_results, holdout_results = [], []
     
 
@@ -127,8 +128,9 @@ def main(Args, FeatureOption):
         pickle.dump(random_results, f)
     with open(os.path.join(dir, f"{label}_results_of_holdout_{int(time.time())}"),"wb") as f:
         pickle.dump(holdout_results, f)
+    '''
     log_file.close()
-
+    
 
 
 def ParseArgs():
@@ -136,7 +138,7 @@ def ParseArgs():
 
     Args.add_argument("--datadir", default= "/home/wang/Data/android/",
                       help= "Absolute path to directory containing apks")
-    Args.add_argument("--ncpucores", type= int, default= 8,
+    Args.add_argument("--ncpucores", type= int, default= 16,
                       help= "Number of CPUs that will be used for processing")
     Args.add_argument("--testsize", type= float, default= 0.5,
                       help= "Size of the test set when split by Scikit Learn's Train Test Split module")
@@ -156,7 +158,7 @@ def ParseArgs():
     #                   help="the scaling for prior distribution")
     # Args.add_argument("--mu", type=int, default=10,
     #                   help="the scaling for posterior distribution")
-    Args.add_argument("--apk", type=bool, default=False, 
+    Args.add_argument("--apk", type=bool, default=True, 
                       help= "Whether to process APKs or not")
     Args.add_argument("--num", type=int, default=20, 
                       help= "the number of different splits")
