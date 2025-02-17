@@ -20,8 +20,8 @@ def getFeature(dir, years):
     return AllMalSamples, AllGoodSamples
 
 
-def sparse_to_dense(sparse_mtx, device):
-    return sparse_mtx.to_dense().to(device)
+# def sparse_to_dense(sparse_mtx, device):
+#     return sparse_mtx.to_dense().to(device)
 
 
 def polynomial_kernel_torch(X, Y, degree=3, coef0=1, gamma=None):
@@ -42,23 +42,23 @@ def compute_mmd(X_s, X_t, degree=3, coef0=1, gamma=None):
     return mmd
 
 
-def sparse_to_torch_coo(sparse_mtx):
-    coo = sparse_mtx.tocoo() 
-    indices = torch.LongTensor(np.vstack((coo.row, coo.col)))
-    values = torch.FloatTensor(coo.data) 
-    shape = torch.Size(coo.shape)
-    return torch.sparse_coo_tensor(indices, values, shape, dtype=torch.float32)
+# def sparse_to_torch_coo(sparse_mtx):
+#     coo = sparse_mtx.tocoo() 
+#     indices = torch.LongTensor(np.vstack((coo.row, coo.col)))
+#     values = torch.FloatTensor(coo.data) 
+#     shape = torch.Size(coo.shape)
+#     return torch.sparse_coo_tensor(indices, values, shape, dtype=torch.float32)
 
 
-def get_batch(sparse_matrix, device, batch_size=32):
+def get_batch(sparse_matrix, device, batch_size=128):
     num_samples = sparse_matrix.shape[0]
     idx = 0
 
     while idx < num_samples:
         batch_end = min(idx + batch_size, num_samples)  
-        batch = sparse_matrix[idx:batch_end] 
+        batch = sparse_matrix[idx:batch_end].toarray() 
         idx = batch_end
-        dense_batch = torch.cat([sparse_to_dense(sparse_to_torch_coo(sparse_mtx), device) for sparse_mtx in batch], dim=0)
+        dense_batch = torch.tensor(batch, dtype=torch.float32, device=device)
         yield dense_batch
 
 
@@ -75,21 +75,21 @@ class Autoencoder(nn.Module):
         return decoded
 
 
-def extract_representations(model, features, batch_size=32, device="cuda"):
+def extract_representations(model, features, batch_size=128, device="cuda"):
     model.eval()
     representations = []
-
-    for dense_batch in get_batch(features, device=device):
-        encoded_batch = model.encoder(dense_batch)
-        representations.append(encoded_batch)
+    with torch.no_grad():
+        for dense_batch in get_batch(features, device=device):
+            encoded_batch = model.encoder(dense_batch)
+            representations.append(encoded_batch)
 
     return torch.cat(representations, dim=0)
 
 def main():
     dir = "/home/wang/Data/android"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    train_years = [str(i) for i in range(2010, 2018)]
-    test_years = [str(i) for i in range(2018, 2024)]
+    train_years = [str(i) for i in range(2014, 2020)]
+    test_years = [str(i) for i in range(2020, 2024)]
     malwares, goodwares = getFeature(dir, train_years)
     tmalwares, tgoodwares = getFeature(dir, test_years)
     NewFeatureVectorizer = TF(input='filename', tokenizer=lambda x: x.split('\n'), token_pattern=None,binary=True)
@@ -105,7 +105,7 @@ def main():
     
     input_dim = train_features.shape[1]
     assert(input_dim==test_features.shape[1])
-    hidden_dim = 128
+    hidden_dim = 768
 
     model = Autoencoder(input_dim, hidden_dim).to(device)
 
@@ -114,9 +114,9 @@ def main():
     loss_function = nn.BCELoss()  
 
 
-    num_epochs = 50  
+    num_epochs = 50 
 
-
+    save_loss = 100000
     for epoch in range(num_epochs):
         model.train()  
         running_loss = 0.0
@@ -153,20 +153,15 @@ def main():
                 f"Recon Train Loss: {reconstruction_loss_train.item():.4f}, "
                 f"Recon Test Loss: {reconstruction_loss_test.item():.4f}, "
                 f"Total Loss: {total_loss.item():.4f}")
-
-        num_batches = train_features.shape[0] // 32
-        avg_loss = running_loss / num_batches
-        avg_mmd_loss = running_mmd_loss / num_batches
-        avg_recon_loss_train = running_recon_loss_train / num_batches
-        avg_recon_loss_test = running_recon_loss_test / num_batches
-
+            
         print(f"Epoch [{epoch+1}/{num_epochs}], "
-            f"Avg MMD Loss: {avg_mmd_loss:.4f}, "
-            f"Avg Recon Train Loss: {avg_recon_loss_train:.4f}, "
-            f"Avg Recon Test Loss: {avg_recon_loss_test:.4f}, "
-            f"Avg Total Loss: {avg_loss:.4f}")
-    
-    torch.save(model.state_dict(), "/home/wang/Data/android/autoencoder.pth")
+            f"Total MMD Loss: {running_mmd_loss:.4f}, "
+            f"Total Recon Train Loss: {running_recon_loss_train:.4f}, "
+            f"Total Recon Test Loss: {running_recon_loss_test:.4f}, "
+            f"Total Total Loss: {running_loss:.4f}")
+        if(running_loss < save_loss):
+            save_loss = running_loss
+            torch.save(model.state_dict(), "/home/wang/Data/android/autoencoder_epoch-50—best_hidden-768_batch-128.pth")
     #'''
     # model.load_state_dict(torch.load("/home/wang/Data/android/autoencoder.pth")) 
     # model.to(device)
@@ -179,18 +174,21 @@ def main():
     
     # with open("/home/wang/Data/android/test_vectors.pkl", "wb") as f:
     #     pickle.dump(test_vectors, f)
+    bmodel = Autoencoder(input_dim, hidden_dim).to(device)
+    bmodel.load_state_dict(torch.load("/home/wang/Data/android/autoencoder_epoch-50—best_hidden-768_batch-128.pth")) 
+    bmodel.to(device)
     del train_features, test_features
     gc.collect()
-    train_goodware = extract_representations(model, goodfeatures).cpu().numpy()
-    train_malware = extract_representations(model, malfeatures).cpu().numpy()
-    test_goodware = extract_representations(model, tgoodfeatures).cpu().numpy()
-    test_malware = extract_representations(model, tmalfeatures).cpu().numpy()
+    train_goodware = extract_representations(bmodel, goodfeatures).detach().cpu().numpy()
+    train_malware = extract_representations(bmodel, malfeatures).detach().cpu().numpy()
+    test_goodware = extract_representations(bmodel, tgoodfeatures).detach().cpu().numpy()
+    test_malware = extract_representations(bmodel, tmalfeatures).detach().cpu().numpy()
     del goodfeatures, malfeatures, tgoodfeatures, tmalfeatures
     gc.collect()
     train_features = np.concatenate([train_goodware, train_malware], axis=0)
     test_features = np.concatenate([test_goodware, test_malware], axis=0)
-    train_labels = np.concatenate([np.zeros(goodfeatures.shape[0]), np.ones(malfeatures.shape[0])])
-    test_labels = np.concatenate([np.zeros(tgoodfeatures.shape[0]), np.ones(tmalfeatures.shape[0])])
+    train_labels = np.concatenate([np.zeros(train_goodware.shape[0]), np.ones(train_malware.shape[0])])
+    test_labels = np.concatenate([np.zeros(test_goodware.shape[0]), np.ones(test_malware.shape[0])])
     train_features, train_labels = shuffle(train_features, train_labels, random_state=1423)
     test_features, test_labels = shuffle(test_features, test_labels, random_state=1423)
     svcModel = LinearSVC(max_iter=1000000, C=1, dual=False, fit_intercept=False)
