@@ -15,10 +15,7 @@ from torch.nn import TransformerEncoder, TransformerEncoderLayer
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 import umap
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.preprocessing import normalize
-from scipy.sparse import vstack
+
 
 def umap_visualization(train_features, test_features, train_labels, test_labels, 
                        save_prefix='umap_visualization', subsample_size=5000, 
@@ -163,7 +160,7 @@ def umap_visualization(train_features, test_features, train_labels, test_labels,
     )
 
 
-def pca_visualization(train_features, test_features, train_labels, test_labels, save_prefix='pca_visualization'):
+def pca_visualization(train_features, test_features, train_labels, test_labels, save_prefix='pca_visualization_linear_rbf'):
     # 合并训练和测试特征
     all_features = vstack([train_features, test_features])
     all_labels = np.concatenate([train_labels, test_labels])
@@ -242,7 +239,7 @@ def getFeature(dir, years):
 
 def rbf_kernel_torch(X, Y, gamma=None):
     if gamma is None:
-        gamma = 0.01 
+        gamma = 1.0 / X.shape[1] 
     X_norm = torch.sum(X ** 2, dim=1).view(-1, 1)
     Y_norm = torch.sum(Y ** 2, dim=1).view(1, -1)
     K = torch.exp(-gamma * (X_norm + Y_norm - 2 * torch.matmul(X, Y.T)))
@@ -251,7 +248,7 @@ def rbf_kernel_torch(X, Y, gamma=None):
 def polynomial_kernel_torch(X, Y, degree=3, coef0=1, gamma=None):
     """PyTorch implementation of polynomial kernel."""
     if gamma is None:
-        gamma = 1.0 / X.shape[1]  
+        gamma = 0.01
     return (gamma * torch.matmul(X, Y.T) + coef0) ** degree
 
 def compute_mmd(X_s, X_t, degree=3, coef0=1, gamma=None):
@@ -284,37 +281,40 @@ def get_batch(sparse_matrix, device, batch_size=256):
 
 # class Autoencoder(nn.Module):
 #     def __init__(self, input_dim, hidden_dim):
-#         super(Autoencoder, self).__init__()
-#         self.encoder = nn.Linear(input_dim, hidden_dim)
-#         self.decoder = nn.Linear(hidden_dim, input_dim)
+#         super().__init__()
+#         self.encoder = nn.Sequential(
+#             nn.Linear(input_dim, 1024),
+#             nn.BatchNorm1d(1024),
+#             nn.ReLU(),
+#             nn.Linear(1024, hidden_dim),
+#             nn.BatchNorm1d(hidden_dim)
+#         )
+#         self.decoder = nn.Sequential(
+#             nn.Linear(hidden_dim, 1024),
+#             nn.ReLU(),
+#             nn.Linear(1024, input_dim),
+#             nn.Sigmoid()
+#         )
+#         for layer in self.modules():
+#             if isinstance(layer, nn.Linear):
+#                 nn.init.kaiming_normal_(layer.weight, mode='fan_in', nonlinearity='relu')
 
 #     def forward(self, x):
-#         encoded = torch.relu(self.encoder(x))  
-#         decoded = torch.sigmoid(self.decoder(encoded)) 
+#         encoded = self.encoder(x)
+#         decoded = self.decoder(encoded)
 #         return decoded
 
-
 class Autoencoder(nn.Module):
-    def __init__(self, input_dim, hidden_dim, num_layers=2, num_heads=4):
+    def __init__(self, input_dim, hidden_dim):
         super(Autoencoder, self).__init__()
-        self.input = nn.Linear(input_dim, hidden_dim)  
-        self.encoder_layer = TransformerEncoderLayer(d_model=hidden_dim, nhead=num_heads, batch_first=True)
-        self.encoder = TransformerEncoder(self.encoder_layer, num_layers=num_layers)
-
-        self.decoder = nn.Sequential(
-            nn.Linear(hidden_dim, hidden_dim * 2),
-            nn.ReLU(),
-            nn.Linear(hidden_dim * 2, input_dim),
-            nn.Sigmoid()  
-        )
+        self.encoder = nn.Linear(input_dim, hidden_dim)
+        self.decoder = nn.Linear(hidden_dim, input_dim)
 
     def forward(self, x):
-        x = self.input(x)  
-        x = x.unsqueeze(1)  
-        encoded = self.encoder(x)
-        encoded = encoded.squeeze(1)
-        decoded = self.decoder(encoded)  
+        encoded = torch.relu(self.encoder(x))  
+        decoded = torch.sigmoid(self.decoder(encoded)) 
         return decoded
+
 
 
 def extract_representations(model, features, batch_size=256, device="cuda"):
@@ -322,7 +322,7 @@ def extract_representations(model, features, batch_size=256, device="cuda"):
     representations = []
     with torch.no_grad():
         for dense_batch in get_batch(features, device=device):
-            encoded_batch = model.encoder(model.input(dense_batch))
+            encoded_batch = model.encoder(dense_batch)
             representations.append(encoded_batch)
 
     return torch.cat(representations, dim=0)
@@ -374,8 +374,8 @@ def main():
             dense_batch_test = next(test_batch_cycle)
             outputs_train = model(dense_batch_train)
             outputs_test = model(dense_batch_test)
-            representation_train = model.encoder(model.input(dense_batch_train))
-            representation_test = model.encoder(model.input(dense_batch_test))
+            representation_train = model.encoder(dense_batch_train)
+            representation_test = model.encoder(dense_batch_test)
 
             mmd_loss = compute_mmd(representation_train, representation_test)
             reconstruction_loss_train = loss_function(outputs_train, dense_batch_train)
@@ -422,24 +422,23 @@ def main():
     test_labels = np.concatenate([np.zeros(test_goodware.shape[0]), np.ones(test_malware.shape[0])])
     train_features, train_labels = shuffle(train_features, train_labels, random_state=1423)
     test_features, test_labels = shuffle(test_features, test_labels, random_state=1423)
-    svcModel = LinearSVC(max_iter=1000000, C=1, dual=False, fit_intercept=False)
-    # svcModel = SVC(kernel='rbf', C=1, gamma='scale')
+    # svcModel = LinearSVC(max_iter=1000000, C=1, dual=False, fit_intercept=False)
+    svcModel = SVC(kernel='rbf', C=1, gamma='scale')
     svcModel.fit(train_features, train_labels)
 
 
     test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Support shift", svcModel, test_features, train_features, test_labels, train_labels)
     
-    # pca_visualization(train_features, test_features, train_labels, test_labels, save_path='pca_visualization_old.png')
-    # 调用示例
-    umap_visualization(
-        train_features, 
-        test_features, 
-        train_labels, 
-        test_labels,
-        subsample_size=100000,  # 根据GPU显存调整
-        use_gpu=True,          # 使用RAPIDS加速
-        save_prefix='umap_result'
-    )
+    pca_visualization(train_features, test_features, train_labels, test_labels)
+    # umap_visualization(
+    #     train_features, 
+    #     test_features, 
+    #     train_labels, 
+    #     test_labels,
+    #     subsample_size=100000,  # 根据GPU显存调整
+    #     use_gpu=True,          # 使用RAPIDS加速
+    #     save_prefix='umap_result'
+    # )
     
     
 if __name__=="__main__":
