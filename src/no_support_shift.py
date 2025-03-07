@@ -21,8 +21,8 @@ def getFeature(dir, years):
 
 def main():
     dir = "/home/wang/Data/android"
-    train_years = [str(i) for i in range(2010, 2018)]
-    test_years = [str(i) for i in range(2018, 2024)]
+    train_years = [str(i) for i in range(2014, 2020)]
+    test_years = [str(i) for i in range(2020, 2024)]
     malwares, goodwares = getFeature(dir, train_years)
     tmalwares, tgoodwares = getFeature(dir, test_years)
     NewFeatureVectorizer = TF(input='filename', tokenizer=lambda x: x.split('\n'), token_pattern=None,binary=True)
@@ -33,8 +33,8 @@ def main():
     tmalfeatures = NewFeatureVectorizer.transform(tmalwares)
 
 
-    train_features = goodfeatures+malfeatures
-    test_features = tgoodfeatures+tmalfeatures
+    train_features = vstack([goodfeatures, malfeatures])
+    test_features = vstack([tgoodfeatures, tmalfeatures])
     train_labels = np.concatenate([np.zeros(goodfeatures.shape[0]), np.ones(malfeatures.shape[0])])
     test_labels = np.concatenate([np.zeros(tgoodfeatures.shape[0]), np.ones(tmalfeatures.shape[0])])
     train_features, train_labels = shuffle(train_features, train_labels, random_state=1423)
