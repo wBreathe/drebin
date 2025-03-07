@@ -120,7 +120,7 @@ def RandomClassification(num:int, config: RandomConfig):
     # Parameters= {'C': [0.01, 0.1, 1, 10, 100]}
     print(f"number of samples in training set: {x_train.shape}, number of samples in test set: {x_test.shape}")
     T0 = time.time() 
-    class_weights = {1: 1-TestSize, -1: TestSize}
+    class_weights = {1: 0.5, -1: 0.5}
     if not Model:
         # Clf = GridSearchCV(LinearSVC(max_iter=1000000,dual=dual, penalty=penalty, fit_intercept=False), Parameters, cv= 5, scoring= 'f1', n_jobs=-1 )
         # SVMModels= Clf.fit(x_train, y_train)
