@@ -17,148 +17,6 @@ from sklearn.decomposition import PCA
 import umap
 
 
-def umap_visualization(train_features, test_features, train_labels, test_labels, 
-                       save_prefix='umap_visualization', subsample_size=5000, 
-                       random_state=42, use_gpu=True):
-    """
-    UMAP可视化替代PCA版本
-    Args:
-        train/test_features: 稀疏矩阵格式特征
-        train/test_labels: 0/1标签
-        subsample_size: 子采样数量（避免内存不足）
-        use_gpu: 是否使用RAPIDS GPU加速
-    """
-    # 合并数据并转换为密集数组
-    all_features = vstack([train_features, test_features]).toarray()
-    all_labels = np.concatenate([train_labels, test_labels])
-    is_train = np.concatenate([np.ones(len(train_labels)), np.zeros(len(test_labels))]).astype(bool)
-
-    # 子采样避免内存问题
-    if len(all_features) > subsample_size:
-        np.random.seed(random_state)
-        idx = np.random.choice(len(all_features), subsample_size, replace=False)
-        all_features = all_features[idx]
-        all_labels = all_labels[idx]
-        is_train = is_train[idx]
-
-    # L2归一化提升UMAP效果
-    all_features = normalize(all_features, norm='l2')
-
-    # 初始化UMAP模型
-    if use_gpu:
-        from cuml.manifold import UMAP  # RAPIDS cuML GPU加速
-        reducer = UMAP(
-            n_components=2,
-            n_neighbors=30,
-            min_dist=0.1,
-            random_state=random_state,
-            verbose=False
-        )
-    else:
-        reducer = umap.UMAP(
-            n_components=2,
-            n_neighbors=30,
-            min_dist=0.1,
-            random_state=random_state,
-            metric='euclidean'
-        )
-
-    # 执行降维
-    embedding = reducer.fit_transform(all_features)
-
-    # 划分数据
-    train_emb = embedding[is_train]
-    test_emb = embedding[~is_train]
-    train_labels_sub = all_labels[is_train]
-    test_labels_sub = all_labels[~is_train]
-
-    # 定义颜色和标签
-    colors = {
-        'train_goodware': ('blue', 'o'),
-        'train_malware': ('red', 'o'),
-        'test_goodware': ('cyan', '^'),
-        'test_malware': ('orange', '^')
-    }
-
-    def plot_umap(data_dict, title, save_name):
-        plt.figure(figsize=(10, 6))
-        for key, (data, color, marker) in data_dict.items():
-            plt.scatter(data[:, 0], data[:, 1], 
-                        c=color, 
-                        marker=marker,
-                        label=key.replace('_', ' ').title(),
-                        alpha=0.6, 
-                        edgecolors='w',
-                        linewidths=0.3,
-                        s=30)
-        plt.title(title)
-        plt.xlabel('UMAP 1')
-        plt.ylabel('UMAP 2')
-        plt.legend(markerscale=1.5)
-        plt.tight_layout()
-        plt.savefig(f'{save_prefix}_{save_name}.png', dpi=150)
-        plt.close()
-
-    # 1. 训练集内部对比
-    train_good = train_emb[train_labels_sub == 0]
-    train_mal = train_emb[train_labels_sub == 1]
-    plot_umap(
-        {
-            'train_goodware': (train_good, colors['train_goodware'][0], 'o'),
-            'train_malware': (train_mal, colors['train_malware'][0], 'o')
-        },
-        'UMAP: Train Data (Goodware vs Malware)',
-        'train_internal'
-    )
-
-    # 2. 测试集内部对比
-    test_good = test_emb[test_labels_sub == 0]
-    test_mal = test_emb[test_labels_sub == 1]
-    plot_umap(
-        {
-            'test_goodware': (test_good, colors['test_goodware'][0], '^'),
-            'test_malware': (test_mal, colors['test_malware'][0], '^')
-        },
-        'UMAP: Test Data (Goodware vs Malware)',
-        'test_internal'
-    )
-
-    # 3. Goodware跨域对比
-    all_good = embedding[all_labels == 0]
-    is_train_good = is_train[all_labels == 0]
-    plot_umap(
-        {
-            'train_goodware': (all_good[is_train_good], colors['train_goodware'][0], 'o'),
-            'test_goodware': (all_good[~is_train_good], colors['test_goodware'][0], '^')
-        },
-        'UMAP: Goodware (Train vs Test)',
-        'goodware_cross_domain'
-    )
-
-    # 4. Malware跨域对比
-    all_mal = embedding[all_labels == 1]
-    is_train_mal = is_train[all_labels == 1]
-    plot_umap(
-        {
-            'train_malware': (all_mal[is_train_mal], colors['train_malware'][0], 'o'),
-            'test_malware': (all_mal[~is_train_mal], colors['test_malware'][0], '^')
-        },
-        'UMAP: Malware (Train vs Test)',
-        'malware_cross_domain'
-    )
-
-    # 5. 全数据综合视图
-    plot_umap(
-        {
-            'train_goodware': (train_good, colors['train_goodware'][0], 'o'),
-            'train_malware': (train_mal, colors['train_malware'][0], 'o'),
-            'test_goodware': (test_good, colors['test_goodware'][0], '^'),
-            'test_malware': (test_mal, colors['test_malware'][0], '^')
-        },
-        'UMAP: All Data',
-        'full_view'
-    )
-
 
 def pca_visualization(train_features, test_features, train_labels, test_labels, save_prefix='pca_visualization_linear_rbf'):
     # 合并训练和测试特征
@@ -266,17 +124,51 @@ def compute_mmd(X_s, X_t, degree=3, coef0=1, gamma=None):
     return mmd
 
 
-def get_batch(sparse_matrix, device, batch_size=256):
+def get_batch(sparse_matrix, labels = None, device='cpu', batch_size=256):
     num_samples = sparse_matrix.shape[0]
     idx = 0
-
     while idx < num_samples:
         batch_end = min(idx + batch_size, num_samples)  
         batch = sparse_matrix[idx:batch_end].toarray() 
-        idx = batch_end
         dense_batch = torch.tensor(batch, dtype=torch.float32, device=device)
-        yield dense_batch
+        if(labels is not None):
+            batch_labels = labels[idx:batch_end] 
+            yield dense_batch, batch_labels
+        else:
+            yield dense_batch
+        idx = batch_end
+                   
 
+class Autoencoder(nn.Module):
+    def __init__(self, input_dim, hidden_dim):
+        super().__init__()
+        self.encoder = nn.Sequential(
+            nn.Linear(input_dim, 1024),
+            nn.BatchNorm1d(1024),
+            nn.ReLU(),
+            nn.Linear(1024, hidden_dim),
+            nn.BatchNorm1d(hidden_dim)
+        )
+        self.decoder = nn.Sequential(
+            nn.Linear(hidden_dim, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, input_dim),
+            nn.Sigmoid()
+        )
+        self.classifier = nn.Linear(hidden_dim, 2)  
+        
+        for layer in self.modules():
+            if isinstance(layer, nn.Linear):
+                nn.init.kaiming_normal_(layer.weight, mode='fan_in', nonlinearity='relu')
+
+    def forward(self, x, train=True):
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        if(train):
+            class_logits = self.classifier(encoded)
+            return decoded, class_logits
+        else:
+            return decoded
 
 
 # class Autoencoder(nn.Module):
@@ -304,16 +196,16 @@ def get_batch(sparse_matrix, device, batch_size=256):
 #         decoded = self.decoder(encoded)
 #         return decoded
 
-class Autoencoder(nn.Module):
-    def __init__(self, input_dim, hidden_dim):
-        super(Autoencoder, self).__init__()
-        self.encoder = nn.Linear(input_dim, hidden_dim)
-        self.decoder = nn.Linear(hidden_dim, input_dim)
+# class Autoencoder(nn.Module):
+#     def __init__(self, input_dim, hidden_dim):
+#         super(Autoencoder, self).__init__()
+#         self.encoder = nn.Linear(input_dim, hidden_dim)
+#         self.decoder = nn.Linear(hidden_dim, input_dim)
 
-    def forward(self, x):
-        encoded = torch.relu(self.encoder(x))  
-        decoded = torch.sigmoid(self.decoder(encoded)) 
-        return decoded
+#     def forward(self, x):
+#         encoded = torch.relu(self.encoder(x))  
+#         decoded = torch.sigmoid(self.decoder(encoded)) 
+#         return decoded
 
 
 
@@ -342,8 +234,12 @@ def main():
     tmalfeatures = NewFeatureVectorizer.transform(tmalwares)
     train_features = vstack([goodfeatures, malfeatures])
     test_features = vstack([tgoodfeatures, tmalfeatures])
-    train_features = shuffle(train_features, random_state=2314)
-    test_features = shuffle(test_features, random_state=2314)
+    
+    train_labels = np.hstack([np.zeros(len(goodfeatures)), np.ones(len(malfeatures))])
+    test_labels = np.hstack([np.zeros(len(tgoodfeatures)), np.ones(len(tmalfeatures))])
+    train_features, train_labels = shuffle(train_features, train_labels, random_state=2314)
+    test_features, test_labels = shuffle(test_features, test_labels, random_state=2314)
+    train_labels = torch.tensor(train_labels, dtype=torch.long, device=device)
     
     input_dim = train_features.shape[1]
     assert(input_dim==test_features.shape[1])
@@ -354,7 +250,7 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
 
     loss_function = nn.BCELoss()  
-
+    classification_loss_function = nn.CrossEntropyLoss()
 
     num_epochs = 20 
 
@@ -365,23 +261,24 @@ def main():
         running_mmd_loss = 0.0
         running_recon_loss_train = 0.0
         running_recon_loss_test = 0.0
+        running_classification_loss = 0.0
 
         test_batch_cycle = cycle(get_batch(test_features, device))
 
-        for batch_idx, dense_batch_train in enumerate(get_batch(train_features, device)):
+        for batch_idx, dense_batch_train, batch_labels in enumerate(get_batch(train_features, train_labels, device)):
             optimizer.zero_grad()
 
             dense_batch_test = next(test_batch_cycle)
-            outputs_train = model(dense_batch_train)
-            outputs_test = model(dense_batch_test)
+            outputs_train, outputs_class = model(dense_batch_train, train=True)
+            outputs_test = model(dense_batch_test, train=False)
             representation_train = model.encoder(dense_batch_train)
             representation_test = model.encoder(dense_batch_test)
 
             mmd_loss = compute_mmd(representation_train, representation_test)
             reconstruction_loss_train = loss_function(outputs_train, dense_batch_train)
             reconstruction_loss_test = loss_function(outputs_test, dense_batch_test)
-
-            total_loss = reconstruction_loss_train + reconstruction_loss_test + mmd_loss
+            classification_loss_train = classification_loss_function(outputs_class, batch_labels)
+            total_loss = reconstruction_loss_train + reconstruction_loss_test + mmd_loss + classification_loss_train
             total_loss.backward()
             optimizer.step()
 
@@ -389,17 +286,20 @@ def main():
             running_mmd_loss += mmd_loss.item()
             running_recon_loss_train += reconstruction_loss_train.item()
             running_recon_loss_test += reconstruction_loss_test.item()
+            running_classification_loss += classification_loss_train.item()
 
             print(f"Batch {batch_idx + 1}: "
                 f"MMD Loss: {mmd_loss.item():.4f}, "
                 f"Recon Train Loss: {reconstruction_loss_train.item():.4f}, "
                 f"Recon Test Loss: {reconstruction_loss_test.item():.4f}, "
+                f"Classification Train Loss: {classification_loss_train.item():.4f}, "
                 f"Total Loss: {total_loss.item():.4f}")
             
         print(f"Epoch [{epoch+1}/{num_epochs}], "
             f"Total MMD Loss: {running_mmd_loss:.4f}, "
             f"Total Recon Train Loss: {running_recon_loss_train:.4f}, "
             f"Total Recon Test Loss: {running_recon_loss_test:.4f}, "
+            f"Total Class Train Loss: {classification_loss_train:.4f}, "
             f"Total Total Loss: {running_loss:.4f}")
         if(running_loss < save_loss):
             save_loss = running_loss
