@@ -18,7 +18,7 @@ import umap
 
 
 
-def pca_visualization(train_features, test_features, train_labels, test_labels, save_prefix='pca_visualization_linear_rbf'):
+def pca_visualization(train_features, test_features, train_labels, test_labels, save_prefix='pca_visualization_linear_rbf_reverse'):
     # 合并训练和测试特征
     all_features = vstack([train_features, test_features])
     all_labels = np.concatenate([train_labels, test_labels])
@@ -235,11 +235,11 @@ def main():
     train_features = vstack([goodfeatures, malfeatures])
     test_features = vstack([tgoodfeatures, tmalfeatures])
     
-    train_labels = np.hstack([np.zeros(len(goodfeatures)), np.ones(len(malfeatures))])
-    test_labels = np.hstack([np.zeros(len(tgoodfeatures)), np.ones(len(tmalfeatures))])
+    train_labels = np.hstack([np.zeros(goodfeatures.shape[0]), np.ones(malfeatures.shape[0])])
+    test_labels = np.hstack([np.zeros(tgoodfeatures.shape[0]), np.ones(tmalfeatures.shape[0])])
     train_features, train_labels = shuffle(train_features, train_labels, random_state=2314)
     test_features, test_labels = shuffle(test_features, test_labels, random_state=2314)
-    train_labels = torch.tensor(train_labels, dtype=torch.long, device=device)
+    train_labels = torch.tensor(train_labels, dtype=torch.long).to(device)
     
     input_dim = train_features.shape[1]
     assert(input_dim==test_features.shape[1])
@@ -263,9 +263,9 @@ def main():
         running_recon_loss_test = 0.0
         running_classification_loss = 0.0
 
-        test_batch_cycle = cycle(get_batch(test_features, device))
+        test_batch_cycle = cycle(get_batch(test_features, device = device))
 
-        for batch_idx, dense_batch_train, batch_labels in enumerate(get_batch(train_features, train_labels, device)):
+        for batch_idx, (dense_batch_train, batch_labels) in enumerate(get_batch(train_features, labels=train_labels, device=device)):
             optimizer.zero_grad()
 
             dense_batch_test = next(test_batch_cycle)
@@ -278,7 +278,7 @@ def main():
             reconstruction_loss_train = loss_function(outputs_train, dense_batch_train)
             reconstruction_loss_test = loss_function(outputs_test, dense_batch_test)
             classification_loss_train = classification_loss_function(outputs_class, batch_labels)
-            total_loss = reconstruction_loss_train + reconstruction_loss_test + mmd_loss + classification_loss_train
+            total_loss = reconstruction_loss_train + reconstruction_loss_test + 5*mmd_loss + 10*classification_loss_train
             total_loss.backward()
             optimizer.step()
 
