@@ -48,18 +48,28 @@ def main():
     test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Without Support shift", svcModel, test_features, train_features, test_labels, train_labels)
     
     
-    iterations = 10
-    for i in range(iterations):
+    iterations = 100
+    for i in range(iterations, 10):
         print(f"Iteration: {i}")
         test_scores = svcModel.decision_function(test_features)
-        best_thresh = np.percentile(np.abs(test_scores), 95)  
-        print(f"Threshold for top 5% confident samples: {best_thresh}")
+        best_thresh = np.percentile(np.abs(test_scores), i)  
+        print(f"Threshold for top {100-i}% confident samples: {best_thresh}")
     
         high_confidence_idx = np.where(np.abs(test_scores) >= best_thresh)[0]
         pseudo_labels = (test_scores[high_confidence_idx] >= 0).astype(int)
 
         pseudo_features = test_features[high_confidence_idx]
+        
+        num_positive = np.sum(pseudo_labels)  
+        num_negative = len(pseudo_labels) - num_positive
+        total_selected = len(pseudo_labels)
 
+        print(f"Total selected samples: {total_selected}")
+        print(f"Positive class (1): {num_positive} ({num_positive / total_selected:.2%})")
+        print(f"Negative class (0): {num_negative} ({num_negative / total_selected:.2%})")
+        
+        
+        '''
         train_features = vstack([train_features, pseudo_features])
         train_labels = np.concatenate([train_labels, pseudo_labels])
 
@@ -69,7 +79,7 @@ def main():
         svcModel.fit(train_features, train_labels)
     
         test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Naive Iteration {i}", svcModel, test_features, train_features, test_labels, train_labels)
-    
+        '''
 
     
 if __name__=="__main__":
