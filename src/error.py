@@ -123,11 +123,11 @@ def evaluation_metrics(label, model, x_test, x_train, y_test, y_train, class_wei
     print("Train set zero-one-loss: ", test_loss)
     print("Test set zero-one-loss: ", train_loss)
     print((metrics.classification_report(y_test,
-                                         y_pred, labels=[1, -1],
+                                         y_pred, labels=[1, 0],
                                          target_names=['Malware', 'Goodware'])))
     Report = "Test Set F1 = " + str(f1) + "\n" + metrics.classification_report(y_test,
                                                                                      y_pred,
-                                                                                     labels=[1, -1],
+                                                                                     labels=[1, 0],
                                                                                      target_names=['Malware',
                                                                                                 'Goodware'])
     print(Report)
