@@ -49,7 +49,7 @@ def main():
     
     
     iterations = 100
-    for i in range(iterations, 10):
+    for i in range(10, iterations, 10):
         print(f"Iteration: {i}")
         test_scores = svcModel.decision_function(test_features)
         best_thresh = np.percentile(np.abs(test_scores), i)  
@@ -68,18 +68,16 @@ def main():
         print(f"Positive class (1): {num_positive} ({num_positive / total_selected:.2%})")
         print(f"Negative class (0): {num_negative} ({num_negative / total_selected:.2%})")
         
-        
-        '''
-        train_features = vstack([train_features, pseudo_features])
-        train_labels = np.concatenate([train_labels, pseudo_labels])
+        # train_features = vstack([train_features, pseudo_features])
+        # train_labels = np.concatenate([train_labels, pseudo_labels])
 
-        train_features, train_labels = shuffle(train_features, train_labels, random_state=1423)
+        # train_features, train_labels = shuffle(train_features, train_labels, random_state=1423)
     
-        svcModel = LinearSVC(max_iter=1000000, C=1, dual=False, fit_intercept=False)
-        svcModel.fit(train_features, train_labels)
+        # svcModel = LinearSVC(max_iter=1000000, C=1, dual=False, fit_intercept=False)
+        # svcModel.fit(train_features, train_labels)
     
-        test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Naive Iteration {i}", svcModel, test_features, train_features, test_labels, train_labels)
-        '''
+        test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Naive Iteration {i}", svcModel, pseudo_features, train_features, pseudo_labels, train_labels)
+        # '''
 
     
 if __name__=="__main__":
