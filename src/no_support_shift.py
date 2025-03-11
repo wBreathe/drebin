@@ -56,8 +56,9 @@ def main():
         print(f"Threshold for top {100-i}% confident samples: {best_thresh}")
     
         high_confidence_idx = np.where(np.abs(test_scores) >= best_thresh)[0]
-        pseudo_labels = (test_scores[high_confidence_idx] >= 0).astype(int)
-
+        # pseudo_labels = (test_scores[high_confidence_idx] >= 0).astype(int)
+    
+        pseudo_labels = test_labels[high_confidence_idx]
         pseudo_features = test_features[high_confidence_idx]
         
         num_positive = np.sum(pseudo_labels)  
@@ -78,6 +79,27 @@ def main():
     
         test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Naive Iteration {i}", svcModel, pseudo_features, train_features, pseudo_labels, train_labels)
         # '''
+    for i in range(91, 101, 1):
+        print(f"Minor Iteration: {i}")
+        test_scores = svcModel.decision_function(test_features)
+        best_thresh = np.percentile(np.abs(test_scores), i)  
+        print(f"Threshold for top {100-i}% confident samples: {best_thresh}")
+    
+        high_confidence_idx = np.where(np.abs(test_scores) >= best_thresh)[0]
+        # pseudo_labels = (test_scores[high_confidence_idx] >= 0).astype(int)
+        pseudo_labels = test_labels[high_confidence_idx]
+
+        pseudo_features = test_features[high_confidence_idx]
+        
+        num_positive = np.sum(pseudo_labels)  
+        num_negative = len(pseudo_labels) - num_positive
+        total_selected = len(pseudo_labels)
+
+        print(f"Total selected samples: {total_selected}")
+        print(f"Positive class (1): {num_positive} ({num_positive / total_selected:.2%})")
+        print(f"Negative class (0): {num_negative} ({num_negative / total_selected:.2%})")
+        
+        test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Naive Iteration {i}", svcModel, pseudo_features, train_features, pseudo_labels, train_labels)
 
     
 if __name__=="__main__":
