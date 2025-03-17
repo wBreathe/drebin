@@ -116,9 +116,9 @@ def compute_mmd(X_s, X_t, degree=3, coef0=1, gamma=None):
     K_ss = rbf_kernel_torch(X_s, X_s, gamma=gamma)
     K_tt = rbf_kernel_torch(X_t, X_t, gamma=gamma)
     K_st = rbf_kernel_torch(X_s, X_t, gamma=gamma)
-    print("K_ss: ", torch.min(K_ss), torch.max(K_ss))
-    print("K_tt: ", torch.min(K_tt), torch.max(K_tt))
-    print("K_st: ", torch.min(K_st), torch.max(K_st))
+    # print("K_ss: ", torch.min(K_ss), torch.max(K_ss))
+    # print("K_tt: ", torch.min(K_tt), torch.max(K_tt))
+    # print("K_st: ", torch.min(K_st), torch.max(K_st))
     mmd = torch.mean(K_ss) + torch.mean(K_tt) - 2 * torch.mean(K_st)
     mmd = torch.clamp(mmd, min=0.0)
     return mmd
@@ -299,11 +299,13 @@ def main():
                 f"Total Total Loss: {running_loss:.4f}")
             if(running_loss < save_loss):
                 save_loss = running_loss
+                bmodel = model
             # torch.save(model.state_dict(), "/home/wang/Data/android/autoencoder_1_rbf_epoch-30—best_hidden-512_batch-256.pth")
 
         # bmodel = Autoencoder(input_dim, hidden_dim).to(device)
         # bmodel.load_state_dict(torch.load("/home/wang/Data/android/autoencoder_1_rbf_epoch-30—best_hidden-512_batch-256.pth")) 
         # bmodel.to(device)
+        model = bmodel
         del train_features, test_features
         gc.collect()
         train_goodware = extract_representations(model, goodfeatures).detach().cpu().numpy()
