@@ -88,12 +88,14 @@ def pca_visualization(train_features, test_features, train_labels, test_labels, 
         'Test Malware': (test_malware, colors['test_malware'])
     }, 'PCA: All Data', 'all')
 
+
 def getFeature(dir, years):
     MalwareCorpus=os.path.join(dir, "training", "malware")
     GoodwareCorpus=os.path.join(dir, "training", "goodware")
     AllMalSamples = CM.ListFiles(MalwareCorpus, ".data", year=years)
     AllGoodSamples = CM.ListFiles(GoodwareCorpus, ".data", year=years)
     return AllMalSamples, AllGoodSamples
+
 
 def rbf_kernel_torch(X, Y, gamma=None):
     if gamma is None:
@@ -103,11 +105,13 @@ def rbf_kernel_torch(X, Y, gamma=None):
     K = torch.exp(-gamma * (X_norm + Y_norm - 2 * torch.matmul(X, Y.T)))
     return K
 
+
 def polynomial_kernel_torch(X, Y, degree=3, coef0=1, gamma=None):
     """PyTorch implementation of polynomial kernel."""
     if gamma is None:
         gamma = 0.01
     return (gamma * torch.matmul(X, Y.T) + coef0) ** degree
+
 
 def compute_mmd(X_s, X_t, degree=3, coef0=1, gamma=None):
     """
@@ -140,9 +144,8 @@ def get_batch(sparse_matrix, labels = None, device='cpu', batch_size=256):
         else:
             yield dense_batch
         idx = batch_end
-                   
 
-class Autoencoder(nn.Module):
+class EncoderBlock(nn.Module):
     def __init__(self, input_dim, hidden_dim):
         super().__init__()
         self.encoder = nn.Sequential(
@@ -152,64 +155,50 @@ class Autoencoder(nn.Module):
             nn.Linear(1024, hidden_dim),
             nn.BatchNorm1d(hidden_dim)
         )
+        for layer in self.modules():
+            if isinstance(layer, nn.Linear):
+                nn.init.kaiming_normal_(layer.weight, mode='fan_in', nonlinearity='relu')
+    
+    def forward(self, x):
+        return self.encoder(x)
+
+class DecoderBlock(nn.Module):
+    def __init__(self, input_dim, hidden_dim):
+        super().__init__()
         self.decoder = nn.Sequential(
             nn.Linear(hidden_dim, 1024),
             nn.ReLU(),
             nn.Linear(1024, input_dim),
             nn.Sigmoid()
         )
-        self.classifier = nn.Linear(hidden_dim, 2)  
-        
         for layer in self.modules():
             if isinstance(layer, nn.Linear):
                 nn.init.kaiming_normal_(layer.weight, mode='fan_in', nonlinearity='relu')
+    
+    def forward(self, x):
+        return self.decoder(x)
 
-    def forward(self, x, train=True):
-        encoded = self.encoder(x)
-        decoded = self.decoder(encoded)
-        if(train):
-            class_logits = self.classifier(encoded)
-            return decoded, class_logits
+class DualAutoEncoder(nn.Module):
+    def __init__(self, input_dim, hidden_dim):
+        super().__init__()
+        self.train_encoder = EncoderBlock(input_dim=input_dim, hidden_dim=hidden_dim)
+        self.test_encoder = EncoderBlock(input_dim=input_dim, hidden_dim=hidden_dim)
+        self.train_decoder = DecoderBlock(input_dim=input_dim, hidden_dim=hidden_dim)
+        self.test_decoder = DecoderBlock(input_dim=input_dim, hidden_dim=hidden_dim)
+        self.classifier = nn.Linear(hidden_dim, 2)  
+        nn.init.kaiming_normal_(self.classifier.weight, mode='fan_in', nonlinearity='relu')
+       
+
+    def forward(self, x_train, x_test, training=True):
+        train_encoded = self.train_encoder(x_train)
+        test_encoded = self.test_encoder(x_test)
+        train_decoded = self.train_decoder(train_encoded)
+        test_decoded = self.test_decoder(test_encoded)
+        if(training):
+            class_logits = self.classifier(train_encoded)
+            return train_encoded, train_decoded, test_encoded, test_decoded, class_logits
         else:
-            return decoded
-
-
-# class Autoencoder(nn.Module):
-#     def __init__(self, input_dim, hidden_dim):
-#         super().__init__()
-#         self.encoder = nn.Sequential(
-#             nn.Linear(input_dim, 1024),
-#             nn.BatchNorm1d(1024),
-#             nn.ReLU(),
-#             nn.Linear(1024, hidden_dim),
-#             nn.BatchNorm1d(hidden_dim)
-#         )
-#         self.decoder = nn.Sequential(
-#             nn.Linear(hidden_dim, 1024),
-#             nn.ReLU(),
-#             nn.Linear(1024, input_dim),
-#             nn.Sigmoid()
-#         )
-#         for layer in self.modules():
-#             if isinstance(layer, nn.Linear):
-#                 nn.init.kaiming_normal_(layer.weight, mode='fan_in', nonlinearity='relu')
-
-#     def forward(self, x):
-#         encoded = self.encoder(x)
-#         decoded = self.decoder(encoded)
-#         return decoded
-
-# class Autoencoder(nn.Module):
-#     def __init__(self, input_dim, hidden_dim):
-#         super(Autoencoder, self).__init__()
-#         self.encoder = nn.Linear(input_dim, hidden_dim)
-#         self.decoder = nn.Linear(hidden_dim, input_dim)
-
-#     def forward(self, x):
-#         encoded = torch.relu(self.encoder(x))  
-#         decoded = torch.sigmoid(self.decoder(encoded)) 
-#         return decoded
-
+            return train_encoded, train_decoded, test_encoded, test_decoded
 
 
 def extract_representations(model, features, batch_size=256, device="cuda"):
@@ -248,12 +237,12 @@ def main():
     assert(input_dim==test_features.shape[1])
     hidden_dim = 512
 
-    model = Autoencoder(input_dim, hidden_dim).to(device)
+    model = DualAutoEncoder(input_dim, hidden_dim).to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
 
     loss_function = nn.BCELoss()  
-    classification_loss_function = nn.CrossEntropyLoss()
+    classification_loss_function = nn.BCEWithLogitsLoss()
 
     num_epochs = 20 
 
@@ -272,15 +261,12 @@ def main():
             optimizer.zero_grad()
 
             dense_batch_test = next(test_batch_cycle)
-            outputs_train, outputs_class = model(dense_batch_train, train=True)
-            outputs_test = model(dense_batch_test, train=False)
-            representation_train = model.encoder(dense_batch_train)
-            representation_test = model.encoder(dense_batch_test)
+            train_encoded, train_decoded, test_encoded, test_decoded, class_logits = model(dense_batch_train, dense_batch_test, train=True)
 
-            mmd_loss = compute_mmd(representation_train, representation_test)
-            reconstruction_loss_train = loss_function(outputs_train, dense_batch_train)
-            reconstruction_loss_test = loss_function(outputs_test, dense_batch_test)
-            classification_loss_train = classification_loss_function(outputs_class, batch_labels)
+            mmd_loss = compute_mmd(train_encoded, test_encoded)
+            reconstruction_loss_train = loss_function(train_decoded, dense_batch_train)
+            reconstruction_loss_test = loss_function(test_decoded, dense_batch_test)
+            classification_loss_train = classification_loss_function(class_logits, batch_labels)
             total_loss = reconstruction_loss_train + reconstruction_loss_test + 5*mmd_loss + 10*classification_loss_train
             total_loss.backward()
             optimizer.step()
@@ -342,7 +328,39 @@ def main():
     #     use_gpu=True,          # 使用RAPIDS加速
     #     save_prefix='umap_result'
     # )
-    
+
+'''
+class Autoencoder(nn.Module):
+    def __init__(self, input_dim, hidden_dim):
+        super().__init__()
+        self.encoder = nn.Sequential(
+            nn.Linear(input_dim, 1024),
+            nn.BatchNorm1d(1024),
+            nn.ReLU(),
+            nn.Linear(1024, hidden_dim),
+            nn.BatchNorm1d(hidden_dim)
+        )
+        self.decoder = nn.Sequential(
+            nn.Linear(hidden_dim, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, input_dim),
+            nn.Sigmoid()
+        )
+        self.classifier = nn.Linear(hidden_dim, 2)  
+        
+        for layer in self.modules():
+            if isinstance(layer, nn.Linear):
+                nn.init.kaiming_normal_(layer.weight, mode='fan_in', nonlinearity='relu')
+
+    def forward(self, x, train=True):
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        if(train):
+            class_logits = self.classifier(encoded)
+            return decoded, class_logits
+        else:
+            return decoded
+'''
     
 if __name__=="__main__":
     main()
