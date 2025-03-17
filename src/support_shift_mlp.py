@@ -18,7 +18,7 @@ import umap
 
 
 
-def pca_visualization(train_features, test_features, train_labels, test_labels, save_prefix='pca_visualization_linear_rbf_reverse'):
+def pca_visualization(train_features, test_features, train_labels, test_labels, save_prefix='pca_visualization_mlp_linear'):
     # 合并训练和测试特征
     all_features = vstack([train_features, test_features])
     all_labels = np.concatenate([train_labels, test_labels])
@@ -113,9 +113,12 @@ def compute_mmd(X_s, X_t, degree=3, coef0=1, gamma=None):
     """
     calculate mmd between source domain and target domain with a polynomial kernel
     """
-    K_ss = rbf_kernel_torch(X_s, X_s, gamma=gamma)
-    K_tt = rbf_kernel_torch(X_t, X_t, gamma=gamma)
-    K_st = rbf_kernel_torch(X_s, X_t, gamma=gamma)
+    # K_ss = rbf_kernel_torch(X_s, X_s, gamma=gamma)
+    # K_tt = rbf_kernel_torch(X_t, X_t, gamma=gamma)
+    # K_st = rbf_kernel_torch(X_s, X_t, gamma=gamma)
+    K_ss = polynomial_kernel_torch(X_s, X_s, degree=1)
+    K_tt = polynomial_kernel_torch(X_t, X_t, degree=1)
+    K_st = polynomial_kernel_torch(X_s, X_t, degree=1)
     print("K_ss: ", torch.min(K_ss), torch.max(K_ss))
     print("K_tt: ", torch.min(K_tt), torch.max(K_tt))
     print("K_st: ", torch.min(K_st), torch.max(K_st))
