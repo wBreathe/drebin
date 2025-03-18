@@ -14,7 +14,77 @@ import error
 from torch.nn import TransformerEncoder, TransformerEncoderLayer
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
-import umap
+from sklearn.manifold import TSNE
+
+def tsne_visualization(train_features, test_features, train_labels, test_labels, save_prefix='tsne_visualization_mlp_linear'):
+    # 合并训练和测试特征
+    all_features = vstack([train_features, test_features])
+    all_labels = np.concatenate([train_labels, test_labels])
+
+    # 进行 t-SNE 降维到 2D
+    tsne = TSNE(n_components=2, perplexity=30, random_state=42, n_iter=1000)
+    tsne_result = tsne.fit_transform(all_features.toarray())
+
+    # 拆分回训练和测试数据
+    train_tsne = tsne_result[:train_features.shape[0]]
+    test_tsne = tsne_result[train_features.shape[0]:]
+
+    # 获取不同类别的索引
+    train_goodware = train_tsne[train_labels == 0]
+    train_malware = train_tsne[train_labels == 1]
+    test_goodware = test_tsne[test_labels == 0]
+    test_malware = test_tsne[test_labels == 1]
+
+    # 颜色定义
+    colors = {
+        'train_goodware': 'blue',
+        'train_malware': 'red',
+        'test_goodware': 'cyan',
+        'test_malware': 'orange'
+    }
+
+    def plot_tsne(data_dict, title, save_name):
+        plt.figure(figsize=(10, 6))
+        for label, (data, color) in data_dict.items():
+            plt.scatter(data[:, 0], data[:, 1], c=color, label=label, alpha=0.6, edgecolors='k')
+        plt.title(title)
+        plt.xlabel('t-SNE Component 1')
+        plt.ylabel('t-SNE Component 2')
+        plt.legend()
+        plt.savefig(f'{save_prefix}_{save_name}.png')
+        plt.close()
+
+    # 1. Train only (goodware & malware)
+    plot_tsne({
+        'Train Goodware': (train_goodware, colors['train_goodware']),
+        'Train Malware': (train_malware, colors['train_malware'])
+    }, 't-SNE: Train Data (Goodware & Malware)', 'train')
+
+    # 2. Test only (goodware & malware)
+    plot_tsne({
+        'Test Goodware': (test_goodware, colors['test_goodware']),
+        'Test Malware': (test_malware, colors['test_malware'])
+    }, 't-SNE: Test Data (Goodware & Malware)', 'test')
+
+    # 3. Goodware comparison (train vs test)
+    plot_tsne({
+        'Train Goodware': (train_goodware, colors['train_goodware']),
+        'Test Goodware': (test_goodware, colors['test_goodware'])
+    }, 't-SNE: Goodware (Train vs Test)', 'goodware')
+
+    # 4. Malware comparison (train vs test)
+    plot_tsne({
+        'Train Malware': (train_malware, colors['train_malware']),
+        'Test Malware': (test_malware, colors['test_malware'])
+    }, 't-SNE: Malware (Train vs Test)', 'malware')
+
+    # 5. All together
+    plot_tsne({
+        'Train Goodware': (train_goodware, colors['train_goodware']),
+        'Train Malware': (train_malware, colors['train_malware']),
+        'Test Goodware': (test_goodware, colors['test_goodware']),
+        'Test Malware': (test_malware, colors['test_malware'])
+    }, 't-SNE: All Data', 'all')
 
 
 
@@ -149,7 +219,7 @@ class EncoderBlock(nn.Module):
     def __init__(self, input_dim, hidden_dim):
         super().__init__()
         self.encoder = nn.Sequential(
-            nn.Linear(input_dim, 1024),
+            nn.Linear(input_dim,1024),
             nn.BatchNorm1d(1024),
             nn.ReLU(),
             nn.Linear(1024, hidden_dim),
@@ -201,12 +271,15 @@ class DualAutoEncoder(nn.Module):
             return train_encoded, train_decoded, test_encoded, test_decoded
 
 
-def extract_representations(model, features, batch_size=256, device="cuda"):
+def extract_representations(model, features, batch_size=256, device="cuda", training=False):
     model.eval()
     representations = []
     with torch.no_grad():
         for dense_batch in get_batch(features, device=device):
-            encoded_batch = model.encoder(dense_batch)
+            if(training):
+                encoded_batch = model.train_encoder(dense_batch)
+            else:
+                encoded_batch = model.test_encoder(dense_batch)
             representations.append(encoded_batch)
 
     return torch.cat(representations, dim=0)
@@ -242,7 +315,7 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
 
     loss_function = nn.BCELoss()  
-    classification_loss_function = nn.BCEWithLogitsLoss()
+    classification_loss_function = nn.CrossEntropyLoss()
 
     num_epochs = 20 
 
@@ -261,7 +334,7 @@ def main():
             optimizer.zero_grad()
 
             dense_batch_test = next(test_batch_cycle)
-            train_encoded, train_decoded, test_encoded, test_decoded, class_logits = model(dense_batch_train, dense_batch_test, train=True)
+            train_encoded, train_decoded, test_encoded, test_decoded, class_logits = model(dense_batch_train, dense_batch_test, training=True)
 
             mmd_loss = compute_mmd(train_encoded, test_encoded)
             reconstruction_loss_train = loss_function(train_decoded, dense_batch_train)
@@ -299,10 +372,10 @@ def main():
     # bmodel.to(device)
     del train_features, test_features
     gc.collect()
-    train_goodware = extract_representations(model, goodfeatures).detach().cpu().numpy()
-    train_malware = extract_representations(model, malfeatures).detach().cpu().numpy()
-    test_goodware = extract_representations(model, tgoodfeatures).detach().cpu().numpy()
-    test_malware = extract_representations(model, tmalfeatures).detach().cpu().numpy()
+    train_goodware = extract_representations(model, goodfeatures,training=True).detach().cpu().numpy()
+    train_malware = extract_representations(model, malfeatures, training=True).detach().cpu().numpy()
+    test_goodware = extract_representations(model, tgoodfeatures,training=False).detach().cpu().numpy()
+    test_malware = extract_representations(model, tmalfeatures, training=False).detach().cpu().numpy()
     del goodfeatures, malfeatures, tgoodfeatures, tmalfeatures
     gc.collect()
     train_features = np.concatenate([train_goodware, train_malware], axis=0)
@@ -318,7 +391,7 @@ def main():
 
     test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Support shift", svcModel, test_features, train_features, test_labels, train_labels)
     
-    pca_visualization(train_features, test_features, train_labels, test_labels)
+    tsne_visualization(train_features, test_features, train_labels, test_labels)
     # umap_visualization(
     #     train_features, 
     #     test_features, 
