@@ -372,8 +372,8 @@ def main():
             dense_batch_test = next(test_batch_cycle)
             train_encoded, train_decoded, test_encoded, test_decoded, class_logits = model(dense_batch_train, dense_batch_test, training=True)
             if(bandwidth==0):
-                bandwidth = median_bandwidth(train_encoded, test_encoded)
-            current_bandwidth = median_bandwidth(train_encoded, test_encoded)
+                bandwidth = median_bandwidth(train_encoded.detach(), test_encoded.detach())
+            current_bandwidth = median_bandwidth(train_encoded.detach(), test_encoded.detach())
             mmd_loss = compute_mmd(train_encoded, test_encoded,  bandwidth=(alpha*bandwidth+(1-alpha)*current_bandwidth))
             reconstruction_loss_train = loss_function(train_decoded, dense_batch_train)
             reconstruction_loss_test = loss_function(test_decoded, dense_batch_test)
