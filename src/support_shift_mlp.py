@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
-def tsne_visualization(train_features, test_features, train_labels, test_labels, save_prefix='tsne_visualization_mlp_linear'):
+def tsne_visualization(train_features, test_features, train_labels, test_labels, save_prefix='tsne_visualization_mlp_rbf'):
     # 合并训练和测试特征
     all_features = vstack([train_features, test_features])
     all_labels = np.concatenate([train_labels, test_labels])
@@ -87,7 +87,7 @@ def tsne_visualization(train_features, test_features, train_labels, test_labels,
     }, 't-SNE: All Data', 'all')
 
 
-
+'''
 def pca_visualization(train_features, test_features, train_labels, test_labels, save_prefix='pca_visualization_mlp_linear'):
     # 合并训练和测试特征
     all_features = vstack([train_features, test_features])
@@ -157,6 +157,7 @@ def pca_visualization(train_features, test_features, train_labels, test_labels, 
         'Test Goodware': (test_goodware, colors['test_goodware']),
         'Test Malware': (test_malware, colors['test_malware'])
     }, 'PCA: All Data', 'all')
+'''
 
 
 def getFeature(dir, years):
@@ -187,12 +188,12 @@ def compute_mmd(X_s, X_t, degree=3, coef0=1, gamma=None):
     """
     calculate mmd between source domain and target domain with a polynomial kernel
     """
-    # K_ss = rbf_kernel_torch(X_s, X_s, gamma=gamma)
-    # K_tt = rbf_kernel_torch(X_t, X_t, gamma=gamma)
-    # K_st = rbf_kernel_torch(X_s, X_t, gamma=gamma)
-    K_ss = polynomial_kernel_torch(X_s, X_s, degree=1)
-    K_tt = polynomial_kernel_torch(X_t, X_t, degree=1)
-    K_st = polynomial_kernel_torch(X_s, X_t, degree=1)
+    K_ss = rbf_kernel_torch(X_s, X_s, gamma=gamma)
+    K_tt = rbf_kernel_torch(X_t, X_t, gamma=gamma)
+    K_st = rbf_kernel_torch(X_s, X_t, gamma=gamma)
+    # K_ss = polynomial_kernel_torch(X_s, X_s, degree=1)
+    # K_tt = polynomial_kernel_torch(X_t, X_t, degree=1)
+    # K_st = polynomial_kernel_torch(X_s, X_t, degree=1)
     print("K_ss: ", torch.min(K_ss), torch.max(K_ss))
     print("K_tt: ", torch.min(K_tt), torch.max(K_tt))
     print("K_st: ", torch.min(K_st), torch.max(K_st))
@@ -295,6 +296,9 @@ def main():
     NewFeatureVectorizer.fit(malwares+goodwares+tmalwares+tgoodwares)
     goodfeatures = NewFeatureVectorizer.transform(goodwares)
     malfeatures = NewFeatureVectorizer.transform(malwares)
+    selected_indices = np.random.choice(malfeatures.shape[0], goodfeatures.shape[0], replace=True)
+    malfeatures = malfeatures[selected_indices]
+
     tgoodfeatures = NewFeatureVectorizer.transform(tgoodwares)
     tmalfeatures = NewFeatureVectorizer.transform(tmalwares)
     train_features = vstack([goodfeatures, malfeatures])
@@ -304,6 +308,10 @@ def main():
     test_labels = np.hstack([np.zeros(tgoodfeatures.shape[0]), np.ones(tmalfeatures.shape[0])])
     train_features, train_labels = shuffle(train_features, train_labels, random_state=2314)
     test_features, test_labels = shuffle(test_features, test_labels, random_state=2314)
+    svcModel = SVC(kernel='rbf', C=1, gamma='scale')
+    svcModel.fit(train_features, train_labels)
+    print("before jiangwei")
+    test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Support shift", svcModel, test_features, train_features, test_labels, train_labels)
     train_labels = torch.tensor(train_labels, dtype=torch.long).to(device)
     
     input_dim = train_features.shape[1]
@@ -372,6 +380,7 @@ def main():
     # bmodel.to(device)
     del train_features, test_features
     gc.collect()
+    
     train_goodware = extract_representations(model, goodfeatures,training=True).detach().cpu().numpy()
     train_malware = extract_representations(model, malfeatures, training=True).detach().cpu().numpy()
     test_goodware = extract_representations(model, tgoodfeatures,training=False).detach().cpu().numpy()
