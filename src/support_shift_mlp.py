@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
-def tsne_visualization(train_features, test_features, train_labels, test_labels, save_prefix='tsne_visualization_mlp_linear'):
+def tsne_visualization(train_features, test_features, train_labels, test_labels, save_prefix='tsne_visualization_mlp_rbf'):
     # 合并训练和测试特征
     all_features = vstack([train_features, test_features])
     all_labels = np.concatenate([train_labels, test_labels])
@@ -87,78 +87,6 @@ def tsne_visualization(train_features, test_features, train_labels, test_labels,
     }, 't-SNE: All Data', 'all')
 
 
-
-def pca_visualization(train_features, test_features, train_labels, test_labels, save_prefix='pca_visualization_mlp_linear'):
-    # 合并训练和测试特征
-    all_features = vstack([train_features, test_features])
-    all_labels = np.concatenate([train_labels, test_labels])
-    
-    # 进行 PCA 降维到 2D
-    pca = PCA(n_components=2)
-    pca_result = pca.fit_transform(all_features.toarray())
-    
-    # 拆分回训练和测试数据
-    train_pca = pca_result[:train_features.shape[0]]
-    test_pca = pca_result[train_features.shape[0]:]
-    
-    # 获取不同类别的索引
-    train_goodware = train_pca[train_labels == 0]
-    train_malware = train_pca[train_labels == 1]
-    test_goodware = test_pca[test_labels == 0]
-    test_malware = test_pca[test_labels == 1]
-    
-    # 颜色定义
-    colors = {
-        'train_goodware': 'blue',
-        'train_malware': 'red',
-        'test_goodware': 'cyan',
-        'test_malware': 'orange'
-    }
-    
-    def plot_pca(data_dict, title, save_name):
-        plt.figure(figsize=(10, 6))
-        for label, (data, color) in data_dict.items():
-            plt.scatter(data[:, 0], data[:, 1], c=color, label=label, alpha=0.6, edgecolors='k')
-        plt.title(title)
-        plt.xlabel('PCA Component 1')
-        plt.ylabel('PCA Component 2')
-        plt.legend()
-        plt.savefig(f'{save_prefix}_{save_name}.png')
-        plt.close()
-    
-    # 1. Train only (goodware & malware)
-    plot_pca({
-        'Train Goodware': (train_goodware, colors['train_goodware']),
-        'Train Malware': (train_malware, colors['train_malware'])
-    }, 'PCA: Train Data (Goodware & Malware)', 'train')
-    
-    # 2. Test only (goodware & malware)
-    plot_pca({
-        'Test Goodware': (test_goodware, colors['test_goodware']),
-        'Test Malware': (test_malware, colors['test_malware'])
-    }, 'PCA: Test Data (Goodware & Malware)', 'test')
-    
-    # 3. Goodware comparison (train vs test)
-    plot_pca({
-        'Train Goodware': (train_goodware, colors['train_goodware']),
-        'Test Goodware': (test_goodware, colors['test_goodware'])
-    }, 'PCA: Goodware (Train vs Test)', 'goodware')
-    
-    # 4. Malware comparison (train vs test)
-    plot_pca({
-        'Train Malware': (train_malware, colors['train_malware']),
-        'Test Malware': (test_malware, colors['test_malware'])
-    }, 'PCA: Malware (Train vs Test)', 'malware')
-    
-    # 5. All together
-    plot_pca({
-        'Train Goodware': (train_goodware, colors['train_goodware']),
-        'Train Malware': (train_malware, colors['train_malware']),
-        'Test Goodware': (test_goodware, colors['test_goodware']),
-        'Test Malware': (test_malware, colors['test_malware'])
-    }, 'PCA: All Data', 'all')
-
-
 def getFeature(dir, years):
     MalwareCorpus=os.path.join(dir, "training", "malware")
     GoodwareCorpus=os.path.join(dir, "training", "goodware")
@@ -167,12 +95,22 @@ def getFeature(dir, years):
     return AllMalSamples, AllGoodSamples
 
 
-def rbf_kernel_torch(X, Y, gamma=None):
-    if gamma is None:
-        gamma = 1.0 / X.shape[1] 
-    X_norm = torch.sum(X ** 2, dim=1).view(-1, 1)
-    Y_norm = torch.sum(Y ** 2, dim=1).view(1, -1)
-    K = torch.exp(-gamma * (X_norm + Y_norm - 2 * torch.matmul(X, Y.T)))
+def median_bandwidth(x1, x2, eps=1e-6):
+    pairwise_dists = torch.cdist(x1, x2, p=2)
+    median_dist = torch.median(pairwise_dists)
+    if(median_dist<eps):
+        print("median_dist is almost 0")
+    return torch.clamp(median_dist**2, min=eps)  
+
+
+def rbf_kernel_torch(X, Y, bandwidth):
+    gamma = 1.0 / (2 * bandwidth)
+    # X_norm = torch.sum(X ** 2, dim=1).view(-1, 1)
+    # Y_norm = torch.sum(Y ** 2, dim=1).view(1, -1)
+    # K = torch.exp(-gamma * (X_norm + Y_norm - 2 * torch.matmul(X, Y.T)))
+    X_norm = (X ** 2).sum(1, keepdim=True)
+    Y_norm = (Y ** 2).sum(1, keepdim=True).T
+    K = torch.exp(-gamma * (X_norm + Y_norm - 2 * (X @ Y.T)))
     return K
 
 
@@ -183,21 +121,22 @@ def polynomial_kernel_torch(X, Y, degree=3, coef0=1, gamma=None):
     return (gamma * torch.matmul(X, Y.T) + coef0) ** degree
 
 
-def compute_mmd(X_s, X_t, degree=3, coef0=1, gamma=None):
+def compute_mmd(X_s, X_t, degree=3, coef0=1, bandwidth=None):
     """
     calculate mmd between source domain and target domain with a polynomial kernel
     """
-    # K_ss = rbf_kernel_torch(X_s, X_s, gamma=gamma)
-    # K_tt = rbf_kernel_torch(X_t, X_t, gamma=gamma)
-    # K_st = rbf_kernel_torch(X_s, X_t, gamma=gamma)
-    K_ss = polynomial_kernel_torch(X_s, X_s, degree=1)
-    K_tt = polynomial_kernel_torch(X_t, X_t, degree=1)
-    K_st = polynomial_kernel_torch(X_s, X_t, degree=1)
-    print("K_ss: ", torch.min(K_ss), torch.max(K_ss))
-    print("K_tt: ", torch.min(K_tt), torch.max(K_tt))
-    print("K_st: ", torch.min(K_st), torch.max(K_st))
+    K_ss = rbf_kernel_torch(X_s, X_s, bandwidth)
+    K_tt = rbf_kernel_torch(X_t, X_t, bandwidth)
+    K_st = rbf_kernel_torch(X_s, X_t, bandwidth)
+    # K_ss = polynomial_kernel_torch(X_s, X_s, degree=1)
+    # K_tt = polynomial_kernel_torch(X_t, X_t, degree=1)
+    # K_st = polynomial_kernel_torch(X_s, X_t, degree=1)
+    # print("K_ss: ", torch.min(K_ss), torch.max(K_ss))
+    # print("K_tt: ", torch.min(K_tt), torch.max(K_tt))
+    # print("K_st: ", torch.min(K_st), torch.max(K_st))
     mmd = torch.mean(K_ss) + torch.mean(K_tt) - 2 * torch.mean(K_st)
-    mmd = torch.clamp(mmd, min=0.0)
+    #mmd = torch.clamp(mmd, min=0.0)
+    print("mmd: ", mmd)
     return mmd
 
 
@@ -304,6 +243,23 @@ def main():
     test_labels = np.hstack([np.zeros(tgoodfeatures.shape[0]), np.ones(tmalfeatures.shape[0])])
     train_features, train_labels = shuffle(train_features, train_labels, random_state=2314)
     test_features, test_labels = shuffle(test_features, test_labels, random_state=2314)
+    svcModel = SVC(kernel='rbf', C=1, gamma='scale')
+    svcModel.fit(train_features, train_labels)
+    test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Support shift initial", svcModel, test_features, train_features, test_labels, train_labels)
+    num_goodwares = goodfeatures.shape[0]
+    selected_indices = np.random.choice(malfeatures.shape[0], num_goodwares, replace=False)
+    malfeatures = malfeatures[selected_indices]
+    train_features = vstack([goodfeatures, malfeatures])
+    test_features = vstack([tgoodfeatures, tmalfeatures])
+    train_labels = np.concatenate([np.zeros(goodfeatures.shape[0]), np.ones(malfeatures.shape[0])])
+    test_labels = np.concatenate([np.zeros(tgoodfeatures.shape[0]), np.ones(tmalfeatures.shape[0])])
+    train_features, train_labels = shuffle(train_features, train_labels, random_state=1423)
+    test_features, test_labels = shuffle(test_features, test_labels, random_state=1423)
+    svcModel = LinearSVC(max_iter=1000000, C=1, dual=False, fit_intercept=False)
+    svcModel.fit(train_features, train_labels)
+    test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Support shift balance", svcModel, test_features, train_features, test_labels, train_labels)
+   
+    
     train_labels = torch.tensor(train_labels, dtype=torch.long).to(device)
     
     input_dim = train_features.shape[1]
@@ -320,6 +276,10 @@ def main():
     num_epochs = 20 
 
     save_loss = 100000
+    
+    bandwidth = 0
+    alpha = 0.95  
+
     for epoch in range(num_epochs):
         model.train()  
         running_loss = 0.0
@@ -335,12 +295,15 @@ def main():
 
             dense_batch_test = next(test_batch_cycle)
             train_encoded, train_decoded, test_encoded, test_decoded, class_logits = model(dense_batch_train, dense_batch_test, training=True)
-
-            mmd_loss = compute_mmd(train_encoded, test_encoded)
+            if(bandwidth==0):
+                bandwidth = median_bandwidth(train_encoded, test_encoded)
+            current_bandwidth = median_bandwidth(train_encoded, test_encoded)
+            mmd_loss = compute_mmd(train_encoded, test_encoded,  bandwidth=(alpha*bandwidth+(1-alpha)*current_bandwidth))
             reconstruction_loss_train = loss_function(train_decoded, dense_batch_train)
             reconstruction_loss_test = loss_function(test_decoded, dense_batch_test)
             classification_loss_train = classification_loss_function(class_logits, batch_labels)
-            total_loss = reconstruction_loss_train + reconstruction_loss_test + 5*mmd_loss + 10*classification_loss_train
+            mmd_weight = min(1.0, epoch / 10) 
+            total_loss = reconstruction_loss_train + reconstruction_loss_test + mmd_weight*mmd_loss + classification_loss_train
             total_loss.backward()
             optimizer.step()
 
@@ -356,7 +319,9 @@ def main():
                 f"Recon Test Loss: {reconstruction_loss_test.item():.4f}, "
                 f"Classification Train Loss: {classification_loss_train.item():.4f}, "
                 f"Total Loss: {total_loss.item():.4f}")
-            
+        
+        print(f"Epoch {epoch}: Train Encoded Mean={train_encoded.mean().item()}, Std={train_encoded.std().item()}")
+        print(f"Epoch {epoch}: Test Encoded Mean={test_encoded.mean().item()}, Std={test_encoded.std().item()}")
         print(f"Epoch [{epoch+1}/{num_epochs}], "
             f"Total MMD Loss: {running_mmd_loss:.4f}, "
             f"Total Recon Train Loss: {running_recon_loss_train:.4f}, "
@@ -389,9 +354,9 @@ def main():
     svcModel.fit(train_features, train_labels)
 
 
-    test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Support shift", svcModel, test_features, train_features, test_labels, train_labels)
+    test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Support shift after dual encoder", svcModel, test_features, train_features, test_labels, train_labels)
     
-    tsne_visualization(train_features, test_features, train_labels, test_labels)
+    # tsne_visualization(train_features, test_features, train_labels, test_labels)
     # umap_visualization(
     #     train_features, 
     #     test_features, 
