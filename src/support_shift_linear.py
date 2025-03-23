@@ -198,12 +198,12 @@ def compute_mmd(X_s, X_t, degree=3, coef0=1, bandwidth=None):
     """
     calculate mmd between source domain and target domain with a polynomial kernel
     """
-    K_ss = rbf_kernel_torch(X_s, X_s, bandwidth)
-    K_tt = rbf_kernel_torch(X_t, X_t, bandwidth)
-    K_st = rbf_kernel_torch(X_s, X_t, bandwidth)
-    # K_ss = polynomial_kernel_torch(X_s, X_s, degree=1)
-    # K_tt = polynomial_kernel_torch(X_t, X_t, degree=1)
-    # K_st = polynomial_kernel_torch(X_s, X_t, degree=1)
+    # K_ss = rbf_kernel_torch(X_s, X_s, bandwidth)
+    # K_tt = rbf_kernel_torch(X_t, X_t, bandwidth)
+    # K_st = rbf_kernel_torch(X_s, X_t, bandwidth)
+    K_ss = polynomial_kernel_torch(X_s, X_s, degree=1)
+    K_tt = polynomial_kernel_torch(X_t, X_t, degree=1)
+    K_st = polynomial_kernel_torch(X_s, X_t, degree=1)
     # print("K_ss: ", torch.min(K_ss), torch.max(K_ss))
     # print("K_tt: ", torch.min(K_tt), torch.max(K_tt))
     # print("K_st: ", torch.min(K_st), torch.max(K_st))
@@ -231,9 +231,8 @@ class EncoderBlock(nn.Module):
     def __init__(self, input_dim, hidden_dim):
         super().__init__()
         self.encoder = nn.Sequential(
-            nn.Linear(input_dim,1024),
+            nn.Linear(input_dim, 1024),
             nn.BatchNorm1d(1024),
-            nn.ReLU(),
             nn.Linear(1024, hidden_dim),
             nn.BatchNorm1d(hidden_dim)
         )
@@ -249,9 +248,8 @@ class DecoderBlock(nn.Module):
         super().__init__()
         self.decoder = nn.Sequential(
             nn.Linear(hidden_dim, 1024),
-            nn.ReLU(),
             nn.Linear(1024, input_dim),
-            nn.Sigmoid()
+            nn.Sigmoid()  
         )
         for layer in self.modules():
             if isinstance(layer, nn.Linear):
@@ -260,20 +258,23 @@ class DecoderBlock(nn.Module):
     def forward(self, x):
         return self.decoder(x)
 
+
 class DualAutoEncoder(nn.Module):
     def __init__(self, input_dim, hidden_dim):
         super().__init__()
-        self.encoder = EncoderBlock(input_dim=input_dim, hidden_dim=hidden_dim)
-        self.decoder = DecoderBlock(input_dim=input_dim, hidden_dim=hidden_dim)
+        self.train_encoder = EncoderBlock(input_dim=input_dim, hidden_dim=hidden_dim)
+        self.test_encoder = EncoderBlock(input_dim=input_dim, hidden_dim=hidden_dim)
+        self.train_decoder = DecoderBlock(input_dim=input_dim, hidden_dim=hidden_dim)
+        self.test_decoder = DecoderBlock(input_dim=input_dim, hidden_dim=hidden_dim)
         self.classifier = nn.Linear(hidden_dim, 2)  
         nn.init.kaiming_normal_(self.classifier.weight, mode='fan_in', nonlinearity='relu')
        
 
     def forward(self, x_train, x_test, training=True):
-        train_encoded = self.encoder(x_train)
-        test_encoded = self.encoder(x_test)
-        train_decoded = self.decoder(train_encoded)
-        test_decoded = self.decoder(test_encoded)
+        train_encoded = self.train_encoder(x_train)
+        test_encoded = self.test_encoder(x_test)
+        train_decoded = self.train_decoder(train_encoded)
+        test_decoded = self.test_decoder(test_encoded)
         if(training):
             class_logits = self.classifier(train_encoded)
             return train_encoded, train_decoded, test_encoded, test_decoded, class_logits
@@ -287,9 +288,9 @@ def extract_representations(model, features, batch_size=256, device="cuda", trai
     with torch.no_grad():
         for dense_batch in get_batch(features, device=device):
             if(training):
-                encoded_batch = model.encoder(dense_batch)
+                encoded_batch = model.train_encoder(dense_batch)
             else:
-                encoded_batch = model.encoder(dense_batch)
+                encoded_batch = model.test_encoder(dense_batch)
             representations.append(encoded_batch)
 
     return torch.cat(representations, dim=0)
@@ -349,8 +350,7 @@ def main():
 
     save_loss = 100000
     
-    bandwidth = 0
-    alpha = 0.95  
+
 
     for epoch in range(num_epochs):
         model.train()  
@@ -367,10 +367,8 @@ def main():
 
             dense_batch_test = next(test_batch_cycle)
             train_encoded, train_decoded, test_encoded, test_decoded, class_logits = model(dense_batch_train, dense_batch_test, training=True)
-            if(bandwidth==0):
-                bandwidth = median_bandwidth(train_encoded.detach(), test_encoded.detach())
-            current_bandwidth = median_bandwidth(train_encoded.detach(), test_encoded.detach())
-            mmd_loss = compute_mmd(train_encoded, test_encoded,  bandwidth=(alpha*bandwidth+(1-alpha)*current_bandwidth))
+            
+            mmd_loss = compute_mmd(train_encoded, test_encoded)
             reconstruction_loss_train = loss_function(train_decoded, dense_batch_train)
             reconstruction_loss_test = loss_function(test_decoded, dense_batch_test)
             classification_loss_train = classification_loss_function(class_logits, batch_labels)
@@ -472,6 +470,6 @@ class Autoencoder(nn.Module):
         else:
             return decoded
 '''
-
+    
 if __name__=="__main__":
     main()
