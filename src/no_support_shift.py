@@ -22,8 +22,8 @@ def getFeature(dir, years):
 
 def main():
     dir = "/home/wang/Data/android"
-    train_years = [str(i) for i in range(2014, 2020)]
-    test_years = [str(i) for i in range(2020, 2024)]
+    train_years = [str(i) for i in range(2020, 2024)]
+    test_years = [str(i) for i in range(2014, 2020)]
     malwares, goodwares = getFeature(dir, train_years)
     tmalwares, tgoodwares = getFeature(dir, test_years)
     NewFeatureVectorizer = TF(input='filename', tokenizer=lambda x: x.split('\n'), token_pattern=None,binary=True)

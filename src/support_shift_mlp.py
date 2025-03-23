@@ -87,6 +87,79 @@ def tsne_visualization(train_features, test_features, train_labels, test_labels,
     }, 't-SNE: All Data', 'all')
 
 
+'''
+def pca_visualization(train_features, test_features, train_labels, test_labels, save_prefix='pca_visualization_mlp_linear'):
+    # 合并训练和测试特征
+    all_features = vstack([train_features, test_features])
+    all_labels = np.concatenate([train_labels, test_labels])
+    
+    # 进行 PCA 降维到 2D
+    pca = PCA(n_components=2)
+    pca_result = pca.fit_transform(all_features.toarray())
+    
+    # 拆分回训练和测试数据
+    train_pca = pca_result[:train_features.shape[0]]
+    test_pca = pca_result[train_features.shape[0]:]
+    
+    # 获取不同类别的索引
+    train_goodware = train_pca[train_labels == 0]
+    train_malware = train_pca[train_labels == 1]
+    test_goodware = test_pca[test_labels == 0]
+    test_malware = test_pca[test_labels == 1]
+    
+    # 颜色定义
+    colors = {
+        'train_goodware': 'blue',
+        'train_malware': 'red',
+        'test_goodware': 'cyan',
+        'test_malware': 'orange'
+    }
+    
+    def plot_pca(data_dict, title, save_name):
+        plt.figure(figsize=(10, 6))
+        for label, (data, color) in data_dict.items():
+            plt.scatter(data[:, 0], data[:, 1], c=color, label=label, alpha=0.6, edgecolors='k')
+        plt.title(title)
+        plt.xlabel('PCA Component 1')
+        plt.ylabel('PCA Component 2')
+        plt.legend()
+        plt.savefig(f'{save_prefix}_{save_name}.png')
+        plt.close()
+    
+    # 1. Train only (goodware & malware)
+    plot_pca({
+        'Train Goodware': (train_goodware, colors['train_goodware']),
+        'Train Malware': (train_malware, colors['train_malware'])
+    }, 'PCA: Train Data (Goodware & Malware)', 'train')
+    
+    # 2. Test only (goodware & malware)
+    plot_pca({
+        'Test Goodware': (test_goodware, colors['test_goodware']),
+        'Test Malware': (test_malware, colors['test_malware'])
+    }, 'PCA: Test Data (Goodware & Malware)', 'test')
+    
+    # 3. Goodware comparison (train vs test)
+    plot_pca({
+        'Train Goodware': (train_goodware, colors['train_goodware']),
+        'Test Goodware': (test_goodware, colors['test_goodware'])
+    }, 'PCA: Goodware (Train vs Test)', 'goodware')
+    
+    # 4. Malware comparison (train vs test)
+    plot_pca({
+        'Train Malware': (train_malware, colors['train_malware']),
+        'Test Malware': (test_malware, colors['test_malware'])
+    }, 'PCA: Malware (Train vs Test)', 'malware')
+    
+    # 5. All together
+    plot_pca({
+        'Train Goodware': (train_goodware, colors['train_goodware']),
+        'Train Malware': (train_malware, colors['train_malware']),
+        'Test Goodware': (test_goodware, colors['test_goodware']),
+        'Test Malware': (test_malware, colors['test_malware'])
+    }, 'PCA: All Data', 'all')
+'''
+
+
 def getFeature(dir, years):
     MalwareCorpus=os.path.join(dir, "training", "malware")
     GoodwareCorpus=os.path.join(dir, "training", "goodware")
@@ -234,6 +307,9 @@ def main():
     NewFeatureVectorizer.fit(malwares+goodwares+tmalwares+tgoodwares)
     goodfeatures = NewFeatureVectorizer.transform(goodwares)
     malfeatures = NewFeatureVectorizer.transform(malwares)
+    selected_indices = np.random.choice(malfeatures.shape[0], goodfeatures.shape[0], replace=True)
+    malfeatures = malfeatures[selected_indices]
+
     tgoodfeatures = NewFeatureVectorizer.transform(tgoodwares)
     tmalfeatures = NewFeatureVectorizer.transform(tmalwares)
     train_features = vstack([goodfeatures, malfeatures])
@@ -337,6 +413,7 @@ def main():
     # bmodel.to(device)
     del train_features, test_features
     gc.collect()
+    
     train_goodware = extract_representations(model, goodfeatures,training=True).detach().cpu().numpy()
     train_malware = extract_representations(model, malfeatures, training=True).detach().cpu().numpy()
     test_goodware = extract_representations(model, tgoodfeatures,training=False).detach().cpu().numpy()
