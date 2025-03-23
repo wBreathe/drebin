@@ -46,8 +46,26 @@ def main():
     # train_preds = svcModel.predict(train_features)
     # test_preds = svcModel.predict(test_features)
     test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Without Support shift", svcModel, test_features, train_features, test_labels, train_labels)
+    print("half half")
+    num_malwares = malfeatures.shape[0]
+    selected_indices = np.random.choice(goodfeatures.shape[0], num_malwares, replace=False)
+    goodfeatures = goodfeatures[selected_indices]
+    train_features = vstack([goodfeatures, malfeatures])
+    test_features = vstack([tgoodfeatures, tmalfeatures])
+    train_labels = np.concatenate([np.zeros(goodfeatures.shape[0]), np.ones(malfeatures.shape[0])])
+    test_labels = np.concatenate([np.zeros(tgoodfeatures.shape[0]), np.ones(tmalfeatures.shape[0])])
+    train_features, train_labels = shuffle(train_features, train_labels, random_state=1423)
+    test_features, test_labels = shuffle(test_features, test_labels, random_state=1423)
+    svcModel = LinearSVC(max_iter=1000000, C=1, dual=False, fit_intercept=False)
+    svcModel.fit(train_features, train_labels)
+
+    # train_preds = svcModel.predict(train_features)
+    # test_preds = svcModel.predict(test_features)
+    test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Without Support shift", svcModel, test_features, train_features, test_labels, train_labels)
     
     
+    
+    '''
     iterations = 100
     for i in range(10, iterations, 10):
         print(f"Iteration: {i}")
@@ -78,7 +96,7 @@ def main():
         # svcModel.fit(train_features, train_labels)
     
         test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Naive Iteration {i}", svcModel, pseudo_features, train_features, pseudo_labels, train_labels)
-        # '''
+        
     for i in range(91, 101, 1):
         print(f"Minor Iteration: {i}")
         test_scores = svcModel.decision_function(test_features)
@@ -100,7 +118,7 @@ def main():
         print(f"Negative class (0): {num_negative} ({num_negative / total_selected:.2%})")
         
         test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Naive Iteration {i}", svcModel, pseudo_features, train_features, pseudo_labels, train_labels)
-
+    '''
     
 if __name__=="__main__":
     main()
