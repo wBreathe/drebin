@@ -285,7 +285,7 @@ class DualAutoEncoder(nn.Module):
             return train_encoded, train_decoded
 
 
-def extract_representations(model, features, batch_size=256, device="cuda", training=False):
+def extract_representations(model, features, batch_size=256, device="cpu", training=False):
     model.eval()
     representations = []
     with torch.no_grad():
@@ -300,9 +300,10 @@ def extract_representations(model, features, batch_size=256, device="cuda", trai
 
 def main():
     dir = "/home/wang/Data/android"
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    train_years = [str(i) for i in range(2014, 2020)]
-    test_years = [str(i) for i in range(2020, 2024)]
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
+    train_years = [str(i) for i in range(2020, 2024)]
+    test_years = [str(i) for i in range(2014, 2020)]
     malwares, goodwares = getFeature(dir, train_years)
     tmalwares, tgoodwares = getFeature(dir, test_years)
     NewFeatureVectorizer = TF(input='filename', tokenizer=lambda x: x.split('\n'), token_pattern=None,binary=True)
