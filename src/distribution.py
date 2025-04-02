@@ -116,7 +116,7 @@ def main():
         features = NewFeatureVectorizer.transform(tmalwares)
     
     input_dim = features.shape[1]
-    hidden_dim = 512
+    hidden_dim = 64
 
     model = AutoEncoder(input_dim, hidden_dim).to(device)
 
@@ -175,7 +175,7 @@ def main():
     }
 
     
-    with open(os.path.join(dir, f"{args.flag}_gmm.pkl"), "wb") as f:
+    with open(os.path.join(dir, f"{args.flag}_64_gmm.pkl"), "wb") as f:
         pickle.dump(gmm_params, f)
     
     # tsne_visualization(train_features, test_features, train_labels, test_labels)

@@ -281,7 +281,7 @@ class DualAutoEncoder(nn.Module):
             return train_encoded, train_decoded, test_encoded, test_decoded
 
 
-def extract_representations(model, features, batch_size=256, device="cuda", training=False):
+def extract_representations(model, features, batch_size=256, device="cpu", training=False):
     model.eval()
     representations = []
     with torch.no_grad():
@@ -296,9 +296,10 @@ def extract_representations(model, features, batch_size=256, device="cuda", trai
 
 def main():
     dir = "/home/wang/Data/android"
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    train_years = [str(i) for i in range(2014, 2020)]
-    test_years = [str(i) for i in range(2020, 2024)]
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
+    train_years = [str(i) for i in range(2020, 2024)]
+    test_years = [str(i) for i in range(2014, 2020)]
     malwares, goodwares = getFeature(dir, train_years)
     tmalwares, tgoodwares = getFeature(dir, test_years)
     NewFeatureVectorizer = TF(input='filename', tokenizer=lambda x: x.split('\n'), token_pattern=None,binary=True)
@@ -319,7 +320,7 @@ def main():
     svcModel.fit(train_features, train_labels)
     test_f1, train_f1, acc, train_acc, test_loss, train_loss = error.evaluation_metrics(f"Support shift initial", svcModel, test_features, train_features, test_labels, train_labels)
     num_goodwares = goodfeatures.shape[0]
-    selected_indices = np.random.choice(malfeatures.shape[0], num_goodwares, replace=False)
+    selected_indices = np.random.choice(malfeatures.shape[0], num_goodwares, replace=True)
     malfeatures = malfeatures[selected_indices]
     train_features = vstack([goodfeatures, malfeatures])
     test_features = vstack([tgoodfeatures, tmalfeatures])
@@ -343,7 +344,7 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
 
     loss_function = nn.BCELoss()  
-    classification_loss_function = nn.CrossEntropyLoss()
+    #classification_loss_function = nn.CrossEntropyLoss()
 
     num_epochs = 20 
 
@@ -373,9 +374,10 @@ def main():
             mmd_loss = compute_mmd(train_encoded, test_encoded,  bandwidth=(alpha*bandwidth+(1-alpha)*current_bandwidth))
             reconstruction_loss_train = loss_function(train_decoded, dense_batch_train)
             reconstruction_loss_test = loss_function(test_decoded, dense_batch_test)
-            classification_loss_train = classification_loss_function(class_logits, batch_labels)
+            #classification_loss_train = classification_loss_function(class_logits, batch_labels)
             mmd_weight = min(1.0, epoch / 10) 
-            total_loss = reconstruction_loss_train + reconstruction_loss_test + mmd_weight*mmd_loss + classification_loss_train
+            #total_loss = reconstruction_loss_train + reconstruction_loss_test + mmd_weight*mmd_loss + classification_loss_train
+            total_loss = reconstruction_loss_train + reconstruction_loss_test + mmd_weight*mmd_loss
             total_loss.backward()
             optimizer.step()
 
@@ -383,13 +385,13 @@ def main():
             running_mmd_loss += mmd_loss.item()
             running_recon_loss_train += reconstruction_loss_train.item()
             running_recon_loss_test += reconstruction_loss_test.item()
-            running_classification_loss += classification_loss_train.item()
+            # running_classification_loss += classification_loss_train.item()
 
             print(f"Batch {batch_idx + 1}: "
                 f"MMD Loss: {mmd_loss.item():.4f}, "
                 f"Recon Train Loss: {reconstruction_loss_train.item():.4f}, "
                 f"Recon Test Loss: {reconstruction_loss_test.item():.4f}, "
-                f"Classification Train Loss: {classification_loss_train.item():.4f}, "
+                # f"Classification Train Loss: {classification_loss_train.item():.4f}, "
                 f"Total Loss: {total_loss.item():.4f}")
         
         print(f"Epoch {epoch}: Train Encoded Mean={train_encoded.mean().item()}, Std={train_encoded.std().item()}")
@@ -398,7 +400,7 @@ def main():
             f"Total MMD Loss: {running_mmd_loss:.4f}, "
             f"Total Recon Train Loss: {running_recon_loss_train:.4f}, "
             f"Total Recon Test Loss: {running_recon_loss_test:.4f}, "
-            f"Total Class Train Loss: {classification_loss_train:.4f}, "
+            #f"Total Class Train Loss: {classification_loss_train:.4f}, "
             f"Total Total Loss: {running_loss:.4f}")
         if(running_loss < save_loss):
             save_loss = running_loss

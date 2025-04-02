@@ -231,9 +231,9 @@ class EncoderBlock(nn.Module):
     def __init__(self, input_dim, hidden_dim):
         super().__init__()
         self.encoder = nn.Sequential(
-            nn.Linear(input_dim, 1024),
-            nn.BatchNorm1d(1024),
-            nn.Linear(1024, hidden_dim),
+            nn.Linear(input_dim, hidden_dim),
+            # nn.BatchNorm1d(256),
+            # nn.Linear(256, hidden_dim),
             nn.BatchNorm1d(hidden_dim)
         )
         for layer in self.modules():
@@ -247,8 +247,8 @@ class DecoderBlock(nn.Module):
     def __init__(self, input_dim, hidden_dim):
         super().__init__()
         self.decoder = nn.Sequential(
-            nn.Linear(hidden_dim, 1024),
-            nn.Linear(1024, input_dim),
+            nn.Linear(hidden_dim, input_dim),
+            # nn.Linear(1024, input_dim),
             nn.Sigmoid()  
         )
         for layer in self.modules():
@@ -282,7 +282,7 @@ class DualAutoEncoder(nn.Module):
             return train_encoded, train_decoded, test_encoded, test_decoded
 
 
-def extract_representations(model, features, batch_size=256, device="cuda", training=False):
+def extract_representations(model, features, batch_size=256, device="cpu", training=False):
     model.eval()
     representations = []
     with torch.no_grad():
@@ -297,7 +297,7 @@ def extract_representations(model, features, batch_size=256, device="cuda", trai
 
 def main():
     dir = "/home/wang/Data/android"
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
     train_years = [str(i) for i in range(2014, 2020)]
     test_years = [str(i) for i in range(2020, 2024)]
     malwares, goodwares = getFeature(dir, train_years)
