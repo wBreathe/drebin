@@ -41,7 +41,7 @@ def extract_representations(model, features, batch_size=256, device="cpu"):
     representations = []
     with torch.no_grad():
         for dense_batch in get_batch(features, device=device, batch_size=batch_size):
-            encoded_batch, _, _ = model.encode(dense_batch)
+            encoded_batch, _, _, _, _ = model(dense_batch)
             representations.append(encoded_batch)
 
     return torch.cat(representations, dim=0)
@@ -50,8 +50,8 @@ def extract_representations(model, features, batch_size=256, device="cpu"):
 if __name__=="__main__":
     dir = "/home/wang/Data/android"
     device = torch.device("cpu")
-    train_years = [str(i) for i in range(2020, 2024)]
-    test_years = [str(i) for i in range(2014, 2020)]
+    train_years = [str(i) for i in range(2014, 2020)]
+    test_years = [str(i) for i in range(2020, 2024)]
     malwares, goodwares = getFeature(dir, train_years)
     tmalwares, tgoodwares = getFeature(dir, test_years)
     NewFeatureVectorizer = TF(input='filename', tokenizer=lambda x: x.split('\n'), token_pattern=None,binary=True)

@@ -44,7 +44,7 @@ class VanillaVAE(nn.Module):
     def encode(self, x):
         x = self.encoder(x)
         mu, log_var = self.fc_mu(x), self.fc_var(x)
-        return x, mu, log_var
+        return mu, log_var
     
     def reparameterize(self, mu, log_var):
         std = torch.exp(0.5 * log_var)
@@ -56,10 +56,10 @@ class VanillaVAE(nn.Module):
         return self.final_layer(x)
     
     def forward(self, x):
-        x, mu, log_var = self.encode(x)
+        mu, log_var = self.encode(x)
         z = self.reparameterize(mu, log_var)
-        class_logits = self.classifier(x)
-        return x, self.decode(z), class_logits, mu, log_var
+        class_logits = self.classifier(z)
+        return z, self.decode(z), class_logits, mu, log_var
     
     '''
     def loss_function(self, recon_x, x, mu, log_var):
