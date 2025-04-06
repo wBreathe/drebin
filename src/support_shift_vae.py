@@ -41,7 +41,7 @@ def extract_representations(model, features, batch_size=256, device="cpu"):
     representations = []
     with torch.no_grad():
         for dense_batch in get_batch(features, device=device, batch_size=batch_size):
-            encoded_batch, _, _, _, _ = model(dense_batch)
+            encoded_batch, _ = model.encode(dense_batch)
             representations.append(encoded_batch)
 
     return torch.cat(representations, dim=0)
@@ -80,7 +80,7 @@ if __name__=="__main__":
 
     model = VanillaVAE(input_dim, hidden_dim).to(device)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=1e-5)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=0.005, weight_decay=1e-5)
 
     classification_loss_function = nn.CrossEntropyLoss()
 
@@ -105,11 +105,11 @@ if __name__=="__main__":
 
             #dense_batch_test = next(test_batch_cycle)
             train_encoded, train_decoded, class_logits, mu, log_var = model(dense_batch_train)
-            reconstruction_loss_train = F.binary_cross_entropy_with_logits(train_decoded, dense_batch_train, reduction='sum')
+            reconstruction_loss_train = F.binary_cross_entropy_with_logits(train_decoded, dense_batch_train, reduction='mean')
             reconstruction_loss_train = reconstruction_loss_train/dense_batch_train.shape[0]
             kld_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
             classification_loss_train = classification_loss_function(class_logits, batch_labels)
-            total_loss = reconstruction_loss_train +100* classification_loss_train + kld_loss
+            total_loss = reconstruction_loss_train +classification_loss_train + kld_loss
             total_loss.backward()
             optimizer.step()
 
@@ -140,10 +140,10 @@ if __name__=="__main__":
     del train_features, test_features
     gc.collect()
     
-    train_goodware = extract_representations(model, goodfeatures,training=True).detach().cpu().numpy()
-    train_malware = extract_representations(model, malfeatures, training=True).detach().cpu().numpy()
-    test_goodware = extract_representations(model, tgoodfeatures,training=False).detach().cpu().numpy()
-    test_malware = extract_representations(model, tmalfeatures, training=False).detach().cpu().numpy()
+    train_goodware = extract_representations(model, goodfeatures).detach().cpu().numpy()
+    train_malware = extract_representations(model, malfeatures).detach().cpu().numpy()
+    test_goodware = extract_representations(model, tgoodfeatures).detach().cpu().numpy()
+    test_malware = extract_representations(model, tmalfeatures).detach().cpu().numpy()
     del goodfeatures, malfeatures, tgoodfeatures, tmalfeatures
     gc.collect()
     train_features = np.concatenate([train_goodware, train_malware], axis=0)

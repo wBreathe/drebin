@@ -39,7 +39,11 @@ class VanillaVAE(nn.Module):
         self.final_layer = nn.Linear(hidden_dims[-1], input_dim)
 
         # Classifier
-        self.classifier = nn.Linear(latent_dim, 2)  
+        self.classifier = nn.Sequential(
+            nn.Linear(latent_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, 2)
+        )
         
     def encode(self, x):
         x = self.encoder(x)
@@ -58,7 +62,7 @@ class VanillaVAE(nn.Module):
     def forward(self, x):
         mu, log_var = self.encode(x)
         z = self.reparameterize(mu, log_var)
-        class_logits = self.classifier(z)
+        class_logits = self.classifier(mu)
         return z, self.decode(z), class_logits, mu, log_var
     
     '''
