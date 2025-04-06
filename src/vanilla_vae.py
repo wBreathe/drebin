@@ -12,7 +12,7 @@ class VanillaVAE(nn.Module):
         
         self.latent_dim = latent_dim
         if hidden_dims is None:
-            hidden_dims = [512, 256]
+            hidden_dims = [1024, 512, 256]
 
         # Encoder
         encoder_layers = []
