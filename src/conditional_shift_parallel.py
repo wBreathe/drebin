@@ -13,15 +13,20 @@ from scipy.spatial.distance import jensenshannon
 import pickle
 from sklearn.model_selection import train_test_split
 
-def compute_js_by_year(years, models, x, year):
+def compute_js_by_year(years, models, x, label, year):
     x = x.copy()
     x.sort_indices()
     js_vectors = {}
     js_vectors[year] = {}
     probs_by_year = {}
+    acc_by_year = {}
+    acc_by_year[year] = {}
     for y in years:
         clf = models[y]
         probs = clf.predict_proba(x)
+        preds = clf.predict(x)
+        acc = np.mean(preds==label)
+        acc_by_year[year][y] = acc
         probs_by_year[y] = probs
 
     # JS divergence matrix: divergence[i,j] = JS(P_i || P_j on data from year_i)
@@ -42,7 +47,7 @@ def compute_js_by_year(years, models, x, year):
     del probs_by_year
     gc.collect()
 
-    return js_vectors 
+    return js_vectors, acc_by_year
 
 def getFeature(dir, years):
     MalwareCorpus = [os.path.join(dir, "training", "malware"), os.path.join(dir, "test", "malware")]
@@ -70,7 +75,7 @@ def train_svc_models(year, dir, featureVectorizer):
     svcModel.fit(X_train, y_train)
     del goodfeatures, malfeatures, all_features, all_labels, X_train, y_train
     gc.collect()
-    return year, svcModel, X_test
+    return year, svcModel, X_test, y_test
 
 
 if __name__=="__main__":
@@ -85,15 +90,36 @@ if __name__=="__main__":
 
     x_features = {}
     models = {}
+    y_labels = {}
     results = Parallel(n_jobs=10)(
         delayed(train_svc_models)(year, dir, featureVectorizer) for year in years
     )
-    models = {year: model for year, model, _ in results}
-    x_features = {year: feats for year, _, feats in results}
-    
-    divergencies = Parallel(n_jobs=10)(
-        delayed(compute_js_by_year)(years, models, x_features[year], year) for year in years
+    models = {year: model for year, model, _, _ in results}
+    x_features = {year: feats for year, _, feats, _ in results}
+    y_labels = {year: labels for year, _, _, labels in results}
+    results = Parallel(n_jobs=10)(
+        delayed(compute_js_by_year)(years, models, x_features[year], y_labels[year], year) for year in years
     )
-    print(divergencies)
-    with open("/home/wang/Data/divergencies.pkl", "wb") as f:
-        pickle.dump(divergencies, f)
+    
+    
+    all_js = {}
+    all_acc = {}
+
+    for js_vec, acc_vec in results:
+        for from_year in js_vec:
+            if from_year not in all_js:
+                all_js[from_year] = {}
+            for to_year, js_val in js_vec[from_year].items():
+                all_js[from_year][to_year] = js_val
+
+        for from_year in acc_vec:
+            if from_year not in all_acc:
+                all_acc[from_year] = {}
+            for to_year, acc_val in acc_vec[from_year].items():
+                all_acc[from_year][to_year] = acc_val
+    
+    with open("/home/wang/Data/drift_results.pkl", "wb") as f:
+        pickle.dump({"js": all_js, "acc": all_acc}, f)
+    
+    print(all_js)
+    print(all_acc)
