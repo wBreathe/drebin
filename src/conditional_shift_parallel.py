@@ -11,7 +11,7 @@ import gc
 from sklearn.svm import SVC
 from scipy.spatial.distance import jensenshannon
 import pickle
-
+from sklearn.model_selection import train_test_split
 
 def compute_js_by_year(years, models, x, year):
     js_vectors = {}
@@ -53,21 +53,27 @@ def train_svc_models(year, dir, featureVectorizer):
     malwares, goodwares = getFeature(dir, [year])
     goodfeatures = featureVectorizer.transform(goodwares)
     malfeatures = featureVectorizer.transform(malwares)
-    train_features = vstack([goodfeatures, malfeatures])
-    train_labels = np.hstack([np.zeros(goodfeatures.shape[0]), np.ones(malfeatures.shape[0])])
-    train_features, train_labels = shuffle(train_features, train_labels, random_state=2314)
+    all_features = vstack([goodfeatures, malfeatures])
+    all_labels = np.hstack([np.zeros(goodfeatures.shape[0]), np.ones(malfeatures.shape[0])])
+    X_train, X_test, y_train, y_test = train_test_split(
+        all_features, all_labels,
+        test_size=0.2,
+        stratify=all_labels,
+        random_state=2314
+    )
+
     svcModel = SVC(kernel='rbf', C=1, gamma='scale', probability=True)
-    svcModel.fit(train_features, train_labels)
-    del goodfeatures, malfeatures, train_labels
+    svcModel.fit(X_train, y_train)
+    del goodfeatures, malfeatures, all_features, all_labels, X_train, y_train
     gc.collect()
-    return year, svcModel, train_features
+    return year, svcModel, X_test
 
 
 
 if __name__=="__main__":
     dir = "/home/wang/Data/android"
 
-    years = [str(i) for i in range(2014, 2015)]
+    years = [str(i) for i in range(2014, 2016)]
     allmals, allgoods = getFeature(dir, years)
     featureVectorizer = TF(input="filename", tokenizer=lambda x: x.split('\n'), token_pattern=None, binary=True)
     featureVectorizer.fit(allmals+allgoods)
