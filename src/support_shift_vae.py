@@ -41,7 +41,8 @@ def extract_representations(model, features, batch_size=256, device="cpu"):
     representations = []
     with torch.no_grad():
         for dense_batch in get_batch(features, device=device, batch_size=batch_size):
-            encoded_batch, _ = model.encode(dense_batch)
+            # encoded_batch, _ = model.encode(dense_batch)
+            encoded_batch, _ , _, _, _ = model(dense_batch)
             representations.append(encoded_batch)
 
     return torch.cat(representations, dim=0)
@@ -84,7 +85,7 @@ if __name__=="__main__":
 
     classification_loss_function = nn.CrossEntropyLoss()
 
-    num_epochs = 200 
+    num_epochs = 50 
 
     save_loss = 100000
     
@@ -106,7 +107,7 @@ if __name__=="__main__":
             #dense_batch_test = next(test_batch_cycle)
             train_encoded, train_decoded, class_logits, mu, log_var = model(dense_batch_train)
             reconstruction_loss_train = F.binary_cross_entropy_with_logits(train_decoded, dense_batch_train, reduction='mean')
-            reconstruction_loss_train = reconstruction_loss_train/dense_batch_train.shape[0]
+            # reconstruction_loss_train = reconstruction_loss_train/dense_batch_train.shape[0]
             kld_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
             classification_loss_train = classification_loss_function(class_logits, batch_labels)
             total_loss = reconstruction_loss_train +classification_loss_train + kld_loss
