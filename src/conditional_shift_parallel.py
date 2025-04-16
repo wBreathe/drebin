@@ -14,13 +14,15 @@ import pickle
 from sklearn.model_selection import train_test_split
 
 def compute_js_by_year(years, models, x, year):
+    x = x.copy()
+    x.sort_indices()
     js_vectors = {}
     js_vectors[year] = {}
     probs_by_year = {}
-    for year in years:
-        clf = models[year]
+    for y in years:
+        clf = models[y]
         probs = clf.predict_proba(x)
-        probs_by_year[year] = probs
+        probs_by_year[y] = probs
 
     # JS divergence matrix: divergence[i,j] = JS(P_i || P_j on data from year_i)
     for year_j in years:
@@ -32,6 +34,7 @@ def compute_js_by_year(years, models, x, year):
         for pi, pj in zip(probs_i, probs_j):
             js = jensenshannon(pi, pj, base=2)**2
             js_divs.append(js)
+        
         js_vectors[year][year_j] = np.mean(js_divs)
         del js_divs
         gc.collect()
@@ -51,6 +54,7 @@ def getFeature(dir, years):
 
 def train_svc_models(year, dir, featureVectorizer):
     malwares, goodwares = getFeature(dir, [year])
+    print(year, len(malwares), len(goodwares))
     goodfeatures = featureVectorizer.transform(goodwares)
     malfeatures = featureVectorizer.transform(malwares)
     all_features = vstack([goodfeatures, malfeatures])
@@ -69,11 +73,10 @@ def train_svc_models(year, dir, featureVectorizer):
     return year, svcModel, X_test
 
 
-
 if __name__=="__main__":
     dir = "/home/wang/Data/android"
 
-    years = [str(i) for i in range(2014, 2016)]
+    years = [str(i) for i in range(2012, 2023)]
     allmals, allgoods = getFeature(dir, years)
     featureVectorizer = TF(input="filename", tokenizer=lambda x: x.split('\n'), token_pattern=None, binary=True)
     featureVectorizer.fit(allmals+allgoods)
@@ -82,13 +85,13 @@ if __name__=="__main__":
 
     x_features = {}
     models = {}
-    results = Parallel(n_jobs=2)(
+    results = Parallel(n_jobs=10)(
         delayed(train_svc_models)(year, dir, featureVectorizer) for year in years
     )
     models = {year: model for year, model, _ in results}
     x_features = {year: feats for year, _, feats in results}
     
-    divergencies = Parallel(n_jobs=2)(
+    divergencies = Parallel(n_jobs=10)(
         delayed(compute_js_by_year)(years, models, x_features[year], year) for year in years
     )
     print(divergencies)
